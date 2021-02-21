@@ -50,12 +50,13 @@ expr:
   | expr OR expr { Binop($1,Or,$3) }
   | expr SEQ expr { Binop($1,Seq,$3) }
   | LPAREN expr RPAREN { $2 }
-  | VAR LBRACE args RBRACE { NamedStruct($1, $3) }
-  | LBRACE args RBRACE { AnonStruct($2) }
+  | VAR LBRACE args_list RBRACE { NamedStruct($1, $3) }
+  | LBRACE args_list RBRACE { AnonStruct($2) }
   | LBRACK args RBRACK { ArrayCon($2) }
   | VAR LPAREN named_args RPAREN { NamedFxnApp($1,$3) }
   | VAR LPAREN args RPAREN { OrderedFxnApp($1,$3) }
   | IF expr THEN expr ELSE expr { IfElse($2,$4,$6) }
+  | VAR VAR EQ expr { VarDef($1,$2,$4) }
 
 named_args:
     /* nothing */ { [] }
