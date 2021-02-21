@@ -27,7 +27,6 @@ type expr =
 | StructField of id * id                   (* name.id *)
 | IntLit of int                            (* int *)
 | FloatLit of float                        (* float *)
-| Parens of expr                           (* (expr) *)
 
 type typedef = 
   Alias of tid * tid                       (* alias name = type *)
