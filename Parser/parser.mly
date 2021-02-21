@@ -7,7 +7,7 @@
 /* %token statements... */
 %token ADD SUB MUL DIV MOD POW SEQ
 %token NOT EQ LT GT AND OR
-%token DOT COMMA
+%token DOT COMMA COLON
 %token LPAREN RPAREN LBRACE RBRACE LBRACK RBRACK
 %token IF THEN ELSE
 %token <int> INTLIT
@@ -63,8 +63,8 @@ named_args:
   | named_args_list {List.rev $1}
 
 named_args_list:
-    VAR EQ expr { [($1,$3)] }
-  | named_args_list COMMA VAR EQ expr { $3 :: $1 }
+    VAR COLON expr { [($1,$3)] }
+  | named_args_list COMMA VAR COLON expr { $3 :: $1 }
 
 args:
     /* nothing */ { [] }
