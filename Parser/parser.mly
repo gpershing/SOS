@@ -5,11 +5,11 @@
 /* Declarations */
 
 /* %token statements... */
-%token ADD SUB MUL DIV MOD POW SEQ ASSIGN
+%token ADD SUB MUL DIV MOD POW SEQ
 %token NOT EQ LT GT AND OR
 %token DOT COMMA
 %token LPAREN RPAREN LBRACE RBRACE LBRACK RBRACK
-% IF THEN ELSE
+%token IF THEN ELSE
 %token <int> INTLIT
 %token <float> FLOATLIT
 %token <string> VAR
