@@ -6,7 +6,7 @@
 
 /* %token statements... */
 %token ADD SUB MUL DIV MOD POW SEQ
-%token NOT EQ LT GT AND OR
+%token NOT EQ LT GT AND OR EQEQ NEQ
 %token DOT COMMA COLON
 %token LPAREN RPAREN LBRACE RBRACE LBRACK RBRACK
 %token IF THEN ELSE
@@ -19,7 +19,17 @@
 %type <Ast.program> program
 
 /* Associativity and Precedence */
-
+%left SEQ
+%left COMMA COLON
+%right EQ
+%left AND OR
+%left EQEQ NEQ
+%left LT GT
+%left ADD SUB
+%left MUL DIV MOD
+%right POW
+%right NOT
+%left DOT
 
 /* %left, %right, and %nonassoc statements */
 
@@ -40,8 +50,8 @@ expr:
   | expr DIV expr { Binop($1,Div,$3) }
   | expr MOD expr { Binop($1,Mod,$3) }
   | expr POW expr { Binop($1,Pow,$3) }
-  | expr EQ EQ expr { Binop($1,Eq,$3) }
-  | expr NOT EQ expr { Binop($1,Neq,$3) }
+  | expr EQEQ expr { Binop($1,Eq,$3) }
+  | expr NEQ expr { Binop($1,Neq,$3) }
   | expr LT expr { Binop($1,Less,$3) }
   | expr GT expr { Binop($1,Greater,$3) }
   | expr LT EQ expr { Binop($1,LessEq,$3) }
