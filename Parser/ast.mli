@@ -17,7 +17,7 @@ type expr =
 | Uop of uop * expr                         (* uop expr *)
 | Binop of expr * operator * expr           (* expr op expr *)
 | OrderedFxnApp of id * expr list           (* name(expr, ...) *)
-| NamedFxnApp of id * namedArg list         (* name(id=expr, ...) *)
+| NamedFxnApp of id * namedArg list         (* name(id:expr, ...) *)
 | IfElse of expr * expr * expr              (* if expr then expr else expr *)
 | ArrayCon of expr list                     (* [expr, ...] *)
 | AnonStruct of expr list                   (* {expr, ...} *)
