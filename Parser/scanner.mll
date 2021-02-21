@@ -26,6 +26,8 @@ rule token = parse
 | '%'      { MOD }
 | '^'      { POW }
 | ';'      { SEQ }
+| "=="     { EQEQ }
+| "!="     { NEQ }
 | '!'      { NOT }
 | '='      { EQ }
 | '<'      { LT }
