@@ -1,4 +1,4 @@
-type operator = Add | Sub | Mul | Div | Mod | Pow | Eq | Neq | Less | Greater | And | Or | Seq
+type operator = Add | Sub | Mul | Div | Mod | Pow | Eq | Neq | Less | Greater | LessEq | GreaterEq | And | Or | Seq
 
 type uop = Not | Neg
 
@@ -7,7 +7,7 @@ type id = string
 (* type name pair *)
 type argtype = id * id
 (* name=expr pair *)
-type namedArg = id * id
+type namedArg = id * expr
 
 (* all possible expression statements, found in LRM sec 4 *)
 type expr = 
