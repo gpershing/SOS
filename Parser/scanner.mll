@@ -8,6 +8,8 @@
 
 rule token = parse
   [' ' '\t' '\r' '\n'] { token lexbuf }
+| "/*"     { comment 0 lexbuf }           (* Comments *)
+| "//"     { single_comment lexbuf }            (* Single line comments *)
 | '('      { LPAREN }
 | ')'      { RPAREN }
 | '{'      { LBRACE }
@@ -37,3 +39,12 @@ rule token = parse
 | digits '.'  digit* ( ['e' 'E'] ['+' '-']? digits )? as lxm { FLOATLIT(float_of_string xm) }
 | ['a'-'z' 'A'-'Z']['a'-'z' 'A'-'Z' '0'-'9' '_']*     as lxm { VAR(lxm) }
 | eof { EOF }
+
+and comment depth = parse
+  "*/" { if depth==0 then token lexbuf else comment (depth-1) lexbuf }
+| "/*" { comment (depth+1) lexbuf }
+| _    { comment depth lexbuf }
+
+and single_comment = parse
+  '\n' { token lexbuf }
+| _    { single_comment lexbuf }
