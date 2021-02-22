@@ -41,7 +41,7 @@ rule token = parse
 | digits as lxm { INTLIT(int_of_string lxm) } 
 (*| digit+ as lxm { INTLIT(int_of_string lxm) } *)
 | digits '.'  digit* ( ['e' 'E'] ['+' '-']? digits )? as lxm { FLOATLIT(float_of_string xm) }
-(*| digit+ '.'  digit* ( ['e' 'E'] ['+' '-']? digit+ )? as lxm { FLOATLIT(float_of_string lxm) } unsure what 'e' 'E' means*)
+(*| digit+ '.'  digit* ( ['e' 'E'] ['+' '-']? digit )? as lxm { FLOATLIT(float_of_string lxm) }*)
 | ['a'-'z' 'A'-'Z']['a'-'z' 'A'-'Z' '0'-'9' '_']*     as lxm { VAR(lxm) }
 | eof { EOF }
 
