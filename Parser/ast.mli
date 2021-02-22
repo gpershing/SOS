@@ -1,4 +1,11 @@
-type operator = Add | Sub | Mul | Div | Mod | Pow | Eq | Neq | Less | Greater | LessEq | GreaterEq | And | Or | Seq
+type operator = 
+(*num operators*)
+Add | Sub | Mul | Div | Mod | Pow 
+(*relational operators*)
+| Eq | Neq | Less | Greater | LessEq | GreaterEq 
+(*boolean operators*)
+| And | Or 
+
 
 type uop = Not | Neg
 
