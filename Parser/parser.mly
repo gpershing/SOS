@@ -67,6 +67,15 @@ expr:
   | VAR LPAREN args RPAREN { OrderedFxnApp($1,$3) }
   | IF expr THEN expr ELSE expr { IfElse($2,$4,$6) }
   | VAR VAR EQ expr { VarDef($1,$2,$4) }
+  | VAR VAR LPAREN fxn_args RPAREN EQ expr { FxnDef($1,$2,$4,$7) }
+
+fxn_args:
+    /* nothing */ { [] }
+  | fxn_args_list {List.rev $1}
+
+fxn_args_list:
+    VAR VAR { [($1,$3)] }
+  | fxn_args_list COMMA VAR VAR { ($3,$4) :: $1 }
 
 named_args:
     /* nothing */ { [] }
@@ -74,7 +83,7 @@ named_args:
 
 named_args_list:
     VAR COLON expr { [($1,$3)] }
-  | named_args_list COMMA VAR COLON expr { $3 :: $1 }
+  | named_args_list COMMA VAR COLON expr { ($3,$4) :: $1 }
 
 args:
     /* nothing */ { [] }
