@@ -3,6 +3,7 @@
 { open Parser }
 
 (* Definitions *)
+let digit = ['0'-'9']
 
 (* Rules *)
 
