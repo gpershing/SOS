@@ -47,6 +47,8 @@ rule token = parse
 (*| digit+ '.'  digit* ( ['e' 'E'] ['+' '-']? digit )? as lxm { FLOATLIT(float_of_string lxm) }*)
 | ['a'-'z' 'A'-'Z']['a'-'z' 'A'-'Z' '0'-'9' '_']*     as lxm { VAR(lxm) }
 | eof { EOF }
+| _ as char { raise (Failure("illegal character " ^ Char.escaped char)) }
+
 
 and comment depth = parse
   "*/" { if depth==0 then token lexbuf else comment (depth-1) lexbuf }
