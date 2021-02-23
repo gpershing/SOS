@@ -38,6 +38,8 @@ rule token = parse
 | "if"     { IF }
 | "then"   { THEN }
 | "else"   { ELSE }
+| "struct" { STRUCT }
+| "alias"  { ALIAS }
 | digits as lxm { INTLIT(int_of_string lxm) } 
 (*| digit+ as lxm { INTLIT(int_of_string lxm) } *)
 | digits '.'  digit* ( ['e' 'E'] ['+' '-']? digits )? as lxm { FLOATLIT(float_of_string xm) }
