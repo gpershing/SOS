@@ -74,7 +74,7 @@ fxn_args:
   | fxn_args_list {List.rev $1}
 
 fxn_args_list:
-    VAR VAR { [($1,$3)] }
+    VAR VAR { [($1,$2)] }
   | fxn_args_list COMMA VAR VAR { ($3,$4) :: $1 }
 
 named_args:
