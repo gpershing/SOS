@@ -34,8 +34,8 @@ rule token = parse
 | '='      { EQ }
 | '<'      { LT }
 | '>'      { GT }
-| '<='     { LTEQ }
-| '>='     { GTEQ }
+| "<="     { LTEQ }
+| ">="     { GTEQ }
 | "&&"     { AND }
 | "||"     { OR }
 | "if"     { IF }
