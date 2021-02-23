@@ -16,6 +16,8 @@ let rec basic_print prog =
       VarDef(a, b, c) -> a ^ " " ^ b ^ " = " ^ expr_str c
     | FxnDef(a, b, c, d) -> a ^ " " ^ b ^ "(" ^ comma_list_str (fun (a, b) -> a ^ " " ^ b) c ^ ") = " ^ expr_str d
     | Assign(a, b) -> a ^ " = " ^ expr_str b
+    | AssignStruct(a, b, c) -> a ^ "." ^ b ^ " = " ^ expr_str c
+    | AssignArray(a, b, c) -> a^"["^expr_str b ^"] = " expr_str c
     | Uop(a, b) -> let uoperator_str = function Not -> "!" | Neg -> "-" in uoperator_str a ^ expr_str b
     | Binop(a, b, c) -> let operator_str = function
         Add -> "+"
