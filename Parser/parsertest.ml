@@ -1,5 +1,11 @@
 open Ast
 
+let rec comma_list_str f l = match l with
+  [] -> ""
+| hd :: tl -> match tl with
+    [] -> f hd
+  | _ -> f hd ^ ", " ^ comma_list_str f tl
+
 let rec basic_print prog = 
   let rec argtypes_str = function
     [] -> ""
@@ -31,12 +37,12 @@ let rec basic_print prog =
       | Or -> "||"
       | Seq -> ";" in
       "(" ^ expr_str a ^ " " ^ operator_str b ^ " " ^ expr_str c ^ ")"
-    | OrderedFxnApp(a, b) -> a ^ "(" ^ List.fold_left (fun x y -> x ^ ", " ^ expr_str y) "" b ^ ")"
-    | NamedFxnApp(a, b) -> a ^ "(" ^ List.fold_left (fun x y -> let (a, b) = y in x ^ ", " ^ a ^ ":" ^ expr_str b) "" b ^ ")"
+    | OrderedFxnApp(a, b) -> a ^ "(" ^ comma_list_str expr_str b ^ ")"
+    | NamedFxnApp(a, b) -> a ^ "(" ^ comma_list_str (fun x -> let (a, b) = x in a ^":"^ expr_str b) b ^ ")"
     | IfElse(a, b, c) -> "if " ^ expr_str a ^ " then " ^ expr_str b ^ " else " ^ expr_str c
-    | ArrayCon(a) -> "[" ^ List.fold_left (fun x y -> x ^ ", " ^ expr_str y) "" a ^ "]"
-    | AnonStruct(a) -> "{" ^ List.fold_left (fun x y -> x ^ ", " ^ expr_str y) "" a ^ "}"
-    | NamedStruct(a, b) -> a ^ "{" ^ List.fold_left (fun x y -> x ^ ", " ^ expr_str y) "" b ^ "}"
+    | ArrayCon(a) -> "[" ^ comma_list_str expr_str a ^ "]"
+    | AnonStruct(a) -> "{" ^ comma_list_str expr_str a ^ "}"
+    | NamedStruct(a, b) -> a ^ "{" ^ comma_list_str expr_str b ^ "}"
     | Var(a) -> a
     | StructField(a, b) -> a ^ "." ^ b
     | IntLit(i) -> string_of_int i
