@@ -55,8 +55,8 @@ expr:
   | expr NEQ expr { Binop($1,Neq,$3) }
   | expr LT expr { Binop($1,Less,$3) }
   | expr GT expr { Binop($1,Greater,$3) }
-  | expr LT EQ expr { Binop($1,LessEq,$3) }
-  | expr GT EQ expr { Binop($1,GreaterEq,$3) }
+  | expr LT EQ expr { Binop($1,LessEq,$4) }
+  | expr GT EQ expr { Binop($1,GreaterEq,$4) }
   | expr AND expr { Binop($1,And,$3) }
   | expr OR expr { Binop($1,Or,$3) }
   | expr SEQ expr { Binop($1,Seq,$3) }
@@ -75,7 +75,7 @@ fxn_args:
   | fxn_args_list {List.rev $1}
 
 fxn_args_list:
-    VAR VAR { [($1,$3)] }
+    VAR VAR { [($1,$2)] }
   | fxn_args_list COMMA VAR VAR { ($3,$4) :: $1 }
 
 named_args:
@@ -84,7 +84,7 @@ named_args:
 
 named_args_list:
     VAR COLON expr { [($1,$3)] }
-  | named_args_list COMMA VAR COLON expr { ($3,$4) :: $1 }
+  | named_args_list COMMA VAR COLON expr { ($3,$5) :: $1 }
 
 args:
     /* nothing */ { [] }
