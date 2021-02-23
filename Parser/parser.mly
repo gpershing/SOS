@@ -97,3 +97,14 @@ args_list:
 typedef:
     ALIAS VAR EQ VAR { Alias($2,$4) }
   | STRUCT VAR EQ LBRACE fxn_args_list RBRACE { StructDef($2,$5) }
+
+stmt:
+    typedef { Typedef($1) }
+  | expr { Expression($1) }
+
+stmts:
+    stmt { [$1] }
+  | stmts stmt { $2:: $1 }
+
+program:
+    stmts EOF { List.rev $1 }
