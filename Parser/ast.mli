@@ -24,6 +24,8 @@ and expr =
   VarDef of tid * id * expr                (* type name = val *)
 | FxnDef of tid * id * argtype list * expr (* type id (type name, ...) = val *)
 | Assign of id * expr                      (* id = val *)
+| AssignStruct of id * id * expr           (* id.field = val *)
+| AssignArray of id * expr * expr          (* id[expr] = expr *)
 | Uop of uop * expr                        (* uop expr *)
 | Binop of expr * operator * expr          (* expr op expr *)
 | OrderedFxnApp of id * expr list          (* name(expr, ...) *)
