@@ -6,7 +6,7 @@
 
 /* %token statements... */
 %token ADD SUB MUL DIV MOD POW SEQ
-%token NOT EQ LT GT AND OR EQEQ NEQ
+%token NOT EQ LT GT LTEQ GTEQ EQEQ NEQ AND OR
 %token DOT COMMA COLON
 %token LPAREN RPAREN LBRACE RBRACE LBRACK RBRACK
 %token IF THEN ELSE
@@ -25,7 +25,7 @@
 %right EQ
 %left AND OR
 %left EQEQ NEQ
-%left LT GT
+%left LT GT LTEQ GTEQ
 %left ADD SUB
 %left MUL DIV MOD
 %right POW
@@ -55,8 +55,8 @@ expr:
   | expr NEQ expr { Binop($1,Neq,$3) }
   | expr LT expr { Binop($1,Less,$3) }
   | expr GT expr { Binop($1,Greater,$3) }
-  | expr LT EQ expr { Binop($1,LessEq,$4) }
-  | expr GT EQ expr { Binop($1,GreaterEq,$4) }
+  | expr LTEQ expr { Binop($1,LessEq,$4) }
+  | expr GTEQ expr { Binop($1,GreaterEq,$4) }
   | expr AND expr { Binop($1,And,$3) }
   | expr OR expr { Binop($1,Or,$3) }
   | expr SEQ expr { Binop($1,Seq,$3) }
