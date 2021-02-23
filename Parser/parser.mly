@@ -68,6 +68,7 @@ expr:
   | VAR LPAREN args RPAREN { OrderedFxnApp($1,$3) }
   | IF expr THEN expr ELSE expr { IfElse($2,$4,$6) }
   | VAR VAR EQ expr { VarDef($1,$2,$4) }
+  | VAR EQ expr { Assign($1, $3) }
   | VAR VAR LPAREN fxn_args RPAREN EQ expr { FxnDef($1,$2,$4,$7) }
 
 fxn_args:
