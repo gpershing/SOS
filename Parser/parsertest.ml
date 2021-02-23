@@ -7,17 +7,14 @@ let rec comma_list_str f l = match l with
   | _ -> f hd ^ ", " ^ comma_list_str f tl
 
 let rec basic_print prog = 
-  let rec argtypes_str = function
-    [] -> ""
-  | (a, b) :: tl -> a ^ " " ^ b ^ ", " ^ argtypes_str tl in
   let print_stmt = function
     Typedef(t) -> let print_tdef = function
       Alias(a, b) -> print_endline ("alias " ^ a ^ " " ^ b)
-    | StructDef(a, b) -> print_endline ("struct " ^ a ^ " = {" ^ argtypes_str b ^ "}")
+    | StructDef(a, b) -> print_endline ("struct " ^ a ^ " = {" ^ comma_list_str (fun (a, b) -> a ^ " " ^ b) b ^ "}")
     in print_tdef t
   | Expression(e) -> let rec expr_str = function
       VarDef(a, b, c) -> a ^ " " ^ b ^ " = " ^ expr_str c
-    | FxnDef(a, b, c, d) -> a ^ " " ^ b ^ "(" ^ argtypes_str c ^ ") = " ^ expr_str d
+    | FxnDef(a, b, c, d) -> a ^ " " ^ b ^ "(" ^ comma_list_str (fun (a, b) -> a ^ " " ^ b) c ^ ") = " ^ expr_str d
     | Assign(a, b) -> a ^ " = " ^ expr_str b
     | Uop(a, b) -> let uoperator_str = function Not -> "!" | Neg -> "-" in uoperator_str a ^ expr_str b
     | Binop(a, b, c) -> let operator_str = function
