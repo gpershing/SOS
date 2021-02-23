@@ -5,6 +5,8 @@ Add | Sub | Mul | Div | Mod | Pow
 | Eq | Neq | Less | Greater | LessEq | GreaterEq 
 (*boolean operators*)
 | And | Or 
+(*sequencing*)
+| Seq
 
 
 type uop = Not | Neg
@@ -18,7 +20,7 @@ type argtype = id * id
 type namedArg = id * expr
 
 (* all possible expression statements, found in LRM sec 4 *)
-type expr = 
+and expr = 
   VarDef of tid * id * expr                (* type name = val *)
 | FxnDef of tid * id * argtype list * expr (* type id (type name, ...) = val *)
 | Assign of id * expr                      (* id = val *)

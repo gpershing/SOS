@@ -1,6 +1,6 @@
 # builds a ./test executable
 test : parser.cmo scanner.cmo parsertest.cmo
-	ocamlc -o calc $^
+	ocamlc -o test $^
 
 %.cmo : %.ml
 	ocamlc -c $<
@@ -21,3 +21,7 @@ parser.cmo : ast.cmi parser.cmi
 parser.cmx : ast.cmi parser.cmi
 scanner.cmo : parser.cmi
 scanner.cmx : parser.cmx
+
+.PHONY : clean
+clean :
+	rm -rf *.cmi *.cmo parser.ml parser.mli scanner.ml test
