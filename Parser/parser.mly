@@ -10,6 +10,7 @@
 %token DOT COMMA COLON
 %token LPAREN RPAREN LBRACE RBRACE LBRACK RBRACK
 %token IF THEN ELSE
+%token STRUCT ALIAS
 %token <int> INTLIT
 %token <float> FLOATLIT
 %token <string> VAR
@@ -54,8 +55,8 @@ expr:
   | expr NEQ expr { Binop($1,Neq,$3) }
   | expr LT expr { Binop($1,Less,$3) }
   | expr GT expr { Binop($1,Greater,$3) }
-  | expr LT EQ expr { Binop($1,LessEq,$4) }
-  | expr GT EQ expr { Binop($1,GreaterEq,$4) }
+  | expr LT EQ expr { Binop($1,LessEq,$3) }
+  | expr GT EQ expr { Binop($1,GreaterEq,$3) }
   | expr AND expr { Binop($1,And,$3) }
   | expr OR expr { Binop($1,Or,$3) }
   | expr SEQ expr { Binop($1,Seq,$3) }
@@ -74,7 +75,7 @@ fxn_args:
   | fxn_args_list {List.rev $1}
 
 fxn_args_list:
-    VAR VAR { [($1,$2)] }
+    VAR VAR { [($1,$3)] }
   | fxn_args_list COMMA VAR VAR { ($3,$4) :: $1 }
 
 named_args:
@@ -92,3 +93,7 @@ args:
 args_list:
     expr { [$1] }
   | args_list COMMA expr { $3 :: $1 }
+
+typedef:
+    ALIAS VAR EQ VAR { Alias($2,$4) }
+  | STRUCT VAR EQ LBRACE fxn_args_list RBRACE { StructDef($2,$5) }
