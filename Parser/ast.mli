@@ -37,7 +37,7 @@ type expr =
 
 type typedef = 
   Alias of tid * tid                       (* alias name = type *)
-| StructDef of id * argtypes               (* struct name = {type name, ...} *)
+| StructDef of id * argtype list           (* struct name = {type name, ...} *)
 
 type stmt = 
   Typedef of typedef
