@@ -22,7 +22,7 @@
 /* Associativity and Precedence */
 %left SEQ
 %nonassoc IF THEN ELSE
-%left COMMA COLON
+%left COLON COMMA 
 %right EQ
 %left AND OR
 %left EQEQ NEQ
@@ -30,20 +30,23 @@
 %left ADD SUB
 %left MUL DIV MOD
 %right POW
-%left LBRACK    /* not exactly sure how to handle this */
+%nonassoc LBRACK RBRACK LPAREN RPAREN LBRACE RBRACE
 %right NOT
-%left DOT
+%left DOT VAR
 
 %%
 
 /* rules */
 
 expr:
-    INTLIT { IntLit($1) }
+    VAR DOT VAR EQ expr { AssignStruct($1, $3, $5) }
+  | VAR LBRACK expr RBRACK EQ expr { AssignArray($1, $3, $6) }
+  | VAR EQ expr { Assign($1, $3) }
+  | VAR VAR EQ expr { VarDef($1,$2,$4) }
+  | VAR VAR LPAREN fxn_args RPAREN EQ expr { FxnDef($1,$2,$4,$7) }
+  | INTLIT { IntLit($1) }
   | FLOATLIT { FloatLit($1) }
   | VAR { Var($1) }
-  | VAR DOT VAR EQ expr { AssignStruct($1, $3, $5) }
-  | VAR LBRACK expr RBRACK EQ expr { AssignArray($1, $3, $6) }
   | VAR DOT VAR { StructField($1,$3) }
   | NOT expr { Uop(Not,$2) }
   | SUB expr { Uop(Neg,$2) }
@@ -69,9 +72,7 @@ expr:
   | VAR LPAREN named_args RPAREN { NamedFxnApp($1,$3) }
   | VAR LPAREN args RPAREN { OrderedFxnApp($1,$3) }
   | IF expr THEN expr ELSE expr { IfElse($2,$4,$6) }
-  | VAR VAR EQ expr { VarDef($1,$2,$4) }
-  | VAR EQ expr { Assign($1, $3) }
-  | VAR VAR LPAREN fxn_args RPAREN EQ expr { FxnDef($1,$2,$4,$7) }
+/*  | stexpr { $1 }*/
 
 fxn_args:
     /* nothing */ { [] }
