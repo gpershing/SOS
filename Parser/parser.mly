@@ -34,25 +34,27 @@
 %nonassoc LBRACK RBRACK LPAREN RPAREN LBRACE RBRACE
 %right NOT
 %left DOT VAR
-%nonassoc USUB
 
 
 %%
 
 /* rules */
 
-expr:
+
+stexpr:
     VAR DOT VAR EQ expr { AssignStruct($1, $3, $5) }
   | VAR LBRACK expr RBRACK EQ expr { AssignArray($1, $3, $6) }
   | VAR EQ expr { Assign($1, $3) }
   | VAR VAR EQ expr { VarDef($1,$2,$4) }
   | VAR VAR LPAREN fxn_args RPAREN EQ expr { FxnDef($1,$2,$4,$7) }
-  | INTLIT { IntLit($1) }
+  
+expr:
+    INTLIT { IntLit($1) }
   | FLOATLIT { FloatLit($1) }
   | VAR { Var($1) }
   | VAR DOT VAR { StructField($1,$3) }
   | NOT expr { Uop(Not,$2) }
-  | SUB expr %prec USUB { Uop(Neg,$2) }
+  | SUB expr { Uop(Neg,$2) }
   | expr ADD expr { Binop($1,Add,$3) }
   | expr SUB expr { Binop($1,Sub,$3) }
   | expr MUL expr { Binop($1,Mul,$3) }
@@ -72,12 +74,9 @@ expr:
   | VAR LBRACE args RBRACE { NamedStruct($1, $3) }
   | LBRACE args RBRACE { AnonStruct($2) }
   | LBRACK args RBRACK { ArrayCon($2) }
-/*  | VAR LPAREN named_args RPAREN { NamedFxnApp($1,$3) }
-  | VAR LPAREN args RPAREN { OrderedFxnApp($1,$3) }*/
   | VAR LPAREN either_args RPAREN { FxnApp($1, $3) }
   | IF expr THEN expr ELSE expr { IfElse($2,$4,$6) }
-
-/*  | stexpr { $1 }*/
+  | stexpr { $1 }
 
 either_args:
   | VARCOLON expr COMMA named_args { NamedFxnArgs (($1, $2) :: $4) }
@@ -113,7 +112,7 @@ typedef:
 
 stmt:
     typedef { Typedef($1) }
-  | expr { Expression($1) }
+  | stexpr { Expression($1) }
 
 stmts:
     stmt { [$1] }
