@@ -34,6 +34,8 @@
 %nonassoc LBRACK RBRACK LPAREN RPAREN LBRACE RBRACE
 %right NOT
 %left DOT VAR
+%nonassoc USUB
+
 
 %%
 
@@ -50,7 +52,7 @@ expr:
   | VAR { Var($1) }
   | VAR DOT VAR { StructField($1,$3) }
   | NOT expr { Uop(Not,$2) }
-  | SUB expr { Uop(Neg,$2) }
+  | SUB expr %prec USUB { Uop(Neg,$2) }
   | expr ADD expr { Binop($1,Add,$3) }
   | expr SUB expr { Binop($1,Sub,$3) }
   | expr MUL expr { Binop($1,Mul,$3) }
@@ -74,6 +76,7 @@ expr:
   | VAR LPAREN args RPAREN { OrderedFxnApp($1,$3) }*/
   | VAR LPAREN either_args RPAREN { FxnApp($1, $3) }
   | IF expr THEN expr ELSE expr { IfElse($2,$4,$6) }
+
 /*  | stexpr { $1 }*/
 
 either_args:
