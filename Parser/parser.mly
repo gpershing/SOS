@@ -47,6 +47,8 @@ stexpr:
   | VAR EQ expr { Assign($1, $3) }
   | VAR VAR EQ expr { VarDef($1,$2,$4) }
   | VAR VAR LPAREN fxn_args RPAREN EQ expr { FxnDef($1,$2,$4,$7) }
+  | VAR LPAREN either_args RPAREN { FxnApp($1, $3) }
+  | IF expr THEN expr ELSE expr { IfElse($2,$4,$6) }
   
 expr:
     INTLIT { IntLit($1) }
@@ -74,8 +76,6 @@ expr:
   | VAR LBRACE args RBRACE { NamedStruct($1, $3) }
   | LBRACE args RBRACE { AnonStruct($2) }
   | LBRACK args RBRACK { ArrayCon($2) }
-  | VAR LPAREN either_args RPAREN { FxnApp($1, $3) }
-  | IF expr THEN expr ELSE expr { IfElse($2,$4,$6) }
   | stexpr { $1 }
 
 either_args:
