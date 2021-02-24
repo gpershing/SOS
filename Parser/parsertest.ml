@@ -17,7 +17,7 @@ let rec basic_print prog =
     | FxnDef(a, b, c, d) -> a ^ " " ^ b ^ "(" ^ comma_list_str (fun (a, b) -> a ^ " " ^ b) c ^ ") = " ^ expr_str d
     | Assign(a, b) -> a ^ " = " ^ expr_str b
     | AssignStruct(a, b, c) -> a ^ "." ^ b ^ " = " ^ expr_str c
-    | AssignArray(a, b, c) -> a^"["^expr_str b ^"] = " expr_str c
+    | AssignArray(a, b, c) -> a^"["^expr_str b ^"] = "^ expr_str c
     | Uop(a, b) -> let uoperator_str = function Not -> "!" | Neg -> "-" in uoperator_str a ^ expr_str b
     | Binop(a, b, c) -> let operator_str = function
         Add -> "+"
@@ -36,8 +36,9 @@ let rec basic_print prog =
       | Or -> "||"
       | Seq -> ";" in
       "(" ^ expr_str a ^ " " ^ operator_str b ^ " " ^ expr_str c ^ ")"
-    | OrderedFxnApp(a, b) -> a ^ "(" ^ comma_list_str expr_str b ^ ")"
-    | NamedFxnApp(a, b) -> a ^ "(" ^ comma_list_str (fun x -> let (a, b) = x in a ^":"^ expr_str b) b ^ ")"
+    | FxnApp(a, c) -> (match c with
+        OrderedFxnArgs(b) -> a ^ "(" ^ comma_list_str expr_str b ^ ")"
+      | NamedFxnArgs(b) -> a ^ "(" ^ comma_list_str (fun x -> let (a, b) = x in a ^":"^ expr_str b) b ^ ")")
     | IfElse(a, b, c) -> "if " ^ expr_str a ^ " then " ^ expr_str b ^ " else " ^ expr_str c
     | ArrayCon(a) -> "[" ^ comma_list_str expr_str a ^ "]"
     | AnonStruct(a) -> "{" ^ comma_list_str expr_str a ^ "}"

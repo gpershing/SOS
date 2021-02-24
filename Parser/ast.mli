@@ -28,8 +28,9 @@ and expr =
 | AssignArray of id * expr * expr          (* id[expr] = expr *)
 | Uop of uop * expr                        (* uop expr *)
 | Binop of expr * operator * expr          (* expr op expr *)
-| OrderedFxnApp of id * expr list          (* name(expr, ...) *)
-| NamedFxnApp of id * namedArg list        (* name(id:expr, ...) *)
+(*| OrderedFxnApp of id * expr list          (* name(expr, ...) *)
+| NamedFxnApp of id * namedArg list  *)      (* name(id:expr, ...) *)
+| FxnApp of id * fxnargs
 | IfElse of expr * expr * expr             (* if expr then expr else expr *)
 | ArrayCon of expr list                    (* [expr, ...] *)
 | AnonStruct of expr list                  (* {expr, ...} *)
@@ -38,6 +39,10 @@ and expr =
 | StructField of id * id                   (* name.id *)
 | IntLit of int                            (* int *)
 | FloatLit of float                        (* float *)
+
+and fxnargs = 
+  OrderedFxnArgs of expr list
+| NamedFxnArgs of namedArg list
 
 type typedef = 
   Alias of tid * tid                       (* alias name = type *)

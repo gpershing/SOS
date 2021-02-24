@@ -7,13 +7,14 @@
 /* %token statements... */
 %token ADD SUB MUL DIV MOD POW SEQ
 %token NOT EQ LT GT LTEQ GTEQ EQEQ NEQ AND OR
-%token DOT COMMA COLON
+%token DOT COMMA
 %token LPAREN RPAREN LBRACE RBRACE LBRACK RBRACK
 %token IF THEN ELSE
 %token STRUCT ALIAS
 %token <int> INTLIT
 %token <float> FLOATLIT
 %token <string> VAR
+%token <string> VARCOLON
 %token EOF
 
 %start program
@@ -22,7 +23,7 @@
 /* Associativity and Precedence */
 %left SEQ
 %nonassoc IF THEN ELSE
-%left COLON COMMA 
+%left COMMA 
 %right EQ
 %left AND OR
 %left EQEQ NEQ
@@ -69,10 +70,15 @@ expr:
   | VAR LBRACE args RBRACE { NamedStruct($1, $3) }
   | LBRACE args RBRACE { AnonStruct($2) }
   | LBRACK args RBRACK { ArrayCon($2) }
-  | VAR LPAREN named_args RPAREN { NamedFxnApp($1,$3) }
-  | VAR LPAREN args RPAREN { OrderedFxnApp($1,$3) }
+/*  | VAR LPAREN named_args RPAREN { NamedFxnApp($1,$3) }
+  | VAR LPAREN args RPAREN { OrderedFxnApp($1,$3) }*/
+  | VAR LPAREN either_args RPAREN { FxnApp($1, $3) }
   | IF expr THEN expr ELSE expr { IfElse($2,$4,$6) }
 /*  | stexpr { $1 }*/
+
+either_args:
+  | VARCOLON expr COMMA named_args { NamedFxnArgs (($1, $2) :: $4) }
+  | args { OrderedFxnArgs ($1) }
 
 fxn_args:
     /* nothing */ { [] }
@@ -87,8 +93,8 @@ named_args:
   | named_args_list {List.rev $1}
 
 named_args_list:
-    VAR COLON expr { [($1,$3)] }
-  | named_args_list COMMA VAR COLON expr { ($3,$5) :: $1 }
+    VARCOLON expr { [($1,$2)] }
+  | named_args_list COMMA VARCOLON expr { ($3,$4) :: $1 }
 
 args:
     /* nothing */ { [] }
