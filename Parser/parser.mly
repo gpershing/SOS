@@ -7,13 +7,14 @@
 /* %token statements... */
 %token ADD SUB MUL DIV MOD POW SEQ
 %token NOT EQ LT GT LTEQ GTEQ EQEQ NEQ AND OR
-%token DOT COMMA COLON
+%token DOT COMMA
 %token LPAREN RPAREN LBRACE RBRACE LBRACK RBRACK
 %token IF THEN ELSE
 %token STRUCT ALIAS
 %token <int> INTLIT
 %token <float> FLOATLIT
 %token <string> VAR
+%token <string> VARCOLON
 %token EOF
 
 %start program
@@ -21,7 +22,8 @@
 
 /* Associativity and Precedence */
 %left SEQ
-%left COMMA COLON
+%nonassoc IF THEN ELSE
+%left COMMA 
 %right EQ
 %left AND OR
 %left EQEQ NEQ
@@ -29,20 +31,23 @@
 %left ADD SUB
 %left MUL DIV MOD
 %right POW
-%left LBRACK    /* not exactly sure how to handle this */
+%nonassoc LBRACK RBRACK LPAREN RPAREN LBRACE RBRACE
 %right NOT
-%left DOT
+%left DOT VAR
 
 %%
 
 /* rules */
 
 expr:
-    INTLIT { IntLit($1) }
+    VAR DOT VAR EQ expr { AssignStruct($1, $3, $5) }
+  | VAR LBRACK expr RBRACK EQ expr { AssignArray($1, $3, $6) }
+  | VAR EQ expr { Assign($1, $3) }
+  | VAR VAR EQ expr { VarDef($1,$2,$4) }
+  | VAR VAR LPAREN fxn_args RPAREN EQ expr { FxnDef($1,$2,$4,$7) }
+  | INTLIT { IntLit($1) }
   | FLOATLIT { FloatLit($1) }
   | VAR { Var($1) }
-  | VAR DOT VAR EQ expr { AssignStruct($1, $3, $5) }
-  | VAR LBRACK expr RBRACK EQ expr { AssignArray($1, $3, $6) }
   | VAR DOT VAR { StructField($1,$3) }
   | NOT expr { Uop(Not,$2) }
   | SUB expr { Uop(Neg,$2) }
@@ -56,8 +61,8 @@ expr:
   | expr NEQ expr { Binop($1,Neq,$3) }
   | expr LT expr { Binop($1,Less,$3) }
   | expr GT expr { Binop($1,Greater,$3) }
-  | expr LTEQ expr { Binop($1,LessEq,$4) }
-  | expr GTEQ expr { Binop($1,GreaterEq,$4) }
+  | expr LTEQ expr { Binop($1,LessEq,$3) }
+  | expr GTEQ expr { Binop($1,GreaterEq,$3) }
   | expr AND expr { Binop($1,And,$3) }
   | expr OR expr { Binop($1,Or,$3) }
   | expr SEQ expr { Binop($1,Seq,$3) }
@@ -65,12 +70,15 @@ expr:
   | VAR LBRACE args RBRACE { NamedStruct($1, $3) }
   | LBRACE args RBRACE { AnonStruct($2) }
   | LBRACK args RBRACK { ArrayCon($2) }
-  | VAR LPAREN named_args RPAREN { NamedFxnApp($1,$3) }
-  | VAR LPAREN args RPAREN { OrderedFxnApp($1,$3) }
+/*  | VAR LPAREN named_args RPAREN { NamedFxnApp($1,$3) }
+  | VAR LPAREN args RPAREN { OrderedFxnApp($1,$3) }*/
+  | VAR LPAREN either_args RPAREN { FxnApp($1, $3) }
   | IF expr THEN expr ELSE expr { IfElse($2,$4,$6) }
-  | VAR VAR EQ expr { VarDef($1,$2,$4) }
-  | VAR EQ expr { Assign($1, $3) }
-  | VAR VAR LPAREN fxn_args RPAREN EQ expr { FxnDef($1,$2,$4,$7) }
+/*  | stexpr { $1 }*/
+
+either_args:
+  | VARCOLON expr COMMA named_args { NamedFxnArgs (($1, $2) :: $4) }
+  | args { OrderedFxnArgs ($1) }
 
 fxn_args:
     /* nothing */ { [] }
@@ -85,8 +93,8 @@ named_args:
   | named_args_list {List.rev $1}
 
 named_args_list:
-    VAR COLON expr { [($1,$3)] }
-  | named_args_list COMMA VAR COLON expr { ($3,$5) :: $1 }
+    VARCOLON expr { [($1,$2)] }
+  | named_args_list COMMA VARCOLON expr { ($3,$4) :: $1 }
 
 args:
     /* nothing */ { [] }

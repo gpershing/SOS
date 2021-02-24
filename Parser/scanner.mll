@@ -20,7 +20,6 @@ rule token = parse
 | ']'      { RBRACK }
 | ','      { COMMA }
 | '.'      { DOT }
-| ':'      { COLON }
 | '+'      { ADD }
 | '-'      { SUB }
 | '*'      { MUL }
@@ -47,6 +46,7 @@ rule token = parse
 (*| digit+ as lxm { INTLIT(int_of_string lxm) } *)
 | digits '.'  digit* ( ['e' 'E'] ['+' '-']? digits )? as lxm { FLOATLIT(float_of_string lxm) }
 (*| digit+ '.'  digit* ( ['e' 'E'] ['+' '-']? digit )? as lxm { FLOATLIT(float_of_string lxm) }*)
+| ['a'-'z' 'A'-'Z']['a'-'z' 'A'-'Z' '0'-'9' '_']*[' ' '\t']*':' as lxm { VARCOLON(String.trim (String.sub lxm 0 ((String.length lxm)-1))) }
 | ['a'-'z' 'A'-'Z']['a'-'z' 'A'-'Z' '0'-'9' '_']*     as lxm { VAR(lxm) }
 | eof { EOF }
 | _ as char { raise (Failure("illegal character " ^ Char.escaped char)) }
