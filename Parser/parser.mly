@@ -11,6 +11,7 @@
 %token LPAREN RPAREN LBRACE RBRACE LBRACK RBRACK
 %token IF THEN ELSE
 %token STRUCT ALIAS
+%token IMPORT NEWLINE
 %token <int> INTLIT
 %token <float> FLOATLIT
 %token <string> VAR
@@ -113,6 +114,7 @@ typedef:
 stmt:
     typedef { Typedef($1) }
   | stexpr { Expression($1) }
+  | IMPORT VAR NEWLINE { Import($2) }
 
 stmts:
     stmt { [$1] }

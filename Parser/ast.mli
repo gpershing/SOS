@@ -13,6 +13,7 @@ type uop = Not | Neg
 
 type id = string (* non-type id *)
 type tid = string (* type id *)
+type import = string
 
 (* type name pair *)
 type argtype = id * id
@@ -51,5 +52,6 @@ type typedef =
 type stmt = 
   Typedef of typedef
 | Expression of expr
+| Import of import
 
 type program = stmt list

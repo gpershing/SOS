@@ -1,6 +1,10 @@
 *.cmi
 *.cmo
+
 parser.ml
 parser.mli
+parser.conflicts
+parser.output
+
 scanner.ml
 test
