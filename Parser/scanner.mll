@@ -43,7 +43,6 @@ rule token = parse
 | "struct" { STRUCT }
 | "alias"  { ALIAS }
 | "import" { IMPORT }
-| "\n"     { NEWLINE }
 | digits as lxm { INTLIT(int_of_string lxm) } 
 | digits '.'  digit* ( ['e' 'E'] ['+' '-']? digits )? as lxm { FLOATLIT(float_of_string lxm) }
 | ['a'-'z' 'A'-'Z']['a'-'z' 'A'-'Z' '0'-'9' '_']*[' ' '\t']*':' as lxm { VARCOLON(String.trim (String.sub lxm 0 ((String.length lxm)-1))) }

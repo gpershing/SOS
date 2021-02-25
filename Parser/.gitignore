@@ -5,6 +5,7 @@ parser.ml
 parser.mli
 parser.conflicts
 parser.output
+**/parser.output
 
 scanner.ml
 test
