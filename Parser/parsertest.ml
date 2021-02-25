@@ -12,7 +12,7 @@ let rec basic_print prog =
       Alias(a, b) -> print_endline ("alias " ^ a ^ " " ^ b)
     | StructDef(a, b) -> print_endline ("struct " ^ a ^ " = {" ^ comma_list_str (fun (a, b) -> a ^ " " ^ b) b ^ "}")
     in print_tdef t
-    | Import(f) -> print_endline("import" ^ f ^ "\n")
+    | Import(f) -> print_endline("import " ^ f)
   | Expression(e) -> let rec expr_str = function
       VarDef(a, b, c) -> a ^ " " ^ b ^ " = " ^ expr_str c
     | FxnDef(a, b, c, d) -> a ^ " " ^ b ^ "(" ^ comma_list_str (fun (a, b) -> a ^ " " ^ b) c ^ ") = " ^ expr_str d
