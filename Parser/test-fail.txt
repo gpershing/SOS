@@ -1,0 +1,9 @@
+int pow(int:n, int:m) = n^m
+int pow(n, m) = n^m
+struct point = {float:x_pos, float:y_pos}
+struct point = (float x, float y)
+arr(1) = 1.2
+int c = +5
+int c = *5
+int temp = 1*/4
+int var3 = if x+5 then
