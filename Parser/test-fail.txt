@@ -1,3 +1,4 @@
+import 5
 int pow(int:n, int:m) = n^m
 int pow(n, m) = n^m
 struct point = {float:x_pos, float:y_pos}
