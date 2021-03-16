@@ -92,8 +92,8 @@ fxn_args:
   | fxn_args_list {List.rev $1}
 
 fxn_args_list:
-    VAR VAR { [($1,$2)] }
-  | fxn_args_list COMMA VAR VAR { ($3,$4) :: $1 }
+    typeid VAR { [($1,$2)] }
+  | fxn_args_list COMMA typeid VAR { ($3,$4) :: $1 }
 
 named_args:
     /* nothing */ { [] }
@@ -113,7 +113,7 @@ args_list:
 
 typedef:
     ALIAS typeid EQ typeid { Alias($2,$4) }
-  | STRUCT VAR EQ LBRACE fxn_args_list RBRACE { StructDef($2,$5) }
+  | STRUCT VAR EQ LBRACE fxn_args RBRACE { StructDef($2,$5) }
 
 stmt:
     typedef { Typedef($1) }

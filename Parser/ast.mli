@@ -18,7 +18,7 @@ type tid = (* type id *)
 type import = string
 
 (* type name pair *)
-type argtype = id * id
+type argtype = tid * id
 (* name:expr pair *)
 type namedArg = id * expr
 
