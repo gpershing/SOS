@@ -6,16 +6,20 @@ let rec comma_list_str f l = match l with
     [] -> f hd
   | _ -> f hd ^ ", " ^ comma_list_str f tl
 
+let rec typeid_str t = match t with
+  TypeID(s) -> s
+| ArrayTypeID(p) -> "array " ^ typeid_str p
+
 let rec basic_print prog = 
   let print_stmt = function
     Typedef(t) -> let print_tdef = function
-      Alias(a, b) -> print_endline ("alias " ^ a ^ " " ^ b)
+      Alias(a, b) -> print_endline ("alias " ^ typeid_str(a) ^ " " ^ typeid_str(b))
     | StructDef(a, b) -> print_endline ("struct " ^ a ^ " = {" ^ comma_list_str (fun (a, b) -> a ^ " " ^ b) b ^ "}")
     in print_tdef t
     | Import(f) -> print_endline("import " ^ f)
   | Expression(e) -> let rec expr_str = function
-      VarDef(a, b, c) -> a ^ " " ^ b ^ " = " ^ expr_str c
-    | FxnDef(a, b, c, d) -> a ^ " " ^ b ^ "(" ^ comma_list_str (fun (a, b) -> a ^ " " ^ b) c ^ ") = " ^ expr_str d
+      VarDef(a, b, c) -> typeid_str(a) ^ " " ^ b ^ " = " ^ expr_str c
+    | FxnDef(a, b, c, d) -> typeid_str(a) ^ " " ^ b ^ "(" ^ comma_list_str (fun (a, b) -> a ^ " " ^ b) c ^ ") = " ^ expr_str d
     | Assign(a, b) -> a ^ " = " ^ expr_str b
     | AssignStruct(a, b, c) -> a ^ "." ^ b ^ " = " ^ expr_str c
     | AssignArray(a, b, c) -> a^"["^expr_str b ^"] = "^ expr_str c

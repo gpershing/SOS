@@ -12,7 +12,9 @@ Add | Sub | Mul | Div | Mod | Pow
 type uop = Not | Neg
 
 type id = string (* non-type id *)
-type tid = string (* type id *)
+type tid = (* type id *)
+  TypeID of string
+| ArrayTypeID of tid
 type import = string
 
 (* type name pair *)
@@ -35,7 +37,7 @@ and expr =
 | IfElse of expr * expr * expr             (* if expr then expr else expr *)
 | ArrayCon of expr list                    (* [expr, ...] *)
 | AnonStruct of expr list                  (* {expr, ...} *)
-| NamedStruct of tid * expr list           (* name{expr, ...} *)
+| NamedStruct of id * expr list           (* name{expr, ...} *)
 | Var of id                                (* name *)
 | StructField of id * id                   (* name.id *)
 | IntLit of int                            (* int *)

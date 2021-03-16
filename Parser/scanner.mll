@@ -42,6 +42,7 @@ rule token = parse
 | "else"   { ELSE }
 | "struct" { STRUCT }
 | "alias"  { ALIAS }
+| "array"  { ARRAY }
 | "import" { IMPORT }
 | digits as lxm { INTLIT(int_of_string lxm) } 
 | digits '.'  digit* ( ['e' 'E'] ['+' '-']? digits )? as lxm { FLOATLIT(float_of_string lxm) }

@@ -10,7 +10,7 @@
 %token DOT COMMA
 %token LPAREN RPAREN LBRACE RBRACE LBRACK RBRACK
 %token IF THEN ELSE
-%token STRUCT ALIAS
+%token STRUCT ALIAS ARRAY
 %token IMPORT
 %token <int> INTLIT
 %token <float> FLOATLIT
@@ -40,14 +40,18 @@
 %%
 
 /* rules */
-
+typeid:
+    VAR { TypeID($1) }
+  | ARRAY typeid { ArrayTypeID($2) }
 
 stexpr:
     VAR DOT VAR EQ expr { AssignStruct($1, $3, $5) }
   | VAR LBRACK expr RBRACK EQ expr { AssignArray($1, $3, $6) }
   | VAR EQ expr { Assign($1, $3) }
-  | VAR VAR EQ expr { VarDef($1,$2,$4) }
-  | VAR VAR LPAREN fxn_args RPAREN EQ expr { FxnDef($1,$2,$4,$7) }
+  | VAR VAR EQ expr { VarDef(TypeID($1),$2,$4) }
+  | ARRAY typeid VAR EQ expr { VarDef(ArrayTypeID($2), $3, $5) }
+  | VAR VAR LPAREN fxn_args RPAREN EQ expr { FxnDef(TypeID($1),$2,$4,$7) }
+  | ARRAY typeid VAR LPAREN fxn_args RPAREN EQ expr { FxnDef(ArrayTypeID($2), $3, $5, $8) }
   | VAR LPAREN either_args RPAREN { FxnApp($1, $3) }
   | IF expr THEN expr ELSE expr { IfElse($2,$4,$6) }
   
@@ -108,7 +112,7 @@ args_list:
   | args_list COMMA expr { $3 :: $1 }
 
 typedef:
-    ALIAS VAR EQ VAR { Alias($2,$4) }
+    ALIAS typeid EQ typeid { Alias($2,$4) }
   | STRUCT VAR EQ LBRACE fxn_args_list RBRACE { StructDef($2,$5) }
 
 stmt:
