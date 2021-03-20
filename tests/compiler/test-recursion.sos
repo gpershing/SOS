@@ -1,0 +1,7 @@
+int add(int n) = 
+if n == 0
+then 0
+else add(n-1) + n
+
+int x = 5
+x = add(x)

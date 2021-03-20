@@ -1,0 +1,8 @@
+struct more = {int field1}
+
+struct stuff = {int field1, more field2}
+
+more temp1 = {2}
+stuff temp2 = {1, temp1}
+
+stuff.field2.more = 5

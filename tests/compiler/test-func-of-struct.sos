@@ -1,0 +1,28 @@
+//predefining struct in outer scope
+struct normal = {int field}
+
+normal func1(int x) = 
+    normal temp = {x}; temp
+
+//defining struct in function with known expression return type
+int func2(int x) = 
+    struct s = {int field};
+    s temp = {field:x};
+    s.field
+
+//defining struct in function function return type of that struct
+s func3(int x) = 
+    struct s = {int field};
+    s temp = {x};
+    s
+
+//fancy
+struct outer = {
+    int field,
+    int func2() = 
+        struct s = {int field1, int field2};
+        s temp = {1, 2};
+        s.x + s.y
+}
+
+outer temp  = {5, 5}

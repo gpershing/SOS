@@ -1,0 +1,4 @@
+//sequencing 
+int foo() = (int bar() = 5); bar()
+
+int a = foo()

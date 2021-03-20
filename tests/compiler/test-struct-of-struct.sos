@@ -1,0 +1,19 @@
+//predefining field struct in outer scope
+struct a = {int field}
+struct b = { 
+    int field,
+    a field2}
+
+b test1 = {1, a temp = {2}; temp}
+int temp = test1.field2.field
+
+/*
+//field struct defined in outer struct
+struct c = {
+    int field,
+    struct d = {int field} field2
+}
+
+c test2 = {1, d temp2 = {2}; temp2}
+int temp2 = test2.field2.field
+*/

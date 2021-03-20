@@ -1,0 +1,16 @@
+struct x = {int i}
+struct y = {int i}
+
+x distance1_x = {5}
+x distance2_x = {6}
+y distance1_y = {1}
+
+array b = [distance1_x, {10}, distance1_y]
+b[0] = distance2_x
+b[1].i = 10
+
+x new = b[0]
+y new2 = b[1]
+
+
+

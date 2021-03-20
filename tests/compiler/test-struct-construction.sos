@@ -1,0 +1,7 @@
+//construction
+struct person = {int identifier, int age}
+
+person p1 = {2, 20}
+
+person p2 = {identifier:1, age:10}
+person p3 = {age:23, identifier: 3}

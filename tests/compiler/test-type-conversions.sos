@@ -1,0 +1,36 @@
+//bool to int
+bool x = True
+int y = x
+y = x + 9
+
+//int to bool
+int m = 1
+int n = 0
+bool o = m 
+bool p = n
+
+//float to int via truncation
+float a = -0.5
+int b = a
+
+a = 2.9
+b = a
+
+a = -2.9
+b = a
+
+
+//point to vector
+/*
+point poi = {-2.5, -4.0}
+vector vec = poi
+
+vector vec2 = {1.0, 2,0}
+point poi2 = vec2
+*/
+
+//used in comparisons
+temp =
+if 5.0 > 2
+then 1 == True
+esle 1.0 == False

@@ -1,0 +1,3 @@
+//basic func, no parameters
+
+int foo() = 5

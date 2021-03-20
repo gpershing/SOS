@@ -1,0 +1,5 @@
+//named func app
+
+int pow(int x, int y) = x^y
+
+int var = pow(x = 2, y = 3)

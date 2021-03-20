@@ -1,0 +1,8 @@
+//defining function in struct
+struct s = {
+    int field, 
+    int add2(int x) = x + 2
+    }
+
+s s1 = {5, 5}
+

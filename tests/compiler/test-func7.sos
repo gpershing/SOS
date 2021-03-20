@@ -1,0 +1,7 @@
+int foo (int x) = 
+    if x == 0
+    then x
+    else int y = x; y - x
+
+int a = foo(0)
+int b = foo(5)

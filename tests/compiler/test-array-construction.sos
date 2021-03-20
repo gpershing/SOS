@@ -1,0 +1,31 @@
+//int array
+array int mult_2(int i, array arr) = 
+    if i == -1
+    then arr
+    //array access and assignment
+    else (arr[i] = i*2; mult_2(i -1, arr))
+//array construction
+array arr = [-2, -1, 0, 1, 2, 3]
+arr = mult_2(i: 5, arr: arr)
+
+//float array
+array arr2 = [5.2]
+arr2[0] = 3.1
+
+//bool array
+array arr3 = [True]
+arr3[0] = False
+
+//struct array in test-array-of-struct.sos
+
+//nested arrays
+array array nested = [[1], [2,3], [4,5,6]]
+
+//arrays using functions
+int func1() = 5
+int func2(int k) = k
+
+array arr4 = [func1(), func2(3)]
+
+//arrays if we make functions as types
+array arr5 = [func1, func2]

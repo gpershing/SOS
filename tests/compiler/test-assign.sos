@@ -1,0 +1,18 @@
+int a = 5
+a = 6
+
+float b = 1.0
+b = 2.5
+
+bool c = True
+c = False
+
+array d = [1, 2]
+int temp = d[1]
+d[1] = d[0]
+d[0] = temp
+
+struct point = {float x, float y}
+
+struct e = {int v, float w, bool x, point y, array int z}
+e = {4, 4.4, True, {3.3, 4.5}, [5, 6, 7]}

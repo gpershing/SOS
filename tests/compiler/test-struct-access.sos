@@ -1,0 +1,8 @@
+//construction
+struct person = {int identifier, int age, bool isMarried}
+person tom = {2, 20, False}
+
+tom.identifier=20
+tom.age = 22
+tom.isMarried = True
+

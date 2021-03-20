@@ -1,0 +1,17 @@
+import gsst
+int a = 1
+int c = -a
+float b = 1.1
+alias translat_amt = float
+int pow(int n, int m) = n^m
+int named_func_app = pow(m:3, n:a)
+int ordered_func_app = pow(2,3)
+struct point = {float x_pos, float y_pos}
+point p1 = point{0.0,b}
+point p2 = {b, 0.0}
+p2.x_pos = b + a 
+array arr = [1, a+5, 2^2, 10/2]
+array point_list = [p1, p2]
+point_list[1] = {1,2}
+int var3 = if x>0 then 1 else 0
+int temp = 0+1*2/3^4%5

@@ -1,0 +1,13 @@
+struct first = {array int arr1}
+
+struct second = {array first arr2}
+
+struct third = {array second arr3}
+
+first s1 = {[1,2]}
+first s1_2 = {[3,4]}
+second s2 = {[s1, s1_2]}
+second s2_2 = {[{[-1, 0]}, {[-2, -1]}]}
+third s1 = {[s2, s2_2]}
+
+int x = s1.arr3[0].arr2[1].arr1[0]

@@ -1,0 +1,5 @@
+//ordered func app
+
+int pow(int x, int y) = n^x
+
+int var = pow(2,3)

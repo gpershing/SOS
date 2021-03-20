@@ -1,0 +1,7 @@
+int fib(int n) = 
+if n <= 1
+then n
+else fib(n-1) + fib(n-2)
+
+int x = 5
+x = fib(5)

@@ -1,0 +1,11 @@
+bool t = True
+bool f = False
+
+bool and_ans = t && f == False
+and_ans = f && t == False
+
+bool or_ans = t || f == True
+or_ans = f || t == True
+
+bool not_ans = !t == False
+not_ans = !f == True

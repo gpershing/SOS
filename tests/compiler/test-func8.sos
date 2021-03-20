@@ -1,0 +1,6 @@
+//currying functions possibly
+/*
+int foo(int x) = (int bar(int y) = y); bar()
+
+func a = foo()
+*/
