@@ -1,5 +1,0 @@
-int named_func_app = pow(m=3, n=2)
-point p1 = point(0.0,b)
-array arr = [1, 1.2]
-array arr = [1.1; 1.2]
-int var3 = if x+5 then 1 else
