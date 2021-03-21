@@ -15,7 +15,7 @@ and sargtype = typeid * id
 (* Detailed function binding *)
 type func_bind {
   ftype : typeid;
-  formals : sargtype list
+  formals : sargtype list;
 }
 
 type sexpr = typeid * sx

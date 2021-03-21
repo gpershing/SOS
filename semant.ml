@@ -11,21 +11,34 @@ module StringMap = Map.Make(String)
    throws an exception if something is wrong.
    Check each statement *)
 
-let check stmts =
+(* Environment type for holding all the bindings currently in scope *)
+type environment {
+  typemap : typeid StringMap.t;
+  varmap : typeid StringMap.t;
+  funcmap : func_bind StringMap.t;
+}
+
+
+let check prog =
 
   (* add built-in function such as basic printing *)
   let built_in_decls = 
     let add_bind map (name, ty) = StringMap.add name {
-      typ = TypeID("void");
-      fname = name;
+      ftype = Void;
       formals = [(ty, "x")] (* maybe need locals here? *)} map
-    in List.fold_left add_bind StringMap.empty [ ("print", TypeID("int"));
-			                         ("printb", TypeID("bool"));
-			                         ("printf", TypeID("float"))]
+    in List.fold_left add_bind StringMap.empty [ ("print", Int);
+			                         ("printb", Bool);
+			                         ("printf", Float)]
   in
 
   (* add built-in types such as int, float *)
-  let built_in_types = ()
+  let built_in_types = 
+    let add_type map (name, ty) = StringMap.add name ty map
+    in List.fold_left add_type StringMap.empty [("int", Int), ("bool", Bool), ("float", Float), ("void", Void)]
+  in
+
+  (* Initial environment containing built-in types and functions *)
+  let global_env = { typemap: build_in_types; varmap: StringMap.empty; funcmap: build_in_decls }
   in
 
   (* maybe we could also add std graph lib here? *)
@@ -41,10 +54,6 @@ let check stmts =
   let check_assign lvaluet rvaluet err = ()
   in
 
-  (* expr type table: shown globals so far, formals and shown locals for each function scope *)
-  let symbols = ()
-  in
-
   (* should add a function to add three things above dynamically *)
   let add_id_type = ()
   in
@@ -55,15 +64,18 @@ let check stmts =
 
   (* maybe it is better do define check funcs for each
      alias, struct and expr here *)
-  let rec expr = function
-      IntLit i -> (TypeID("int"), SIntLit i)
-    | FloatLit f -> (TypeID("float"), SFloatLit i)
+  let rec expr env = function
+      IntLit i -> ((TypeID("int"), SIntLit i), env)
+    | FloatLit f -> ((TypeID("float"), SFloatLit i), env)
     | FxnApp(id, fxnargs) -> () (* TODO: need to check if it is match *)
     | _ -> ()
 
   (* return checked sast, a long function *)
-  let rec stmt = function
-      Expression(e) -> SExpression (expr e)
+  let rec stmt env = function
+      Expression(e) -> let (se, en) = expr env e in (SExpression (se), en)
     | _ -> ()
 
-in stmts
+  let rec stmts env = function 
+    hd :: tl -> let (st, en) = stmt hd in st :: stmts en tl
+    _ -> []
+  in stmts prog global_env
