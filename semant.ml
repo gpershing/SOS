@@ -70,14 +70,28 @@ let check prog =
   (* checks whether the given types match and, if not, whether b can be cast to a *)
   let match_type a b = 
     if a = b then TMatch else TNoMatch (* TODO Casting not currently supported *)
+  in
 
   (* should add a function to add three things above dynamically *)
   let add_id_type = ()
   in
 
   (* function to lookup *)
-  let type_of_id s = ()
+  let type_of_id s map = 
+    if StringMap.mem s map then StringMap.find s map
+    else raise ("Unknown variable name "^s)
   in
+
+  (* function to lookup the type of a struct field *)
+  let type_of_field s f map = 
+    let stype = type_of_id s map in
+    match stype with
+      Struct(sargs) -> 
+      let rec find_field f = function
+        (ft, fn) :: tl -> if fn = f then ft else find_field f tl
+        | _ -> raise ("Could not find field "^f)
+      in find_field f sargs
+      _ -> raise ("Cannot access fields for a non-struct variable")
 
   let add_typedef td map =
     match td with
@@ -85,6 +99,12 @@ let check prog =
         then raise ("Cannot create an alias with preexisting name " ^ nm)
         else StringMap.add nm (resolve_typeid t) map
     | StructDef(nm, l) -> StringMap.add nm Struct(List.map (fun (t, i) -> (resolve_typeid t, i)) l)
+  in
+
+  let rec add_formals args map = match args with
+    (typ, nm) :: tl -> add_formals tl StringMap.update nm (resolve_typeid typ) map
+    _ -> map
+  in
 
   (* maybe it is better do define check funcs for each
      alias, struct and expr here *)
@@ -94,7 +114,30 @@ let check prog =
         let t = resolve_typeid tstr in
         match match_type t exptype with
           TMatch -> ((t, SVarDef(tstr, name, sexp)), { env with varmap = StringMap.update name t env.varmap } ) (* TODO may want to deal with overriding variables differently *)
-    | 
+          _ -> raise ("Could not match type when defining variable " ^ name)
+    | FxnDef (tstr, name, args, exp) ->
+        let t = resolve_typeid tstr in
+        let sargs = List.map (fun (typ, nm) -> (resolve_typeid typ, nm)) in
+        let newfxnmap = StringMap.update name { ftype = t; formals = sargs} env.fxnmap in
+        let ((exptype, sexp), _) = expr { env with
+           fxnmap = newfxnmap; 
+           varmap = add_formals args varmap; }
+        in
+        match match_type t exptype with
+          TMatch -> ((t, SFxnDef(tstr, name, sargs, sexp)), { env with fxnmap = newfxnma })
+          _ -> raise ("Incorrect return type for function " ^ name)
+    | Assign (name, exp) ->
+         let ((exptype, sexp), _) = expr env exp in
+         let t = type_of_id name in
+         match match_type t exptype with
+           TMatch -> ((t, SAssign(name, sexp)), env)
+           _ -> raise ("Could not match type when assigning variable "^name)
+    | AssignStruct (name, field, exp) ->
+         let ((exptype, sexp), _) = expr env exp in
+         let t = type_of_field name field env.varmap in
+         match match_type t exptype with
+           TMatch -> ((t, SAssignStruct(name, field, sexp)), env)
+           _ -> raise ("Could not match type when assigning field "^name^"."^field)
     | IntLit i -> ((Int, SIntLit i), env)
     | FloatLit f -> ((Float, SFloatLit i), env)
     | BoolLit b -> ((Bool, SBoolLit b), env)
