@@ -2,10 +2,20 @@
 
 open Ast
 
+(* Detailed type meaning *)
+type typeid =
+  Int
+| Float
+| Bool
+| Void
+| Array of typeid
+| Struct of sargtype list
+and sargtype = typeid * id
+
 type sexpr = typeid * sx
 and sx = 
   SVarDef of tid * id * sexpr                (* type name = val *)
-| SFxnDef of tid * id * argtype list * sexpr (* type id (type name, ...) = val *)
+| SFxnDef of tid * id * sargtype list * sexpr (* type id (type name, ...) = val *)
 | SAssign of id * sexpr                      (* id = val *)
 | SAssignStruct of id * id * sexpr           (* id.field = val *)
 | SAssignArray of id * sexpr * sexpr          (* id[expr] = expr *)
