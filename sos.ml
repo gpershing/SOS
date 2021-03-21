@@ -15,12 +15,12 @@ let () =
     ("-c", Arg.Unit (set_action Compile),
       "Check and print the generated LLVM IR (default)");
   ] in  
-  let usage_msg = "usage: ./microc.native [-a|-s|-l|-c] [file.mc]" in
+  let usage_msg = "usage: ./sos.native [-a|-s|-l|-c] [file.sos]" in
   let channel = ref stdin in
   Arg.parse speclist (fun filename -> channel := open_in filename) usage_msg;
   
   let lexbuf = Lexing.from_channel !channel in
-  let ast = Microcparse.program Scanner.token lexbuf in  
+  let ast = Parser.program Scanner.token lexbuf in  
   match !action with
     Ast -> Astprint.basic_print ast
   | _ -> let sast = Semant.check ast in
