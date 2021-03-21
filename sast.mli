@@ -12,6 +12,12 @@ type typeid =
 | Struct of sargtype list
 and sargtype = typeid * id
 
+(* Detailed function binding *)
+type func_bind {
+  ftype : typeid;
+  formals : sargtype list
+}
+
 type sexpr = typeid * sx
 and sx = 
   SVarDef of tid * id * sexpr                (* type name = val *)
