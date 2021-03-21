@@ -12,11 +12,16 @@ module StringMap = Map.Make(String)
    Check each statement *)
 
 (* Environment type for holding all the bindings currently in scope *)
-type environment {
+type environment = {
   typemap : typeid StringMap.t;
   varmap : typeid StringMap.t;
   funcmap : func_bind StringMap.t;
 }
+
+type typecheck =
+  TMatch
+| TCast
+| TNoMatch
 
 
 let check prog =
@@ -54,6 +59,18 @@ let check prog =
   let check_assign lvaluet rvaluet err = ()
   in
 
+  (* resolve the type of a tid to a typeid *)
+  let rec resolve_typeid t map = match t with
+    TypeID(s) -> if StringMap.mem s map
+      then StringMap.find s map
+      else raise ("Could not resolve type id "^s)
+  | ArrayTypeID(s) -> Array(resolve_typeid s)
+  in
+
+  (* checks whether the given types match and, if not, whether b can be cast to a *)
+  let match_type a b = 
+    if a = b then TMatch else TNoMatch (* TODO Casting not currently supported *)
+
   (* should add a function to add three things above dynamically *)
   let add_id_type = ()
   in
@@ -62,18 +79,32 @@ let check prog =
   let type_of_id s = ()
   in
 
+  let add_typedef td map =
+    match td with
+      Alias(nm, t) -> if StringMap.mem nm map
+        then raise ("Cannot create an alias with preexisting name " ^ nm)
+        else StringMap.add nm (resolve_typeid t) map
+    | StructDef(nm, l) -> StringMap.add nm Struct(List.map (fun (t, i) -> (resolve_typeid t, i)) l)
+
   (* maybe it is better do define check funcs for each
      alias, struct and expr here *)
   let rec expr env = function
-      IntLit i -> ((TypeID("int"), SIntLit i), env)
-    | FloatLit f -> ((TypeID("float"), SFloatLit i), env)
-    | FxnApp(id, fxnargs) -> () (* TODO: need to check if it is match *)
-    | _ -> ()
+      VarDef (tstr, name, exp) -> 
+        let ((exptype, sexp), _) = expr env exp in
+        let t = resolve_typeid tstr in
+        match match_type t exptype with
+          TMatch -> ((t, SVarDef(tstr, name, sexp)), { env with varmap = StringMap.update name t env.varmap } ) (* TODO may want to deal with overriding variables differently *)
+    | 
+    | IntLit i -> ((Int, SIntLit i), env)
+    | FloatLit f -> ((Float, SFloatLit i), env)
+    | BoolLit b -> ((Bool, SBoolLit b), env)
+    | _ -> raise ("There is an unsupported expression in this program")
 
-  (* return checked sast, a long function *)
+  (* check a single statement and update the environment *)
   let rec stmt env = function
       Expression(e) -> let (se, en) = expr env e in (SExpression (se), en)
-    | _ -> ()
+    | Typedef(td) -> (STypedef(td), {env with typemap = add_typedef td env.typemap})
+    | Import -> raise ("Import statements not currently supported") (* TODO *)
 
   let rec stmts env = function 
     hd :: tl -> let (st, en) = stmt hd in st :: stmts en tl

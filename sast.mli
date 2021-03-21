@@ -13,7 +13,7 @@ type typeid =
 and sargtype = typeid * id
 
 (* Detailed function binding *)
-type func_bind {
+type func_bind = {
   ftype : typeid;
   formals : sargtype list;
 }

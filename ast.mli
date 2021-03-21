@@ -49,7 +49,7 @@ and fxnargs =
 | NamedFxnArgs of namedArg list
 
 type typedef = 
-  Alias of tid * tid                       (* alias name = type *)
+  Alias of id * tid                       (* alias name = type *)
 | StructDef of id * argtype list           (* struct name = {type name, ...} *)
 
 type stmt = 
