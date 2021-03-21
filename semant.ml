@@ -15,10 +15,13 @@ let check stmts =
 
   (* add built-in function such as basic printing *)
   let built_in_decls = 
-    let add_bind map (name, ty) = StringMap.add name ty map
+    let add_bind map (name, ty) = StringMap.add name {
+      typ = TypeID("void");
+      fname = name;
+      formals = [(ty, "x")] (* maybe need locals here? *)} map
     in List.fold_left add_bind StringMap.empty [ ("print", TypeID("int"));
-			                         ("printb", TypeID("bool"));
-			                         ("printf", TypeID("float"))]
+			                         ("printb", );
+			                         ("printf", FloatLit)]
   in
 
   (* add built-in types such as int, float *)
@@ -52,8 +55,15 @@ let check stmts =
 
   (* maybe it is better do define check funcs for each
      alias, struct and expr here *)
+  let rec expr = function
+      IntLit i -> (TypeID("int"), SIntLit i)
+    | FloatLit f -> (TypeID("float"), SFloatLit i)
+    | FxnApp(id, fxnargs) -> () (* TODO: need to check if it is match *)
+    | _ -> ()
 
   (* return checked sast, a long function *)
-  let rec stmt = ()
+  let rec stmt = function
+      Expression(e) -> SExpression (expr e)
+    | _ -> ()
 
 in stmts
