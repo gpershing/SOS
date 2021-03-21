@@ -20,8 +20,8 @@ let check stmts =
       fname = name;
       formals = [(ty, "x")] (* maybe need locals here? *)} map
     in List.fold_left add_bind StringMap.empty [ ("print", TypeID("int"));
-			                         ("printb", );
-			                         ("printf", FloatLit)]
+			                         ("printb", TypeID("bool"));
+			                         ("printf", TypeID("float"))]
   in
 
   (* add built-in types such as int, float *)

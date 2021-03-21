@@ -42,6 +42,7 @@ and expr =
 | StructField of id * id                   (* name.id *)
 | IntLit of int                            (* int *)
 | FloatLit of float                        (* float *)
+| BoolLit of bool                          (* bool *)
 
 and fxnargs = 
   OrderedFxnArgs of expr list

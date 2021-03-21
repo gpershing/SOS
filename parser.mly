@@ -14,6 +14,7 @@
 %token IMPORT
 %token <int> INTLIT
 %token <float> FLOATLIT
+%token <bool> BOOLLIT
 %token <string> VAR
 %token <string> VARCOLON
 %token EOF
@@ -58,6 +59,7 @@ stexpr:
 expr:
     INTLIT { IntLit($1) }
   | FLOATLIT { FloatLit($1) }
+  | BOOLLIT { BoolLit($1) }
   | VAR { Var($1) }
   | VAR DOT VAR { StructField($1,$3) }
   | NOT expr { Uop(Not,$2) }

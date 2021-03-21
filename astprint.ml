@@ -52,6 +52,8 @@ let rec basic_print prog =
     | StructField(a, b) -> a ^ "." ^ b
     | IntLit(i) -> string_of_int i
     | FloatLit(f) -> string_of_float f
+    | BoolLit(true) -> "true"
+    | BoolLit(false) -> "false"
     in print_endline(expr_str e)
   in
   List.map print_stmt prog

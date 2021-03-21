@@ -46,6 +46,8 @@ rule token = parse
 | "import" { IMPORT }
 | digits as lxm { INTLIT(int_of_string lxm) } 
 | digits '.'  digit* ( ['e' 'E'] ['+' '-']? digits )? as lxm { FLOATLIT(float_of_string lxm) }
+| "true"   { BoolLit(true) }
+| "false"  { BoolLit(false) }
 | ['a'-'z' 'A'-'Z']['a'-'z' 'A'-'Z' '0'-'9' '_']*[' ' '\t']*':' as lxm { VARCOLON(String.trim (String.sub lxm 0 ((String.length lxm)-1))) }
 | ['a'-'z' 'A'-'Z']['a'-'z' 'A'-'Z' '0'-'9' '_']*     as lxm { VAR(lxm) }
 | eof { EOF }
