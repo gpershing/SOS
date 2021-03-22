@@ -10,6 +10,7 @@ type typeid =
 | Void
 | Array of typeid
 | Struct of sargtype list
+| EmptyArray (* The empty array constructor, [] *)
 and sargtype = typeid * id
 
 (* Detailed function binding *)
