@@ -23,27 +23,28 @@ type typecheck =
 | TCast
 | TNoMatch
 
+let raisestr s = raise (Failure s) 
 
 let check prog =
 
   (* add built-in function such as basic printing *)
-  let built_in_decls = 
+  let built_in_decls = (
     let add_bind map (name, ty) = StringMap.add name {
       ftype = Void;
       formals = [(ty, "x")] (* maybe need locals here? *)} map
     in List.fold_left add_bind StringMap.empty [ ("print", Int);
 			                         ("printb", Bool);
-			                         ("printf", Float)]
+			                         ("printf", Float)] )
   in
 
   (* add built-in types such as int, float *)
-  let built_in_types = 
+  let built_in_types = (
     let add_type map (name, ty) = StringMap.add name ty map
-    in List.fold_left add_type StringMap.empty [("int", Int), ("bool", Bool), ("float", Float), ("void", Void)]
+    in List.fold_left add_type StringMap.empty [("int", Int); ("bool", Bool); ("float", Float); ("void", Void)] )
   in
 
   (* Initial environment containing built-in types and functions *)
-  let global_env = { typemap: build_in_types; varmap: StringMap.empty; funcmap: build_in_decls }
+  let global_env = { typemap = built_in_types; varmap = StringMap.empty; funcmap =  built_in_decls }
   in
 
   (* maybe we could also add std graph lib here? *)
@@ -63,8 +64,8 @@ let check prog =
   let rec resolve_typeid t map = match t with
     TypeID(s) -> if StringMap.mem s map
       then StringMap.find s map
-      else raise ("Could not resolve type id "^s)
-  | ArrayTypeID(s) -> Array(resolve_typeid s)
+      else raisestr ("Could not resolve type id "^s)
+  | ArrayTypeID(s) -> Array(resolve_typeid s map)
   in
 
   (* checks whether the given types match and, if not, whether b can be cast to a *)
@@ -79,7 +80,7 @@ let check prog =
   (* function to lookup *)
   let type_of_id s map = 
     if StringMap.mem s map then StringMap.find s map
-    else raise ("Unknown variable name "^s)
+    else raisestr ("Unknown variable name "^s)
   in
 
   (* function to lookup the type of a struct field *)
@@ -89,38 +90,41 @@ let check prog =
       Struct(sargs) -> 
       let rec find_field f = function
         (ft, fn) :: tl -> if fn = f then ft else find_field f tl
-        | _ -> raise ("Could not find field "^f)
+        | _ -> raisestr ("Could not find field "^f)
       in find_field f sargs
-      _ -> raise ("Cannot access fields for a non-struct variable")
+     | _ -> raisestr ("Cannot access fields for a non-struct variable")
+  in
 
   (* get the signature of a function *)
   let sig_of_func f map = 
     if StringMap.mem f map then StringMap.find f map
-    else raise ("Unknown function name "^f)
+    else raisestr ("Unknown function name "^f)
   in
 
   let add_typedef td map =
     match td with
       Alias(nm, t) -> if StringMap.mem nm map
-        then raise ("Cannot create an alias with preexisting name " ^ nm)
-        else StringMap.add nm (resolve_typeid t) map
-    | StructDef(nm, l) -> StringMap.add nm Struct(List.map (fun (t, i) -> (resolve_typeid t, i)) l)
+        then raisestr ("Cannot create an alias with preexisting name " ^ nm)
+        else StringMap.add nm (resolve_typeid t map) map
+    | StructDef(nm, l) -> raisestr ("Struct def not yet supported") (* TODO *)
   in
 
-  let rec add_formals args map = match args with
-    (typ, nm) :: tl -> add_formals tl StringMap.update nm (resolve_typeid typ) map
-    _ -> map
+  let rec add_formals args vmap tmap = match args with
+    (typ, nm) :: tl -> add_formals tl (StringMap.add nm (resolve_typeid typ tmap) vmap) tmap
+    | _ -> vmap
   in
 
   (* maybe it is better do define check funcs for each
      alias, struct and expr here *)
   let rec expr env = function
+     (*
       VarDef (tstr, name, exp) -> 
-        let ((exptype, sexp), _) = expr env exp in
+        let (sexp, _) = expr env exp in
+        let (exptype, _) = sexp in
         let t = resolve_typeid tstr in
-        match match_type t exptype with
+        (match match_type t exptype with
           TMatch -> ((t, SVarDef(tstr, name, sexp)), { env with varmap = StringMap.update name t env.varmap } ) (* TODO may want to deal with overriding variables differently *)
-        |  _ -> raise ("Could not match type when defining variable " ^ name)
+        |  _ -> raisestr ("Could not match type when defining variable " ^ name))
 
     | FxnDef (tstr, name, args, exp) ->
         let t = resolve_typeid tstr in
@@ -132,28 +136,28 @@ let check prog =
         in
         match match_type t exptype with
           TMatch -> ((t, SFxnDef(tstr, name, sargs, sexp)), { env with fxnmap = newfxnma })
-          | _ -> raise ("Incorrect return type for function " ^ name)
+          | _ -> raisestr ("Incorrect return type for function " ^ name)
 
     | Assign (name, exp) ->
          let ((exptype, sexp), _) = expr env exp in
          let t = type_of_id name in
          match match_type t exptype with
            TMatch -> ((t, SAssign(name, sexp)), env)
-         | _ -> raise ("Could not match type when assigning variable "^name)
+         | _ -> raisestr ("Could not match type when assigning variable "^name)
 
     | AssignStruct (name, field, exp) ->
          let ((exptype, sexp), _) = expr env exp in
          let t = type_of_field name field env.varmap in
          match match_type t exptype with
            TMatch -> ((t, SAssignStruct(name, field, sexp)), env)
-         |  _ -> raise ("Could not match type when assigning field "^name^"."^field)
+         |  _ -> raisestr ("Could not match type when assigning field "^name^"."^field)
 
-    | Uop -> raise ("Unary operations not yet supported") (* TODO *)
+    | Uop -> raisestr ("Unary operations not yet supported") (* TODO *)
 
-    | Binop -> raise ("Binary operations not yet supported") (* TODO *)
+    | Binop -> raisestr ("Binary operations not yet supported") (* TODO *)
 
     | FxnApp (name, args) -> 
-         let fxn = sig_of_func name
+         let fxn = sig_of_func name in
          match args with
            OrderedFxnArgs(exps) ->
              let rec check_args sigl expl env = match expl with
@@ -161,21 +165,21 @@ let check prog =
                  (match sigl with
                    (typ, nm) :: sigtl -> (match match_type typ exptype with
                        TMatch -> sexp :: check_args sigtl tl env
-                     | _ -> raise ("Could not match type of argument "^nm))
-                   | _ -> raise ("Too many arguments for function signature")
-               [] -> if sigl = [] then [] else raise ("Function currying not yet supported") 
+                     | _ -> raisestr ("Could not match type of argument "^nm))
+                   | _ -> raisestr ("Too many arguments for function signature"))
+             | [] -> if sigl = [] then [] else raisestr ("Function currying not yet supported")
            in ((fxn.ftype, check_args fxn.formals exps env), env)
-         | NameFxnArgs -> raise ("Named function arguments not yet supported") (* TODO *)
+         | NameFxnArgs -> raisestr ("Named function arguments not yet supported") (* TODO *)
 
     | IfElse (eif, ethen, eelse) -> 
         let ((exptype, sexp), _) = expr env eif in
-        match match_type exptype Bool in
+        match match_type exptype Bool with
           TMatch -> let (thentype, thenexp) = expr env ethen in
             let (elsetype, elseexp) = expr env eelse in
-            (match match_type thentype, elsetype in
+            (match match_type thentype, elsetype with
               TMatch -> ((thentype, SIfElse(sexp, thenexp, elseexp)), exp)
-            | _ -> raise ("Could not reconcile types of then and else clauses")
-        | _ -> raise ("Could not resolve if condition to a bool")
+            | _ -> raisestr ("Could not reconcile types of then and else clauses"))
+        | _ -> raisestr ("Could not resolve if condition to a bool")
 
     | ArrayCon l -> match l with
       hd :: tl ->
@@ -183,7 +187,7 @@ let check prog =
         ((Array(exptype), SArrayCon(sexp :: List.map
           (fun ex -> let ((et, se), _) = expr env ex in
            match match_type exptype et with TMatch -> se
-           | _ -> raise ("Cannot make an array literal out of elements of different types"))
+           | _ -> raisestr ("Cannot make an array literal out of elements of different types"))
           tl)), env)
       | [] -> ((EmptyArray, SArrayCon([])), env) (* TODO: make appropriate array cast *)
 
@@ -206,31 +210,34 @@ let check prog =
             (match argl with (t, nm) :: argtl ->
               (match match_type t exptype with
                  TMatch -> sexp :: create_name_struct argtl tl
-               | _ -> raise ("Could not resolve type of struct field "^nm))
-            _ -> raise ("Too many arguments for struct "^name))
-          [] -> match argl with
+               | _ -> raisestr ("Could not resolve type of struct field "^nm))
+            | _ -> raisestr ("Too many arguments for struct "^name))
+          | [] -> (match argl with
             [] -> []
-           _ -> raise ("Not enough arguments for struct "^name)
+           | _ -> raisestr ("Not enough arguments for struct "^name))
         in
         let sexprs = create_named_struct sargs l
         in ((st, SNamedStruct(name, sexprs)), env)
-      | _ -> raise ("Cannot resolve the struct name "^name)
+      | _ -> raisestr ("Cannot resolve the struct name "^name)
 
     | Var i -> ((type_of_id i, SVar(i)), env)
     | StructField (nm, fl) -> ((type_of_field nm fl, SStructField(nm ,fl)), env)
+   *)
 
     | IntLit i -> ((Int, SIntLit i), env)
-    | FloatLit f -> ((Float, SFloatLit i), env)
+    | FloatLit f -> ((Float, SFloatLit f), env)
     | BoolLit b -> ((Bool, SBoolLit b), env)
-    | _ -> raise ("There is an unsupported expression in this program")
+    | _ -> raisestr ("There is an unsupported expression in this program")
+  in
 
   (* check a single statement and update the environment *)
   let rec stmt env = function
       Expression(e) -> let (se, en) = expr env e in (SExpression (se), en)
     | Typedef(td) -> (STypedef(td), {env with typemap = add_typedef td env.typemap})
-    | Import -> raise ("Import statements not currently supported") (* TODO *)
+    | Import(_) -> raisestr ("Import statements not currently supported") (* TODO *)
+  in
 
   let rec stmts env = function 
-    hd :: tl -> let (st, en) = stmt hd in st :: stmts en tl
-    _ -> []
-  in stmts prog global_env
+    hd :: tl -> let (st, en) = stmt env hd in st :: stmts en tl
+  | _ -> []
+  in stmts global_env prog

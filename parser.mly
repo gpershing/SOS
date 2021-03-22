@@ -114,7 +114,7 @@ args_list:
   | args_list COMMA expr { $3 :: $1 }
 
 typedef:
-    ALIAS typeid EQ typeid { Alias($2,$4) }
+    ALIAS VAR EQ typeid { Alias($2,$4) }
   | STRUCT VAR EQ LBRACE fxn_args RBRACE { StructDef($2,$5) }
 
 stmt:
