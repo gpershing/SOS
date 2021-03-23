@@ -45,8 +45,12 @@ and sfxnargs =
   SOrderedFxnArgs of sexpr list
 | SNamedFxnArgs of snamedArg list
 
+type stypedef = 
+  SAlias of id * typeid
+| SStructDef of id * sargtype list
+
 type sstmt = 
-  STypedef of typedef
+  STypeDef of stypedef
 | SExpression of sexpr
 | SImport of import
 

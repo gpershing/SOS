@@ -240,10 +240,15 @@ let check prog =
     | _ -> raisestr ("There is an unsupported expression in this program")
   in
 
+  let make_stypedef env = function
+      Alias(nm, tp) -> SAlias(nm, resolve_typeid tp env.typemap)
+    | StructDef(nm , l) -> SStructDef(nm, List.map (fun (t, i) -> (resolve_typeid t env.typemap, i)) l)
+  in
+
   (* check a single statement and update the environment *)
   let rec stmt env = function
       Expression(e) -> let (se, en) = expr env e in (SExpression (se), en)
-    | Typedef(td) -> (STypedef(td), {env with typemap = add_typedef td env.typemap})
+    | Typedef(td) -> (STypeDef(make_stypedef env td), {env with typemap = add_typedef td env.typemap})
     | Import(_) -> raisestr ("Import statements not currently supported") (* TODO *)
   in
 
