@@ -9,3 +9,5 @@ parser.output
 
 scanner.ml
 test
+
+.DS_Store
