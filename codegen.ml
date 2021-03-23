@@ -38,9 +38,11 @@ let translate stmts =
   let printf_func : L.llvalue = 
       L.declare_function "printf" printf_t the_module in
 
-(* environment??? not changed beyond this point...*)
+(* environment??? not changed *)
 
 
+
+(* unmodified code till line 95
 
 
 (* Define each function (arguments and return type) so we can 
@@ -90,11 +92,22 @@ let translate stmts =
                    with Not_found -> StringMap.find n global_vars
     in
 
+*)
+
+
+
+
+
+
+
+(* builder is defined above...needs to define env? *)
+
+
     (* Construct code for an expression; return its value *)
     let rec expr builder ((_, e) : sexpr) = match e with
-	SLiteral i  -> L.const_int i32_t i
+	SIntLit i  -> L.const_int i32_t i
       | SBoolLit b  -> L.const_int i1_t (if b then 1 else 0)
-      | SFliteral l -> L.const_float_of_string float_t l
+      | SFloatLit l -> L.const_float_of_string float_t l
       | SNoexpr     -> L.const_int i32_t 0
       | SId s       -> L.build_load (lookup s) s builder
       | SAssign (s, e) -> let e' = expr builder e in
