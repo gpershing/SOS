@@ -117,99 +117,108 @@ let check prog =
   (* maybe it is better do define check funcs for each
      alias, struct and expr here *)
   let rec expr env = function
-     (*
+     
       VarDef (tstr, name, exp) -> 
         let (sexp, _) = expr env exp in
         let (exptype, _) = sexp in
-        let t = resolve_typeid tstr in
+        let t = resolve_typeid tstr env.typemap in
         (match match_type t exptype with
-          TMatch -> ((t, SVarDef(tstr, name, sexp)), { env with varmap = StringMap.update name t env.varmap } ) (* TODO may want to deal with overriding variables differently *)
+          TMatch -> ((t, SVarDef(tstr, name, sexp)),
+              { env with varmap = StringMap.add name t env.varmap } )
+          (* TODO may want to deal with overriding variables differently *)
         |  _ -> raisestr ("Could not match type when defining variable " ^ name))
 
     | FxnDef (tstr, name, args, exp) ->
-        let t = resolve_typeid tstr in
-        let sargs = List.map (fun (typ, nm) -> (resolve_typeid typ, nm)) in
-        let newfxnmap = StringMap.update name { ftype = t; formals = sargs} env.fxnmap in
-        let ((exptype, sexp), _) = expr { env with
-           fxnmap = newfxnmap; 
-           varmap = add_formals args varmap; }
+        let t = resolve_typeid tstr env.typemap in
+        let sargs = List.map
+          (fun (typ, nm) -> (resolve_typeid typ env.typemap, nm)) args
         in
-        match match_type t exptype with
-          TMatch -> ((t, SFxnDef(tstr, name, sargs, sexp)), { env with fxnmap = newfxnma })
-          | _ -> raisestr ("Incorrect return type for function " ^ name)
+        let newfxnmap = StringMap.add
+           name { ftype = t; formals = sargs} env.funcmap in
+        let ((exptype, sx), _) = expr { env with
+           funcmap = newfxnmap; 
+           varmap = add_formals args env.varmap env.typemap; } exp
+        in
+        (match match_type t exptype with
+          TMatch -> ((t, SFxnDef(tstr, name, sargs, (exptype, sx))),
+                  { env with funcmap = newfxnmap })
+          | _ -> raisestr ("Incorrect return type for function " ^ name))
 
     | Assign (name, exp) ->
          let ((exptype, sexp), _) = expr env exp in
-         let t = type_of_id name in
-         match match_type t exptype with
-           TMatch -> ((t, SAssign(name, sexp)), env)
-         | _ -> raisestr ("Could not match type when assigning variable "^name)
+         let t = type_of_id name env.varmap in
+         (match match_type t exptype with
+           TMatch -> ((t, SAssign(name, (exptype, sexp))), env)
+         | _ -> raisestr ("Could not match type when assigning variable "^name))
 
     | AssignStruct (name, field, exp) ->
          let ((exptype, sexp), _) = expr env exp in
          let t = type_of_field name field env.varmap in
-         match match_type t exptype with
-           TMatch -> ((t, SAssignStruct(name, field, sexp)), env)
-         |  _ -> raisestr ("Could not match type when assigning field "^name^"."^field)
+         (match match_type t exptype with
+           TMatch -> ((t, SAssignStruct(name, field, (exptype, sexp))), env)
+         |  _ -> raisestr ("Could not match type when assigning field "^name^"."^field))
 
-    | Uop -> raisestr ("Unary operations not yet supported") (* TODO *)
+    | Uop(_) -> raisestr ("Unary operations not yet supported") (* TODO *)
 
-    | Binop -> raisestr ("Binary operations not yet supported") (* TODO *)
+    | Binop(_) -> raisestr ("Binary operations not yet supported") (* TODO *)
 
     | FxnApp (name, args) -> 
-         let fxn = sig_of_func name in
-         match args with
+         let fxn = sig_of_func name env.funcmap in
+         (match args with
            OrderedFxnArgs(exps) ->
              let rec check_args sigl expl env = match expl with
                hd :: tl -> let ((exptype, sexp), _) = expr env hd in
                  (match sigl with
                    (typ, nm) :: sigtl -> (match match_type typ exptype with
-                       TMatch -> sexp :: check_args sigtl tl env
+                       TMatch -> (exptype, sexp) :: check_args sigtl tl env
                      | _ -> raisestr ("Could not match type of argument "^nm))
                    | _ -> raisestr ("Too many arguments for function signature"))
              | [] -> if sigl = [] then [] else raisestr ("Function currying not yet supported")
-           in ((fxn.ftype, check_args fxn.formals exps env), env)
-         | NameFxnArgs -> raisestr ("Named function arguments not yet supported") (* TODO *)
+           in ((fxn.ftype, SFxnApp(name, SOrderedFxnArgs(check_args fxn.formals exps env))), env) 
+         | NamedFxnArgs(_) -> raisestr ("Named function arguments not yet supported") (* TODO *)
+         )
 
     | IfElse (eif, ethen, eelse) -> 
         let ((exptype, sexp), _) = expr env eif in
-        match match_type exptype Bool with
-          TMatch -> let (thentype, thenexp) = expr env ethen in
-            let (elsetype, elseexp) = expr env eelse in
-            (match match_type thentype, elsetype with
-              TMatch -> ((thentype, SIfElse(sexp, thenexp, elseexp)), exp)
+        (match match_type exptype Bool with
+          TMatch -> let ((thentype, thenexp), _) = expr env ethen in
+            let ((elsetype, elseexp), _)  = expr env eelse in
+            (match match_type thentype elsetype with
+              TMatch -> ((thentype, SIfElse((exptype, sexp), (thentype, thenexp), (elsetype, elseexp))), env)
             | _ -> raisestr ("Could not reconcile types of then and else clauses"))
-        | _ -> raisestr ("Could not resolve if condition to a bool")
+        | _ -> raisestr ("Could not resolve if condition to a bool"))
 
-    | ArrayCon l -> match l with
+    | ArrayCon l -> (match l with
       hd :: tl ->
         let ((exptype, sexp), _) = expr env hd in 
-        ((Array(exptype), SArrayCon(sexp :: List.map
+        ((Array(exptype), SArrayCon((exptype, sexp) :: List.map
           (fun ex -> let ((et, se), _) = expr env ex in
-           match match_type exptype et with TMatch -> se
-           | _ -> raisestr ("Cannot make an array literal out of elements of different types"))
+           match match_type exptype et with TMatch -> (et, se) 
+           | _ -> raisestr ("Cannot make an array literal out of elements of different types")
+          )
           tl)), env)
       | [] -> ((EmptyArray, SArrayCon([])), env) (* TODO: make appropriate array cast *)
+      )
 
     | AnonStruct l -> 
       let rec create_anon_struct n = function
         e :: tl -> let ((exptype, sexp), _) = expr env e in
-          let (typel, expl) = create_anon_struct n+1 tl in
-          ((exptype, "x"^string_of_int n) :: typel, sexp :: expl)
-      | _ -> []
+          let (typel, expl) = create_anon_struct (n+1) tl in
+          ((exptype, "x"^string_of_int n) :: typel, (exptype, sexp) :: expl)
+      | _ -> [], []
       in
-      let (typel, expl) = create_anon_struct l in
+      let (typel, expl) = create_anon_struct 1 l in
       ((Struct(typel), SAnonStruct(expl)), env)
 
     | NamedStruct (name, l)  ->
-      let st = resolve_typeid name in
-      match st with
+      let st = resolve_typeid (TypeID(name)) env.typemap in
+      (match st with
         Struct(sargs) -> 
         let rec create_named_struct argl = function
           e :: tl -> let ((exptype, sexp), _) = expr env e in
             (match argl with (t, nm) :: argtl ->
               (match match_type t exptype with
-                 TMatch -> sexp :: create_name_struct argtl tl
+                 TMatch -> (exptype, sexp) :: create_named_struct argtl tl
                | _ -> raisestr ("Could not resolve type of struct field "^nm))
             | _ -> raisestr ("Too many arguments for struct "^name))
           | [] -> (match argl with
@@ -219,10 +228,11 @@ let check prog =
         let sexprs = create_named_struct sargs l
         in ((st, SNamedStruct(name, sexprs)), env)
       | _ -> raisestr ("Cannot resolve the struct name "^name)
+     )
 
-    | Var i -> ((type_of_id i, SVar(i)), env)
-    | StructField (nm, fl) -> ((type_of_field nm fl, SStructField(nm ,fl)), env)
-   *)
+    | Var i -> ((type_of_id i env.varmap, SVar(i)), env)
+    | StructField (nm, fl) -> ((type_of_field nm fl env.varmap, SStructField(nm ,fl)), env)
+   
 
     | IntLit i -> ((Int, SIntLit i), env)
     | FloatLit f -> ((Float, SFloatLit f), env)

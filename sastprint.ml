@@ -1,6 +1,6 @@
 open Sast
 
-
+let basic_print sast = ()
 
 let _ =
   let lexbuf = Lexing.from_channel stdin in
