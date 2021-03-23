@@ -10,7 +10,7 @@ module StringMap = Map.Make(String)
 
 
 (* translate : Sast.program -> Llvm.module *)
-let translate (globals, functions) =
+let translate stmts =
   let context    = L.global_context () in
   
   (* Create the LLVM compilation module into which
@@ -48,6 +48,9 @@ let translate (globals, functions) =
       L.declare_function "printf" printf_t the_module in
 
 (* environment??? not changed beyond this point...*)
+
+
+
 
 (* Define each function (arguments and return type) so we can 
      call it even before we've created its body *)
@@ -230,6 +233,8 @@ let translate (globals, functions) =
       | t -> L.build_ret (L.const_int (ltype_of_typ t) 0))
   in
 
-  List.iter build_function_body functions;
-  the_module
-
+   let build_stmt stmtdecl =
+  
+   in
+   List.iter build_stmt stmts;
+   the_module
