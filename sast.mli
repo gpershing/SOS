@@ -21,8 +21,8 @@ type func_bind = {
 
 type sexpr = typeid * sx
 and sx = 
-  SVarDef of tid * id * sexpr                (* type name = val *)
-| SFxnDef of tid * id * sargtype list * sexpr (* type id (type name, ...) = val *)
+  SVarDef of typeid * id * sexpr                (* type name = val *)
+| SFxnDef of typeid * id * sargtype list * sexpr (* type id (type name, ...) = val *)
 | SAssign of id * sexpr                      (* id = val *)
 | SAssignStruct of id * id * sexpr           (* id.field = val *)
 | SAssignArray of id * sexpr * sexpr          (* id[expr] = expr *)

@@ -106,7 +106,8 @@ let check prog =
       Alias(nm, t) -> if StringMap.mem nm map
         then raisestr ("Cannot create an alias with preexisting name " ^ nm)
         else StringMap.add nm (resolve_typeid t map) map
-    | StructDef(nm, l) -> raisestr ("Struct def not yet supported") (* TODO *)
+    | StructDef(nm, l) -> let sargl = List.map (fun (t, i) -> (resolve_typeid t map, i)) l in
+      StringMap.add nm (Struct(sargl)) map
   in
 
   let rec add_formals args vmap tmap = match args with
@@ -123,7 +124,7 @@ let check prog =
         let (exptype, _) = sexp in
         let t = resolve_typeid tstr env.typemap in
         (match match_type t exptype with
-          TMatch -> ((t, SVarDef(tstr, name, sexp)),
+          TMatch -> ((t, SVarDef(t, name, sexp)),
               { env with varmap = StringMap.add name t env.varmap } )
           (* TODO may want to deal with overriding variables differently *)
         |  _ -> raisestr ("Could not match type when defining variable " ^ name))
@@ -140,7 +141,7 @@ let check prog =
            varmap = add_formals args env.varmap env.typemap; } exp
         in
         (match match_type t exptype with
-          TMatch -> ((t, SFxnDef(tstr, name, sargs, (exptype, sx))),
+          TMatch -> ((t, SFxnDef(t, name, sargs, (exptype, sx))),
                   { env with funcmap = newfxnmap })
           | _ -> raisestr ("Incorrect return type for function " ^ name))
 
