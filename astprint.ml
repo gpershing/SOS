@@ -51,7 +51,7 @@ let rec basic_print prog =
     | Var(a) -> a
     | StructField(a, b) -> a ^ "." ^ b
     | IntLit(i) -> string_of_int i
-    | FloatLit(f) -> string_of_float f
+    | FloatLit(f) -> f
     | BoolLit(true) -> "true"
     | BoolLit(false) -> "false"
     in print_endline(expr_str e)

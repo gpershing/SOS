@@ -13,7 +13,7 @@
 %token STRUCT ALIAS ARRAY
 %token IMPORT
 %token <int> INTLIT
-%token <float> FLOATLIT
+%token <string> FLOATLIT
 %token <bool> BOOLLIT
 %token <string> VAR
 %token <string> VARCOLON

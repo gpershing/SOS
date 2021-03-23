@@ -41,7 +41,7 @@ and expr =
 | Var of id                                (* name *)
 | StructField of id * id                   (* name.id *)
 | IntLit of int                            (* int *)
-| FloatLit of float                        (* float *)
+| FloatLit of string                       (* float *)
 | BoolLit of bool                          (* bool *)
 
 and fxnargs = 

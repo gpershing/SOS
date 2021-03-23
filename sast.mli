@@ -36,7 +36,7 @@ and sx =
 | SVar of id                                (* name *)
 | SStructField of id * id                   (* name.id *)
 | SIntLit of int                            (* int *)
-| SFloatLit of float                        (* float *)
+| SFloatLit of string                       (* float *)
 | SBoolLit of bool                          (* bool *)
 
 and snamedArg = id * sexpr 
