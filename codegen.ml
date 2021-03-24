@@ -6,6 +6,9 @@ open Sast
 
 module StringMap = Map.Make(String)
 
+type environment = {
+evars : L.llvalue StringMap.t; (* The storage associated with a given var *)
+}
 
 (* translate : Sast.program -> Llvm.module *)
 let translate prog =
@@ -14,6 +17,9 @@ let translate prog =
   (* Create the LLVM compilation module into which
      we will generate code *)
   let the_module = L.create_module context "SOS" in
+
+  (* Pointer to the program environment *)
+  let env = ref { evars = StringMap.empty } in
 
   (* Get types from the context *)
   let i32_t      = L.i32_type    context
@@ -42,8 +48,14 @@ let translate prog =
       L.define_function "main" (L.function_type i32_t [||]) the_module
   in
 
-(* environment??? not changed *)
-
+  (* Add a variable llvalue to environment.evars *)
+  let env_add_variable nm lv =
+      env := {!env with evars = StringMap.add nm lv !env.evars }
+  in
+  
+  (* Get a variable's llvalue from environment.evars *)
+  let env_get_variable nm = StringMap.find nm !env.evars
+  in
 
 
 (* unmodified code till line 95
@@ -120,6 +132,21 @@ let translate prog =
      SIntLit(i) -> L.const_int i32_t i, builder
    | SFloatLit(f) -> L.const_float_of_string float_t f, builder
    | SBoolLit(b) -> L.const_int i1_t (if b then 1 else 0), builder
+
+     (* Access *)
+   | SVar(nm) -> (L.build_load (env_get_variable nm) nm builder), builder
+
+     (* Definitions *)
+   | SVarDef(ty, nm, ex) -> 
+       let var = L.build_alloca (ltype_of_typ ty) nm builder in
+       env_add_variable nm var ;
+       expr builder (t, SAssign(nm, ex)) (* Bootstrap off Assign *)
+
+     (* Assignments *)
+   | SAssign(nm, ex) ->
+       let ex' = expr builder ex in
+       let (lv, _) = ex' in
+       ignore(L.build_store lv (env_get_variable nm) builder); ex'
 
      (* Function application *)
    | SFxnApp("printf", SOrderedFxnArgs([e])) ->
