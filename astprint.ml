@@ -10,10 +10,10 @@ let rec typeid_str t = match t with
   TypeID(s) -> s
 | ArrayTypeID(p) -> "array " ^ typeid_str p
 
-let rec basic_print prog = 
+let basic_print prog = 
   let print_stmt = function
     Typedef(t) -> let print_tdef = function
-      Alias(a, b) -> print_endline ("alias " ^ typeid_str(a) ^ " " ^ typeid_str(b))
+      Alias(a, b) -> print_endline ("alias " ^ a ^ " " ^ typeid_str(b))
     | StructDef(a, b) -> print_endline ("struct " ^ a ^ " = {" ^ comma_list_str (fun (a, b) -> typeid_str(a) ^ " " ^ b) b ^ "}")
     in print_tdef t
     | Import(f) -> print_endline("import " ^ f)
@@ -56,9 +56,9 @@ let rec basic_print prog =
     | BoolLit(false) -> "false"
     in print_endline(expr_str e)
   in
-  List.map print_stmt prog
+  List.iter print_stmt prog
 
-let _ =
+(*let _ =
   let lexbuf = Lexing.from_channel stdin in
   let prog = Parser.program Scanner.token lexbuf in
-  basic_print prog
+  basic_print prog *)

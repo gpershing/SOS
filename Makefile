@@ -1,6 +1,3 @@
-sastprint : parser.cmo scanner.cmo semant.cmo sastprint.cmo codegen.cmo
-	ocamlc -o sastprint $^
-
 .PHONY : all
 
 all : sos.native
@@ -8,10 +5,6 @@ all : sos.native
 sos.native:
 	opam config exec -- \
 	ocamlbuild -use-ocamlfind -pkgs llvm sos.native
-
-# builds a ./test executable
-astprint : parser.cmo scanner.cmo astprint.cmo
-	ocamlc -o astprint $^
 
 %.cmo : %.ml
 	ocamlc -c $<
@@ -29,7 +22,7 @@ parser.ml parser.mli : parser.mly
 	ocamlyacc $^
 
 # dependencies
-codegen.cmo : ast.cmo sast.cmi
+codegen.cmo : ast.cmi sast.cmi
 codegen.cmx : ast.cmx sast.cmi
 sastprint.cmo : semant.cmo ast.cmi sast.cmi
 sastprint.cmx : semant.cmx ast.cmi sast.cmi

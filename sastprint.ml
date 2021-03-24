@@ -1,4 +1,5 @@
 open Sast
+open Ast
 
 let basic_print sast = 
   let rec sargl_string l =
@@ -62,8 +63,9 @@ let basic_print sast =
 
   in List.iter print_sstmt sast
 
+(*
 let _ =
   let lexbuf = Lexing.from_channel stdin in
   let ast = Parser.program Scanner.token lexbuf in
-  let sast = Semant.check ast in
-  basic_print sast
+  let sast = Semant.check ast in 
+  basic_print sast *)
