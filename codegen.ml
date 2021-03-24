@@ -2,7 +2,6 @@
 produces LLVM IR *)
 
 module L = Llvm
-(* module S = Sast *)
 open Sast 
 
 module StringMap = Map.Make(String)
