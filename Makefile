@@ -4,5 +4,9 @@ sos.native:
 	ocamlbuild -use-ocamlfind sos.native
 
 .PHONY : clean
+
+test: 
+	./tests/testall.sh
+
 clean : 
 	ocamlbuild -clean

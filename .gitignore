@@ -11,3 +11,10 @@ scanner.ml
 test
 
 .DS_Store
+
+test
+testall.log
+tests/fail-*.diff
+tests/helloworld.ll
+tests/test-*.ll
+tests/testall.log

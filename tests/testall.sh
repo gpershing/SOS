@@ -165,7 +165,8 @@ if [ $# -ge 1 ]
 then
     files=$@
 else
-    files="tests/test-*.sos tests/fail-*.sos"
+    files="helloworld.sos"
+    # "tests/test-*.sos tests/fail-*.sos"
 fi
 
 for file in $files
@@ -177,6 +178,9 @@ do
 	*fail-*)
 	    CheckFail $file 2>> $globallog
 	    ;;
+    *helloworld*)
+        Check $file 2>> $globallog
+        ;;
 	*)
 	    echo "unknown file type $file"
 	    globalerror=1
