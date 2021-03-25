@@ -18,5 +18,3 @@ tests/fail-*.diff
 tests/helloworld.ll
 tests/test-*.ll
 tests/testall.log
-
-testall.log
