@@ -7,6 +7,7 @@ open Sast
 module StringMap = Map.Make(String)
 
 type environment = {
+ebuilder : L.llbuilder
 evars : L.llvalue StringMap.t; (* The storage associated with a given var *)
 }
 
@@ -17,9 +18,6 @@ let translate prog =
   (* Create the LLVM compilation module into which
      we will generate code *)
   let the_module = L.create_module context "SOS" in
-
-  (* Pointer to the program environment *)
-  let env = ref { evars = StringMap.empty } in
 
   (* Get types from the context *)
   let i32_t      = L.i32_type    context
@@ -49,74 +47,21 @@ let translate prog =
   in
 
   (* Add a variable llvalue to environment.evars *)
-  let env_add_variable nm lv =
-      env := {!env with evars = StringMap.add nm lv !env.evars }
+  let add_variable env nm lv =
+       {env with evars = StringMap.add nm lv env.evars }
   in
   
   (* Get a variable's llvalue from environment.evars *)
-  let env_get_variable nm = StringMap.find nm !env.evars
+  let get_variable env nm = StringMap.find nm env.evars
   in
 
-
-(* unmodified code till line 95
-
-
-(* Define each function (arguments and return type) so we can 
-     call it even before we've created its body *)
-  let function_decls : (L.llvalue * sfunc_decl) StringMap.t =
-    let function_decl m fdecl =
-      let name = fdecl.sfname
-      and formal_types = 
-	Array.of_list (List.map (fun (t,_) -> ltype_of_typ t) fdecl.sformals)
-      in let ftype = L.function_type (ltype_of_typ fdecl.styp) formal_types in
-      StringMap.add name (L.define_function name ftype the_module, fdecl) m in
-    List.fold_left function_decl StringMap.empty functions in
-  
-  (* Fill in the body of the given function *)
-  let build_function_body fdecl =
-    let (the_function, _) = StringMap.find fdecl.sfname function_decls in
-    let builder = L.builder_at_end context (L.entry_block the_function) in
-
-    let int_format_str = L.build_global_stringptr "%d\n" "fmt" builder
-    and float_format_str = L.build_global_stringptr "%g\n" "fmt" builder in
-
-    (* Construct the function's "locals": formal arguments and locally
-       declared variables.  Allocate each on the stack, initialize their
-       value, if appropriate, and remember their values in the "locals" map *)
-    let local_vars =
-      let add_formal m (t, n) p = 
-        L.set_value_name n p;
-	let local = L.build_alloca (ltype_of_typ t) n builder in
-        ignore (L.build_store p local builder);
-	StringMap.add n local m 
-
-      (* Allocate space for any locally declared variables and add the
-       * resulting registers to our map *)
-      and add_local m (t, n) =
-	let local_var = L.build_alloca (ltype_of_typ t) n builder
-	in StringMap.add n local_var m 
-      in
-
-      let formals = List.fold_left2 add_formal StringMap.empty fdecl.sformals
-          (Array.to_list (L.params the_function)) in
-      List.fold_left add_local formals fdecl.slocals 
-    in
-
-    (* Return the value for a variable or formal argument.
-       Check local names first, then global names *)
-    let lookup n = try StringMap.find n local_vars
-                   with Not_found -> StringMap.find n global_vars
-    in
-
-*)
-
-
-
-
-
-
-
-(* builder is defined above...needs to define env? *)
+  (* Add a formal argument llvalue to environment.evars *)
+  let add_formal env (ty, nm) param =
+    L.set_value_name nm param;
+    let local = L.build_alloca (ltype_of_typ ty) nm env.ebuilder in
+    ignore (L.build_store param local env.ebuilder);
+    add_variable env nm local
+  in
 
     (* Add a new type definition, return ? *)
     let add_typedef = function 
@@ -126,44 +71,60 @@ let translate prog =
 
    (* Construct code for an expression
       Return its llvalue and the updated builder *)
-   let rec expr builder sexpr = 
+   let rec expr env sexpr = 
      let (t, e) = sexpr in match e with
      (* Literals *)
-     SIntLit(i) -> L.const_int i32_t i, builder
-   | SFloatLit(f) -> L.const_float_of_string float_t f, builder
-   | SBoolLit(b) -> L.const_int i1_t (if b then 1 else 0), builder
+     SIntLit(i) -> L.const_int i32_t i, env
+   | SFloatLit(f) -> L.const_float_of_string float_t f, env
+   | SBoolLit(b) -> L.const_int i1_t (if b then 1 else 0), env
 
      (* Access *)
-   | SVar(nm) -> (L.build_load (env_get_variable nm) nm builder), builder
+   | SVar(nm) -> (L.build_load (get_variable env nm) nm env.ebuilder),env 
 
      (* Definitions *)
    | SVarDef(ty, nm, ex) -> 
-       let var = L.build_alloca (ltype_of_typ ty) nm builder in
-       env_add_variable nm var ;
-       expr builder (t, SAssign(nm, ex)) (* Bootstrap off Assign *)
+       let var = L.build_alloca (ltype_of_typ ty) nm env.ebuilder in
+       add_variable env nm var ;
+       expr env (t, SAssign(nm, ex)) (* Bootstrap off Assign *)
+
+   | SFxnDef(ty, nm, args, ex) ->
+       let formal_types =
+           Array.of_list (List.map (fun (t, _) -> ltype_of_typ t) args) in
+       let ftype = L.function_type (ltype_of_typ ty) formal_types in
+       let decl = L.define_function nm ftype the_module in
+       let new_builder = L.builder_at_end context (L.entry_block decl) in
+
+       let new_env = List.fold_left2 add_formal env args (
+              Array.to_list (L.params decl)) in
+       let (lv, ret_env) = expr {new_env with ebuilder=new_builder} ex in
+       
+       (* End with a return statement *)
+       L.build_ret lv ret_env.ebuilder;
+       (* Return the old environment *) (* TODO update env's fxns *)
+       decl, env 
 
      (* Assignments *)
    | SAssign(nm, ex) ->
-       let ex' = expr builder ex in
+       let ex' = expr env ex in
        let (lv, _) = ex' in
-       ignore(L.build_store lv (env_get_variable nm) builder); ex'
+       ignore(L.build_store lv (get_variable env nm) env.ebuilder); ex'
 
      (* Function application *)
    | SFxnApp("printf", SOrderedFxnArgs([e])) ->
       let float_format_str =
-       L.build_global_stringptr "%g\n" "fmt" builder in
-      let arg, _ = expr builder e in 
+       L.build_global_stringptr "%g\n" "fmt" env.ebuilder in
+      let arg, _ = expr env e in 
       L.build_call printf_func [| float_format_str ; arg |]
-        "printf" builder, builder
+        "printf" env.ebuilder, env
    
    | _ -> raise (Failure "Found an unsupported expression")
    in
 
-   (* Builds an SOS statement and returns the updated builder *)
-   let build_stmt builder = function
-     STypeDef(td) -> add_typedef td; builder (* Builder unchanged *)
-   | SExpression(ex) -> let (_, builder) = expr builder ex 
-     in builder
+   (* Builds an SOS statement and returns the updated environment *)
+   let build_stmt env = function
+     STypeDef(td) -> add_typedef td; env
+   | SExpression(ex) -> let (_, env) = expr env ex 
+     in env
    | SImport(im) -> raise (Failure "Import not yet supported") (*TODO*)
    in
   
@@ -172,9 +133,10 @@ let translate prog =
      (* Init the builder at the beginning of main() *)
      let builder = L.builder_at_end context (L.entry_block main) in
      (* Use the builder to add the statements of main() *)
-     let builder = List.fold_left build_stmt builder stmts in
+     let start_env = { ebuilder = builder; evars = StringMap.empty } in
+     let end_env = List.fold_left build_stmt env stmts in
      (* Add a return statement *)
-     L.build_ret (L.const_int i32_t 0) builder    
+     L.build_ret (L.const_int i32_t 0) env.ebuilder    
 
    in
    ignore(build_main prog);
