@@ -7,7 +7,7 @@ open Sast
 module StringMap = Map.Make(String)
 
 type environment = {
-ebuilder : L.llbuilder
+ebuilder : L.llbuilder;
 evars : L.llvalue StringMap.t; (* The storage associated with a given var *)
 }
 
@@ -134,9 +134,9 @@ let translate prog =
      let builder = L.builder_at_end context (L.entry_block main) in
      (* Use the builder to add the statements of main() *)
      let start_env = { ebuilder = builder; evars = StringMap.empty } in
-     let end_env = List.fold_left build_stmt env stmts in
+     let end_env = List.fold_left build_stmt start_env stmts in
      (* Add a return statement *)
-     L.build_ret (L.const_int i32_t 0) env.ebuilder    
+     L.build_ret (L.const_int i32_t 0) end_env.ebuilder    
 
    in
    ignore(build_main prog);
