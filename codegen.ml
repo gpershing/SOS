@@ -9,6 +9,7 @@ module StringMap = Map.Make(String)
 type environment = {
 ebuilder : L.llbuilder;
 evars : L.llvalue StringMap.t; (* The storage associated with a given var *)
+efxns : (L.llvalue * func_bind) StringMap.t;
 }
 
 (* translate : Sast.program -> Llvm.module *)
@@ -55,6 +56,15 @@ let translate prog =
   let get_variable env nm = StringMap.find nm env.evars
   in
 
+  (* Add a function declaration to environment.efxns *)
+  let add_function env nm bind = 
+      {env with efxns = StringMap.add nm bind env.efxns }
+  in
+
+  (* Gets a function's llvalue and fdecl from environment.evars *)
+  let get_function env nm = StringMap.find nm env.efxns
+  in
+
   (* Add a formal argument llvalue to environment.evars *)
   let add_formal env (ty, nm) param =
     L.set_value_name nm param;
@@ -84,7 +94,7 @@ let translate prog =
      (* Definitions *)
    | SVarDef(ty, nm, ex) -> 
        let var = L.build_alloca (ltype_of_typ ty) nm env.ebuilder in
-       add_variable env nm var ;
+       let env = add_variable env nm var in
        expr env (t, SAssign(nm, ex)) (* Bootstrap off Assign *)
 
    | SFxnDef(ty, nm, args, ex) ->
@@ -93,15 +103,17 @@ let translate prog =
        let ftype = L.function_type (ltype_of_typ ty) formal_types in
        let decl = L.define_function nm ftype the_module in
        let new_builder = L.builder_at_end context (L.entry_block decl) in
+       let bind = decl, { ftype = ty; formals = args } in
 
        let new_env = List.fold_left2 add_formal env args (
               Array.to_list (L.params decl)) in
+       let new_env = add_function new_env nm bind in
        let (lv, ret_env) = expr {new_env with ebuilder=new_builder} ex in
        
        (* End with a return statement *)
-       L.build_ret lv ret_env.ebuilder;
-       (* Return the old environment *) (* TODO update env's fxns *)
-       decl, env 
+       ignore (L.build_ret lv ret_env.ebuilder);
+       (* Add this function to the returned environment *)
+       decl, add_function env nm bind
 
      (* Assignments *)
    | SAssign(nm, ex) ->
@@ -110,12 +122,24 @@ let translate prog =
        ignore(L.build_store lv (get_variable env nm) env.ebuilder); ex'
 
      (* Function application *)
+    (* Special functions *)
    | SFxnApp("printf", SOrderedFxnArgs([e])) ->
       let float_format_str =
        L.build_global_stringptr "%g\n" "fmt" env.ebuilder in
       let arg, _ = expr env e in 
       L.build_call printf_func [| float_format_str ; arg |]
         "printf" env.ebuilder, env
+
+    (* General functions *)
+   | SFxnApp(nm, SOrderedFxnArgs(args)) -> 
+      let (fdef, fdecl) = get_function env nm in
+      (* Get llvalues of args, discard environments *)
+      let llargs = List.map
+        (fun a -> let (ll, _) = expr env a in ll) args in
+      let result = (match fdecl.ftype with
+                      Void -> ""
+                    | _ -> nm ^ "_result") in
+      L.build_call fdef (Array.of_list llargs) result env.ebuilder, env
    
    | _ -> raise (Failure "Found an unsupported expression")
    in
@@ -133,7 +157,8 @@ let translate prog =
      (* Init the builder at the beginning of main() *)
      let builder = L.builder_at_end context (L.entry_block main) in
      (* Use the builder to add the statements of main() *)
-     let start_env = { ebuilder = builder; evars = StringMap.empty } in
+     let start_env = { ebuilder = builder; evars = StringMap.empty;
+       efxns = StringMap.empty } in
      let end_env = List.fold_left build_stmt start_env stmts in
      (* Add a return statement *)
      L.build_ret (L.const_int i32_t 0) end_env.ebuilder    
