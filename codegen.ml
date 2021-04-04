@@ -2,6 +2,7 @@
 produces LLVM IR *)
 
 module L = Llvm
+open Ast
 open Sast 
 
 module StringMap = Map.Make(String)
@@ -79,6 +80,23 @@ let translate prog =
     | SStructDef(_) -> raise (Failure "Struct def not yet supported")
     in
 
+   (* Construct code for a binop
+      Return its llvalue and the updated environment *)
+   let binop_expr env typ ll1 op ll2 = (match op with
+      Add -> (match typ with
+        Int -> L.build_add
+      | Float -> L.build_fadd
+      | _ -> raise (Failure "That type not supported for Add")
+      )
+    | Sub -> (match typ with
+        Int -> L.build_sub
+      | Float -> L.build_fsub
+      | _ -> raise (Failure "That type not supported for Sub")
+      )
+    | _ -> raise (Failure "Operator not yet supported")
+    ) ll1 ll2 "tmp" env.ebuilder, env 
+   in
+
    (* Construct code for an expression
       Return its llvalue and the updated builder *)
    let rec expr env sexpr = 
@@ -120,6 +138,17 @@ let translate prog =
        let ex' = expr env ex in
        let (lv, _) = ex' in
        ignore(L.build_store lv (get_variable env nm) env.ebuilder); ex'
+
+     (* Operators *)
+   | SBinop(exp1, op, exp2) ->
+       (match op with
+         (* Sequencing deals with environment differently than other binops*)
+         Seq -> raise (Failure "Sequencing not yet supported")
+       | _ -> 
+         let (ll1, _) = expr env exp1 in
+         let (ll2, _) = expr env exp2 in
+         binop_expr env t ll1 op ll2
+       )
 
      (* Function application *)
     (* Special functions *)

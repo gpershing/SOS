@@ -10,4 +10,3 @@ test:
 
 clean : 
 	ocamlbuild -clean
-	rm testall.log

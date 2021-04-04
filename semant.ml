@@ -115,8 +115,20 @@ let check prog =
     | _ -> vmap
   in
 
-  (* maybe it is better do define check funcs for each
-     alias, struct and expr here *)
+  let addsub_expr env exp1 op exp2 = 
+      let (t1, _) = exp1 in let (t2, _) = exp2 in
+      match (t1, t2) with
+        (Int, Int) -> (Int, SBinop(exp1, op, exp2)), env
+      | (Float, Float) -> (Float, SBinop(exp1, op, exp2)), env
+      | _ -> raisestr ("Cannot add or subtract these types")
+  in
+
+  let binop_expr env exp1 op exp2 = match op with
+      Add -> addsub_expr env exp1 op exp2
+    | Sub -> addsub_expr env exp1 op exp2
+    | _ -> raisestr ("Undefined operator")
+  in
+
   let rec expr env = function
      
       VarDef (tstr, name, exp) -> 
@@ -161,7 +173,10 @@ let check prog =
 
     | Uop(_) -> raisestr ("Unary operations not yet supported") (* TODO *)
 
-    | Binop(_) -> raisestr ("Binary operations not yet supported") (* TODO *)
+    | Binop(exp1, op, exp2) -> 
+         let (e1, _) = expr env exp1 in
+         let (e2, _) = expr env exp2 in
+         binop_expr env e1 op e2
 
     | FxnApp (name, args) -> 
          let fxn = sig_of_func name env.funcmap in
