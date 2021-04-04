@@ -11,6 +11,7 @@ type environment = {
 ebuilder : L.llbuilder;
 evars : L.llvalue StringMap.t; (* The storage associated with a given var *)
 efxns : (L.llvalue * func_bind) StringMap.t;
+ecurrent_fxn : L.llvalue (* The current function *)
 }
 
 (* translate : Sast.program -> Llvm.module *)
@@ -126,7 +127,8 @@ let translate prog =
        let new_env = List.fold_left2 add_formal env args (
               Array.to_list (L.params decl)) in
        let new_env = add_function new_env nm bind in
-       let (lv, ret_env) = expr {new_env with ebuilder=new_builder} ex in
+       let new_env = {new_env with ebuilder = new_builder; ecurrent_fxn=decl} in
+       let (lv, ret_env) = expr new_env ex in
        
        (* End with a return statement *)
        ignore (L.build_ret lv ret_env.ebuilder);
@@ -136,7 +138,7 @@ let translate prog =
      (* Assignments *)
    | SAssign(nm, ex) ->
        let ex' = expr env ex in
-       let (lv, _) = ex' in
+       let (lv, env) = ex' in
        ignore(L.build_store lv (get_variable env nm) env.ebuilder); ex'
 
      (* Operators *)
@@ -145,8 +147,8 @@ let translate prog =
          (* Sequencing deals with environment differently than other binops*)
          Seq -> raise (Failure "Sequencing not yet supported")
        | _ -> 
-         let (ll1, _) = expr env exp1 in
-         let (ll2, _) = expr env exp2 in
+         let (ll1, env) = expr env exp1 in
+         let (ll2, env) = expr env exp2 in
          binop_expr env t ll1 op ll2
        )
 
@@ -155,20 +157,43 @@ let translate prog =
    | SFxnApp("printf", SOrderedFxnArgs([e])) ->
       let float_format_str =
        L.build_global_stringptr "%g\n" "fmt" env.ebuilder in
-      let arg, _ = expr env e in 
+      let arg, env  = expr env e in 
       L.build_call printf_func [| float_format_str ; arg |]
         "printf" env.ebuilder, env
 
     (* General functions *)
    | SFxnApp(nm, SOrderedFxnArgs(args)) -> 
       let (fdef, fdecl) = get_function env nm in
-      (* Get llvalues of args, discard environments *)
-      let llargs = List.map
-        (fun a -> let (ll, _) = expr env a in ll) args in
+      (* Get llvalues of args and accumualte env *)
+      let (llargs_rev, env) = List.fold_left
+        (fun (l, en) a -> let (ll, e) = expr env a in (ll::l, e))
+        ([], env) args in
+      let llargs = List.rev llargs_rev in
       let result = (match fdecl.ftype with
                       Void -> ""
                     | _ -> nm ^ "_result") in
       L.build_call fdef (Array.of_list llargs) result env.ebuilder, env
+
+    (* Control flow *)
+   | SIfElse (eif, ethen, eelse) ->
+      let (cond, inenv) = expr env eif in
+      (* Memory to store the value of this expression *)
+      let ret = L.build_alloca (ltype_of_typ t) "if_tmp" env.ebuilder in
+      let merge_bb = L.append_block context "merge" env.ecurrent_fxn in
+      let then_bb = L.append_block context "then" env.ecurrent_fxn in
+      let else_bb = L.append_block context "else" env.ecurrent_fxn in
+      ignore (L.build_cond_br cond then_bb else_bb env.ebuilder);
+
+      let (thenv, then_env) = expr {inenv with ebuilder=(L.builder_at_end context then_bb)} ethen in
+      ignore (L.build_store thenv ret then_env.ebuilder);
+      ignore (L.build_br merge_bb then_env.ebuilder);
+
+      let (elsev, else_env) = expr {inenv with ebuilder=(L.builder_at_end context else_bb)} eelse in
+      ignore (L.build_store elsev ret else_env.ebuilder);
+      ignore (L.build_br merge_bb else_env.ebuilder);
+
+      let env ={env with ebuilder=(L.builder_at_end context merge_bb)} in
+      (L.build_load ret "if_tmp" env.ebuilder), env
    
    | _ -> raise (Failure "Found an unsupported expression")
    in
@@ -187,7 +212,7 @@ let translate prog =
      let builder = L.builder_at_end context (L.entry_block main) in
      (* Use the builder to add the statements of main() *)
      let start_env = { ebuilder = builder; evars = StringMap.empty;
-       efxns = StringMap.empty } in
+       efxns = StringMap.empty; ecurrent_fxn = main } in
      let end_env = List.fold_left build_stmt start_env stmts in
      (* Add a return statement *)
      L.build_ret (L.const_int i32_t 0) end_env.ebuilder    
