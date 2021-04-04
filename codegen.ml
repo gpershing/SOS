@@ -81,20 +81,52 @@ let translate prog =
     | SStructDef(_) -> raise (Failure "Struct def not yet supported")
     in
 
+   (* Operator Maps *)
+   let opstr = function
+     Add -> "Add"
+   | Sub -> "Sub"
+   | Mul -> "Mul"
+   | Div -> "Div"
+   | Mod -> "Mod"
+   | Pow -> "Pow"
+   | Eq -> "Eq"
+   | Neq -> "Neq"
+   | Less -> "Less"
+   | Greater -> "Greater"
+   | LessEq -> "LessEq"
+   | GreaterEq -> "GreaterEq"
+   | And -> "And"
+   | Or -> "Or" in
+
+   let make_opmap l =
+     List.fold_left (fun map (op, fxn) -> StringMap.add (opstr op) fxn map)
+      StringMap.empty l
+   in
+
+   let int_map = make_opmap
+   [(Add, L.build_add); (Sub, L.build_sub);
+    (Mul, L.build_mul); (Div, L.build_sdiv);
+    (Eq, L.build_icmp L.Icmp.Eq); (Neq, L.build_icmp L.Icmp.Ne);
+    (Less, L.build_icmp L.Icmp.Slt); (Greater, L.build_icmp L.Icmp.Sgt);
+    (LessEq, L.build_icmp L.Icmp.Sle); (GreaterEq, L.build_icmp L.Icmp.Sge)
+     ]
+   in
+   
+   let float_map = make_opmap
+   [(Add, L.build_fadd); (Sub, L.build_fsub);
+    (Mul, L.build_fmul); (Div, L.build_fdiv);
+    (Eq, L.build_fcmp L.Fcmp.Oeq); (Neq, L.build_fcmp L.Fcmp.One);
+    (Less, L.build_fcmp L.Fcmp.Olt); (Greater, L.build_fcmp L.Fcmp.Ogt);
+    (LessEq, L.build_fcmp L.Fcmp.Ole); (GreaterEq, L.build_fcmp L.Fcmp.Oge)
+     ]
+   in
+
    (* Construct code for a binop
       Return its llvalue and the updated environment *)
-   let binop_expr env typ ll1 op ll2 = (match op with
-      Add -> (match typ with
-        Int -> L.build_add
-      | Float -> L.build_fadd
-      | _ -> raise (Failure "That type not supported for Add")
-      )
-    | Sub -> (match typ with
-        Int -> L.build_sub
-      | Float -> L.build_fsub
-      | _ -> raise (Failure "That type not supported for Sub")
-      )
-    | _ -> raise (Failure "Operator not yet supported")
+   let binop_expr env typ t1 t2 ll1 op ll2 = (match (t1, t2) with
+      (Int, Int) -> StringMap.find (opstr op) int_map
+    | (Float, Float) -> StringMap.find (opstr op) float_map
+    | _ -> raise (Failure "Given types do not support binops")
     ) ll1 ll2 "tmp" env.ebuilder, env 
    in
 
@@ -147,9 +179,10 @@ let translate prog =
          (* Sequencing deals with environment differently than other binops*)
          Seq -> raise (Failure "Sequencing not yet supported")
        | _ -> 
+         let (t1, _) = exp1 in let (t2, _) = exp2 in
          let (ll1, env) = expr env exp1 in
          let (ll2, env) = expr env exp2 in
-         binop_expr env t ll1 op ll2
+         binop_expr env t t1 t2 ll1 op ll2
        )
 
      (* Function application *)

@@ -123,9 +123,33 @@ let check prog =
       | _ -> raisestr ("Cannot add or subtract these types")
   in
 
+  let eq_expr env exp1 op exp2 = 
+      let (t1, _) = exp1 in let (t2, _) = exp2 in
+      (match (t1, t2) with
+        (Int, Int) -> ()
+      | (Float, Float) -> ()
+      | _ -> raisestr ("Cannot equate these types") );
+      (Bool, SBinop(exp1, op, exp2)), env
+  in
+
+  let comp_expr env exp1 op exp2 = 
+      let (t1, _) = exp1 in let (t2, _) = exp2 in
+      (match (t1, t2) with
+        (Int, Int) -> ()
+      | (Float, Float) -> ()
+      | _ -> raisestr ("Cannot compare these types") );
+      (Bool, SBinop(exp1, op, exp2)), env
+  in
+
   let binop_expr env exp1 op exp2 = match op with
       Add -> addsub_expr env exp1 op exp2
     | Sub -> addsub_expr env exp1 op exp2
+    | Eq  -> eq_expr     env exp1 op exp2
+    | Neq -> eq_expr     env exp1 op exp2
+    | Less      -> comp_expr env exp1 op exp2
+    | Greater   -> comp_expr env exp1 op exp2
+    | LessEq    -> comp_expr env exp1 op exp2
+    | GreaterEq -> comp_expr env exp1 op exp2
     | _ -> raisestr ("Undefined operator")
   in
 
