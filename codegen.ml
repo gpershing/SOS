@@ -209,24 +209,34 @@ let translate prog =
 
     (* Control flow *)
    | SIfElse (eif, ethen, eelse) ->
-      let (cond, inenv) = expr env eif in
+      let (cond, env) = expr env eif in
       (* Memory to store the value of this expression *)
-      let ret = L.build_alloca (ltype_of_typ t) "if_tmp" env.ebuilder in
+      let ret = (if t != Void then
+        Some(L.build_alloca (ltype_of_typ t) "if_tmp" env.ebuilder)
+        else None) in
       let merge_bb = L.append_block context "merge" env.ecurrent_fxn in
       let then_bb = L.append_block context "then" env.ecurrent_fxn in
       let else_bb = L.append_block context "else" env.ecurrent_fxn in
       ignore (L.build_cond_br cond then_bb else_bb env.ebuilder);
 
-      let (thenv, then_env) = expr {inenv with ebuilder=(L.builder_at_end context then_bb)} ethen in
-      ignore (L.build_store thenv ret then_env.ebuilder);
+      let (thenv, then_env) = expr {env with ebuilder=(L.builder_at_end context then_bb)} ethen in
+      (match ret with Some(rv) ->
+        ignore (L.build_store thenv rv then_env.ebuilder)
+        | None -> () );
       ignore (L.build_br merge_bb then_env.ebuilder);
 
-      let (elsev, else_env) = expr {inenv with ebuilder=(L.builder_at_end context else_bb)} eelse in
-      ignore (L.build_store elsev ret else_env.ebuilder);
+      let (elsev, else_env) = expr {env with ebuilder=(L.builder_at_end context else_bb)} eelse in
+      (match ret with Some(rv) ->
+        ignore (L.build_store elsev rv else_env.ebuilder)
+        | None -> () );
       ignore (L.build_br merge_bb else_env.ebuilder);
 
       let env ={env with ebuilder=(L.builder_at_end context merge_bb)} in
-      (L.build_load ret "if_tmp" env.ebuilder), env
+      let rv = match ret with
+        Some(rv) -> rv
+      | None -> L.build_alloca (ltype_of_typ Bool) "if_tmp" env.ebuilder
+      in
+      (L.build_load rv "if_tmp" env.ebuilder), env
    
    | _ -> raise (Failure "Found an unsupported expression")
    in
