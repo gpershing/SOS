@@ -18,11 +18,6 @@ type environment = {
   funcmap : func_bind StringMap.t;
 }
 
-type typecheck =
-  TMatch
-| TCast
-| TNoMatch
-
 let raisestr s = raise (Failure s) 
 
 let check prog =
@@ -66,11 +61,6 @@ let check prog =
       then StringMap.find s map
       else raisestr ("Could not resolve type id "^s)
   | ArrayTypeID(s) -> Array(resolve_typeid s map)
-  in
-
-  (* checks whether the given types match and, if not, whether b can be cast to a *)
-  let match_type a b = 
-    if a = b then TMatch else TNoMatch (* TODO Casting not currently supported *)
   in
 
   (* should add a function to add three things above dynamically *)
@@ -153,17 +143,47 @@ let check prog =
     | _ -> raisestr ("Undefined operator")
   in
 
+  (* Returns a sexp that casts sexp to typ, if possible. *)
+  (* Returns sexp if no cast is required *)
+  let cast_to typ sexp err_str = 
+   let (expt, _) = sexp in
+   if expt=typ then sexp else (
+   (match (typ, expt) with
+     (Int, Float)   -> ()
+   | (Int, Bool)    -> ()
+   | (Bool, Int)    -> ()
+   | (Bool, Float)  -> ()
+   | (Float, Int)   -> ()
+   | _ -> raisestr err_str );
+   (typ, SCast(sexp)))
+  in
+
+  (* Takes a pair of sexprs and makes their types agree by adding casts,
+   if possible. *)
+  let agree_type e1 e2 err_str =
+    let ((t1, _), (t2, _)) = (e1, e2) in
+    if t1=t2 then (e1, e2) else
+    (match (t1, t2) with
+     (* Priority is Float -> Int -> Bool *)
+      (Float, _) -> (e1, cast_to t1 e2 err_str)
+    | (_, Float) -> (cast_to t2 e1 err_str, e2)
+    | (Int, _)   -> (e1, cast_to t1 e2 err_str)
+    | (_, Int)   -> (cast_to t2 e1 err_str, e2)
+    | (Bool, _)  -> (e1, cast_to t1 e2 err_str)
+    | (_, Bool)  -> (cast_to t2 e1 err_str, e2)
+    | _ -> raisestr err_str )
+  in
+
   let rec expr env = function
      
       VarDef (tstr, name, exp) -> 
         let (sexp, _) = expr env exp in
         let (exptype, _) = sexp in
         let t = resolve_typeid tstr env.typemap in
-        (match match_type t exptype with
-          TMatch -> ((t, SVarDef(t, name, sexp)),
-              { env with varmap = StringMap.add name t env.varmap } )
+        ((t, SVarDef(t, name, cast_to t sexp
+                     ("Could not resolve type when defining "^name))),
+         { env with varmap = StringMap.add name t env.varmap } )
           (* TODO may want to deal with overriding variables differently *)
-        |  _ -> raisestr ("Could not match type when defining variable " ^ name))
 
     | FxnDef (tstr, name, args, exp) ->
         let t = resolve_typeid tstr env.typemap in
@@ -176,24 +196,22 @@ let check prog =
            funcmap = newfxnmap; 
            varmap = add_formals args env.varmap env.typemap; } exp
         in
-        (match match_type t exptype with
-          TMatch -> ((t, SFxnDef(t, name, sargs, (exptype, sx))),
-                  { env with funcmap = newfxnmap })
-          | _ -> raisestr ("Incorrect return type for function " ^ name))
+        ((t, SFxnDef(t, name, sargs, cast_to t (exptype, sx)
+                     ("Incorrect return type for function "^name))),
+         { env with funcmap = newfxnmap } )
 
     | Assign (name, exp) ->
          let ((exptype, sexp), _) = expr env exp in
          let t = type_of_id name env.varmap in
-         (match match_type t exptype with
-           TMatch -> ((t, SAssign(name, (exptype, sexp))), env)
-         | _ -> raisestr ("Could not match type when assigning variable "^name))
+         ((t, SAssign(name, cast_to t (exptype, sexp)
+                      ("Could not match type when assigning variable "^name))),
+          env)
 
     | AssignStruct (name, field, exp) ->
          let ((exptype, sexp), _) = expr env exp in
          let t = type_of_field name field env.varmap in
-         (match match_type t exptype with
-           TMatch -> ((t, SAssignStruct(name, field, (exptype, sexp))), env)
-         |  _ -> raisestr ("Could not match type when assigning field "^name^"."^field))
+         ((t, SAssignStruct(name, field, cast_to t (exptype, sexp)
+                            ("Could not match type when assigning field "^name^"."^field))), env)
 
     | Uop(_) -> raisestr ("Unary operations not yet supported") (* TODO *)
 
@@ -209,9 +227,10 @@ let check prog =
              let rec check_args sigl expl env = match expl with
                hd :: tl -> let ((exptype, sexp), _) = expr env hd in
                  (match sigl with
-                   (typ, nm) :: sigtl -> (match match_type typ exptype with
-                       TMatch -> (exptype, sexp) :: check_args sigtl tl env
-                     | _ -> raisestr ("Could not match type of argument "^nm))
+                   (typ, nm) :: sigtl ->
+                      (cast_to typ (exptype, sexp)
+                       ("Could not match type of argument "^nm)) ::
+                       check_args sigtl tl env
                    | _ -> raisestr ("Too many arguments for function signature"))
              | [] -> if sigl = [] then [] else raisestr ("Function currying not yet supported")
            in ((fxn.ftype, SFxnApp(name, SOrderedFxnArgs(check_args fxn.formals exps env))), env) 
@@ -219,24 +238,25 @@ let check prog =
          )
 
     | IfElse (eif, ethen, eelse) -> 
-        let ((exptype, sexp), _) = expr env eif in
-        (match match_type exptype Bool with
-          TMatch -> let ((thentype, thenexp), _) = expr env ethen in
-            let ((elsetype, elseexp), _)  = expr env eelse in
-            (match match_type thentype elsetype with
-              TMatch -> ((thentype, SIfElse((exptype, sexp), (thentype, thenexp), (elsetype, elseexp))), env)
-            | _ -> raisestr ("Could not reconcile types of then and else clauses"))
-        | _ -> raisestr ("Could not resolve if condition to a bool"))
+        let (sif, _) = expr env eif in
+        let scif = cast_to Bool sif
+         "Could not resolve if condition to a bool" in
+        let (sthen, _) = expr env ethen in
+        let (selse, _)  = expr env eelse in
+        let (scthen, scelse) = agree_type sthen selse
+          "Could not reconcile types of then and else clauses" in
+        let (t, _) = scthen in
+        ((t, SIfElse(scif, scthen, scelse)), env)
 
     | ArrayCon l -> (match l with
       hd :: tl ->
         let ((exptype, sexp), _) = expr env hd in 
         ((Array(exptype), SArrayCon((exptype, sexp) :: List.map
-          (fun ex -> let ((et, se), _) = expr env ex in
-           match match_type exptype et with TMatch -> (et, se) 
-           | _ -> raisestr ("Cannot make an array literal out of elements of different types")
+          (fun ex -> let (se, _) = expr env ex in
+           cast_to exptype se
+             "Could not resolve types of array literal"
           )
-          tl)), env)
+          tl)), env) (* TODO: Smarter Array type casting *)
       | [] -> ((EmptyArray, SArrayCon([])), env) (* TODO: make appropriate array cast *)
       )
 
@@ -255,11 +275,11 @@ let check prog =
       (match st with
         Struct(sargs) -> 
         let rec create_named_struct argl = function
-          e :: tl -> let ((exptype, sexp), _) = expr env e in
+          e :: tl -> let (sexp, _) = expr env e in
             (match argl with (t, nm) :: argtl ->
-              (match match_type t exptype with
-                 TMatch -> (exptype, sexp) :: create_named_struct argtl tl
-               | _ -> raisestr ("Could not resolve type of struct field "^nm))
+              cast_to t sexp
+                ("Could not resolve type of struct field "^nm)
+               :: create_named_struct argtl tl
             | _ -> raisestr ("Too many arguments for struct "^name))
           | [] -> (match argl with
             [] -> []

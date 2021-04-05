@@ -38,6 +38,7 @@ and sx =
 | SIntLit of int                            (* int *)
 | SFloatLit of string                       (* float *)
 | SBoolLit of bool                          (* bool *)
+| SCast of sexpr                            (* type casting *)
 
 and snamedArg = id * sexpr 
 
