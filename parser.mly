@@ -81,6 +81,7 @@ expr:
   | expr SEQ expr { Binop($1,Seq,$3) }
   | LPAREN expr RPAREN { $2 }
   | VAR LBRACE args RBRACE { NamedStruct($1, $3) }
+  | VAR LBRACK expr RBRACK { ArrayAccess($1, $3) }
   | LBRACE args RBRACE { AnonStruct($2) }
   | LBRACK args RBRACK { ArrayCon($2) }
   | stexpr { $1 }

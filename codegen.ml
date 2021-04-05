@@ -23,18 +23,23 @@ let translate prog =
   let the_module = L.create_module context "SOS" in
 
   (* Get types from the context *)
-  let i32_t      = L.i32_type    context
-  and i8_t       = L.i8_type     context
-  and i1_t       = L.i1_type     context
-  and float_t    = L.double_type context
-  and void_t     = L.void_type   context in
+  let i32_t      = L.i32_type     context
+  and i8_t       = L.i8_type      context
+  and i1_t       = L.i1_type      context
+  and float_t    = L.double_type  context
+  and void_t     = L.void_type    context 
+  and ptr_t      = L.pointer_type context
+  and struct_t   = L.struct_type  context in
 
   (* Return the LLVM type for a SOS type *)
   let ltype_of_typ = function
-      Int   -> i32_t
-    | Bool  -> i1_t
-    | Float -> float_t
-    | Void  -> void_t
+      Int      -> i32_t
+    | Bool     -> i1_t
+    | Float    -> float_t
+    | Void     -> void_t
+    (* An array is a pointer to a struct containing an array (as a pointer)
+      and its length, an int *)
+    | Array(t) -> ptr_t struct_t [|ptr_t (ltype_of_type t); i32_t|]
     | _ -> raise (Failure "Non-basic types not yet supported") (*TODO*)  
 
   in
@@ -96,7 +101,9 @@ let translate prog =
    | LessEq -> "LessEq"
    | GreaterEq -> "GreaterEq"
    | And -> "And"
-   | Or -> "Or" in
+   | Or -> "Or" 
+   | Seq -> "Seq"
+   in
 
    let make_opmap l =
      List.fold_left (fun map (op, fxn) -> StringMap.add (opstr op) fxn map)
@@ -141,6 +148,14 @@ let translate prog =
 
      (* Access *)
    | SVar(nm) -> (L.build_load (get_variable env nm) nm env.ebuilder),env 
+   | SArrayAccess(nm, idx) -> 
+     let (idx_lv, env) = expr env idx in
+     (* Access the pointer, then the struct, then the array *)
+     L.build_gep (get_variable env nm) [|
+       (*ptr*)    L.const_int i32_t 0;
+       (*struct*) L.const_int i32_t 0;
+       (*array*)  idx_lv |]
+       (nm^"el") env.ebuilder, env
 
      (* Definitions *)
    | SVarDef(ty, nm, ex) -> 
@@ -234,7 +249,7 @@ let translate prog =
       let env ={env with ebuilder=(L.builder_at_end context merge_bb)} in
       let rv = match ret with
         Some(rv) -> rv
-      | None -> L.build_alloca (ltype_of_typ Bool) "if_tmp" env.ebuilder
+      | None -> L.const_int (ltype_of_typ Bool) 0 env.ebuilder
       in
       (L.build_load rv "if_tmp" env.ebuilder), env
 
