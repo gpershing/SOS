@@ -237,6 +237,24 @@ let translate prog =
       | None -> L.build_alloca (ltype_of_typ Bool) "if_tmp" env.ebuilder
       in
       (L.build_load rv "if_tmp" env.ebuilder), env
+
+    (* Type casting *)
+   | SCast (ex) -> let t_to = t in let (t_from, _) = ex in 
+      let normal_cast command = 
+        let (lv, _) = expr env ex in
+        (command lv (ltype_of_typ t_to) "cast" env.ebuilder, env)
+      in
+      let il i = (Int, SIntLit(i)) in
+      let fl f = (Float, SFloatLit(f)) in
+      (
+      match (t_to, t_from) with
+        (Int, Float)  -> normal_cast L.build_fptosi 
+      | (Int, Bool)   -> expr env (Int, SIfElse(ex, il 1, il 0))
+      | (Float, Int)  -> normal_cast L.build_sitofp
+      | (Bool, Int)   -> expr env (Bool, SBinop(ex, Neq, il 0))
+      | (Bool, Float) -> expr env (Bool, SBinop(ex, Neq, fl "0"))
+      | _             -> raise (Failure "Unknown type cast")
+      )
    
    | _ -> raise (Failure "Found an unsupported expression")
    in
