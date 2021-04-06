@@ -5,4 +5,6 @@ struct s = {
     }
 
 s s1 = {5, 5}
+int a = s1.add2
+print(a) //7
 

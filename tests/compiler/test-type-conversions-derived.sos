@@ -1,0 +1,8 @@
+//point to vector
+/*
+point poi = {-2.5, -4.0}
+vector vec = poi 
+
+vector vec2 = {1.0, 2,0}
+point poi2 = vec2
+*/

@@ -1,7 +1,10 @@
-int first() = 1
+//nested function application
 
+int first() = 1
 int second(int x) = x
 
 int a = second(first())
+print(a) //1
 
 int b = second(second(second(first())))
+print(b) //1

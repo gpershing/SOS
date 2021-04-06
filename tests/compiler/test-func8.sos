@@ -1,6 +1,6 @@
-//currying functions possibly
-/*
-int foo(int x) = (int bar(int y) = y); bar()
+//sequencing functions
 
-func a = foo()
-*/
+int foo() = (int bar() = 5); bar()
+
+int a = foo()
+print(a) //5

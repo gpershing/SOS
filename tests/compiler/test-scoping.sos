@@ -1,9 +1,14 @@
-int func1(int x) = x
+//outer x, x in function
 
-int y = func1(5)
+int func1(int x) = x+x
+
 int x = func1(3)
+print(x) //6
 
-int func2() = int x = 3; x
+x = func1(x)
+print(X) //12
 
-y = func2()
+int func2() = int x = 3; x+x
+
 x = func2()
+print(x) //6

@@ -3,3 +3,4 @@
 int pow(int x, int y) = n^x
 
 int var = pow(2,3)
+print(var) //8

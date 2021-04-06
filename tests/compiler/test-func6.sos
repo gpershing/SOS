@@ -3,3 +3,6 @@
 int pow(int x, int y) = x^y
 
 int var = pow(x = 2, y = 3)
+int var2 = pow(y = 3, x = 2)
+print(var) //8
+print(var2) //8

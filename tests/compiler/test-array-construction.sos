@@ -1,31 +1,44 @@
-//int array
-array int mult_2(int i, array arr) = 
-    if i == -1
-    then arr
-    //array access and assignment
-    else (arr[i] = i*2; mult_2(i -1, arr))
-//array construction
+/*int array*/
+//type implicit
 array arr = [-2, -1, 0, 1, 2, 3]
-arr = mult_2(i: 5, arr: arr)
+print(arr[0]) //-2
 
-//float array
+//type explicit
+array int arrr = [1]
+print(arrr[0]) //1
+
+
+/*float array*/
+//type implicit
 array arr2 = [5.2]
-arr2[0] = 3.1
+printf(arr2[0]) //5.2
 
-//bool array
+//type explicit
+array float arrr2 = [1.2, 2.4]
+printf(arrr2[1]) //2.4
+
+
+/*bool array*/
+//type implicit
 array arr3 = [True]
-arr3[0] = False
+printb(arr3[0]) //True
 
-//struct array in test-array-of-struct.sos
+//type explicit
+array bool arrr3 = [False]
+printb(arrr3[0]) //False
 
-//nested arrays
-array array nested = [[1], [2,3], [4,5,6]]
 
-//arrays using functions
+/*struct array in test-array-of-struct.sos*/
+
+
+/*nested arrays*/
+array array int nested = [[1], [2,3], [4,5,6]]
+print(nested[0][0]) //1
+
+
+/*func arrays*/
 int func1() = 5
 int func2(int k) = k
 
 array arr4 = [func1(), func2(3)]
-
-//arrays if we make functions as types
-array arr5 = [func1, func2]
+print(arr4[0]) //5

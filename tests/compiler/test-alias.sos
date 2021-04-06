@@ -1,0 +1,134 @@
+/*alias of int */
+alias year = int
+alias month = int
+
+//alias of alias
+alias day = month 
+
+year present_year = 2021
+month present_month = 3
+day present_day = 20
+print(present_year) //2021
+print(present_month) //3
+print(present_day) //20
+
+
+/*alias operations */
+
+//alias operator primitive -> alias
+//year + int -> year
+year test = present_year + 1
+print(test) //2021+1=2022
+
+//alias operator primitive -> alias2
+//year + int -> month
+month test2 = present_year + 1
+print(test) //2021+1=2022
+
+//alias operator primitive -> aliasofalias
+//year + int -> day
+day test3 = present_year + 3
+print(test3) //2021+1=2022
+
+//alias operator primitive -> primitive
+//year + int -> int
+int test4 = present_year + 1
+print(test4) //2021+1=2022
+
+//alias operator alias -> primitive
+//year + year -> int
+int test5 = present_year + present_year
+print(test5) //2021+2021=4042
+
+//alias operator alias2 -> primitive
+//year + month -> int
+int test6 = present_year + present_month
+print(test6) //2021+3=2024
+
+//alias operator aliasofalias -> primitive
+//year + month -> month
+int test7 = present_year + present_day
+print(test7) //2021+20=2041
+
+//mixing int operators and aliases
+day test8 = present_month*present_day-present_year/10%9
+print(test8) //3*20-2021/10%9=-1961
+
+
+/*alias comparison */
+//primitive vs alias
+int i1 = 1
+year y1 = 1
+bool result = i1 = y1
+printb(result) //True
+
+//alias vs alias
+year y2 = 1
+bool result2 = y1 = y2
+printb(result2) //True
+
+//alias vs alias2
+month m1 = 1
+bool result3 = y1 == m1
+print(result3) //True
+
+//alias vs aliasofalias
+day d1 = 1
+bool result4 = y1 == d1
+print(result4) //True
+
+
+/*alias of struct*/
+struct date = {int day, year yr, month mth}
+date present_day = {20, present_year, present_month}
+print(present_day.yr) //2021
+
+//alias of struct field
+present_day.yr = present_month
+print(present_day.yr) //3
+
+//alias of struct
+alias new_date = date
+new_date newer = present_day
+print(newer.day) //20
+
+new_date newer2 = {1, 2, 3}
+print(newer.day) //1
+
+bool result5 = newer == present_day
+printb(result5) //True (pass by reference)
+bool result6 = newer == newer2 
+printb(result6) //False
+
+
+/*alias of float*/
+alias x_dist = float
+x_dist x = 1.2
+print(x_dist) //1.2
+
+/*alias array*/
+//alias of array int
+alias scores = array int
+scores class1 = [87,93,70]
+print(class1[0]) //87
+class1 + 3
+print(class1[0]) //90
+
+//alias of alias of array int
+alias marks = scores
+marks class2 = class1
+marks class3 = [87, 93, 70]
+bool result7 = class2 == class1
+printb(result7) //True
+bool result8 = class3 == class1
+printb(result8) //False
+
+//alias of array of alias of array int: array array int
+alias class-scores = array scores
+class-scores highschool1 = [class1, [1,2,3]]
+print(highschool1[0][0]) //87
+
+//alias of array array array int
+alias school-scores = array array array int
+school-scores district1 = [highschool1, [[[4,5,6], [7,8,9]], [[10,11], [12,13,14,15]]]
+print(district1[0][0][0]) //4

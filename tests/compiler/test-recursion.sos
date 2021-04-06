@@ -5,3 +5,5 @@ else add(n-1) + n
 
 int x = 5
 x = add(x)
+print(x) //5+4+3+2+1+0=15
+

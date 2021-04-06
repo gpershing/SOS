@@ -1,3 +1,5 @@
+(* arithmetic operators on primitives int, float *)
+
 int add(int x, int y) = x + y
 int sub(int x, int y) = x - y
 int mult(int x, int y) = x * y
@@ -10,12 +12,21 @@ float mult(float x, float y) = x * y
 float div(float x, float y) = x/y 
 
 int x = add(1,2)
+print(x) //3
 x = sub(1,2)
+print(x) //-1
 x = mult(1,2)
+print(x) //2
 x = div(1,2)
+print(x) //0
 x = mod(10,8)
+print(x) //2
 
 float y = add(1.1, 2.1)
+printf(y) //3.2
 y = sub(2.1, 1.1)
+printf(y) //1.0
 y = mult(1.1, 2.1)
+printf(y) //2.31
 y = div(2.1, 1.1)
+printf(y) //1.9090...

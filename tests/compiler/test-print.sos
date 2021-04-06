@@ -1,1 +1,15 @@
-//filled later on
+/* Int: print */
+int x = 1
+print(1) //1
+print(x) //1
+
+/* Float: printf */
+float y = 1.0
+printf(1.0) //1.0
+printf(y) //1.0
+
+/* Boolean: printb */
+bool z = True
+printb(True) //True
+printb(False) //False
+printb(z) //True
