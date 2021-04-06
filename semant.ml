@@ -292,11 +292,13 @@ let check prog =
 
     | Var i -> ((type_of_id i env.varmap, SVar(i)), env)
     | ArrayAccess (nm, idx) -> 
-      let t = type_of_id nm in
+      let (sidx, _) = expr env idx in
+      let t = type_of_id nm env.varmap in
       let el_t = (match t with Array(e) -> e
         | _ -> raisestr ("Cannot access elements of non-array variable "^nm))
       in
-      ((el_t, SArrayAccess(nm, cast_to Int idx)), env)
+      ((el_t, SArrayAccess(nm, cast_to Int sidx
+         "Could not cast array index to an integer")), env)
     | StructField (nm, fl) -> ((type_of_field nm fl env.varmap, SStructField(nm ,fl)), env)
    
 

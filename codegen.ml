@@ -28,18 +28,21 @@ let translate prog =
   and i1_t       = L.i1_type      context
   and float_t    = L.double_type  context
   and void_t     = L.void_type    context 
-  and ptr_t      = L.pointer_type context
+  and ptr_t      = L.pointer_type 
   and struct_t   = L.struct_type  context in
 
+  (* Convenient notation for GEP instructions, etc *)
+  let l0         = L.const_int i32_t 0 in
+
   (* Return the LLVM type for a SOS type *)
-  let ltype_of_typ = function
+  let rec ltype_of_typ = function
       Int      -> i32_t
     | Bool     -> i1_t
     | Float    -> float_t
     | Void     -> void_t
     (* An array is a pointer to a struct containing an array (as a pointer)
       and its length, an int *)
-    | Array(t) -> ptr_t struct_t [|ptr_t (ltype_of_type t); i32_t|]
+    | Array(t) -> (struct_t [|ptr_t (ltype_of_typ t); i32_t|])
     | _ -> raise (Failure "Non-basic types not yet supported") (*TODO*)  
 
   in
@@ -145,20 +148,48 @@ let translate prog =
      SIntLit(i) -> L.const_int i32_t i, env
    | SFloatLit(f) -> L.const_float_of_string float_t f, env
    | SBoolLit(b) -> L.const_int i1_t (if b then 1 else 0), env
+   | SArrayCon(expl) -> 
+     let n = List.length expl in
+     let el_typ = match t with Array(et) -> et | _ -> Void in
+     (* Create data *)
+     let data = L.build_array_alloca (ltype_of_typ el_typ)
+       (L.const_int i32_t n) "arrdata" env.ebuilder in 
+     let (_, env) = List.fold_left
+       (fun (n, env) sx -> 
+         let addr = L.build_gep data [|L.const_int i32_t n|]
+         ("el"^(string_of_int n)) env.ebuilder in
+         let (lv, env) = expr env sx in
+         ignore (L.build_store lv addr env.ebuilder);
+         (n+1, env) ) (0, env) expl in
+     (* Create struct *)
+     let arr_struct = L.build_alloca (ltype_of_typ t) "arr"
+       env.ebuilder in
+     let data_addr = L.build_gep arr_struct [|l0; L.const_int i32_t 0|] "datafield"
+       env.ebuilder in
+     ignore (L.build_store data data_addr env.ebuilder);
+     let len_addr = L.build_gep arr_struct [|l0; L.const_int i32_t 1|]
+       "lenfield" env.ebuilder in
+     ignore (L.build_store (L.const_int i32_t n) len_addr env.ebuilder);
+
+     (* We need to return the struct itself, not the pointer *)
+     let arr = L.build_load arr_struct "arrcon" env.ebuilder in
+     arr, env 
+
 
      (* Access *)
    | SVar(nm) -> (L.build_load (get_variable env nm) nm env.ebuilder),env 
    | SArrayAccess(nm, idx) -> 
      let (idx_lv, env) = expr env idx in
-     (* Access the pointer, then the struct, then the array *)
-     L.build_gep (get_variable env nm) [|
-       (*ptr*)    L.const_int i32_t 0;
-       (*struct*) L.const_int i32_t 0;
-       (*array*)  idx_lv |]
-       (nm^"el") env.ebuilder, env
+     (* Access the struct pointer, then the field *)
+     let elref = L.build_gep (get_variable env nm) [|l0; l0|]
+       (nm^"dataref") env.ebuilder in
+     (* Access data *)
+     let d = L.build_load elref (nm^"data") env.ebuilder in
+     let valref = L.build_gep d [|idx_lv|] (nm^"elref") env.ebuilder in
+     L.build_load valref (nm^"el") env.ebuilder, env
 
      (* Definitions *)
-   | SVarDef(ty, nm, ex) -> 
+   | SVarDef(ty, nm, ex) ->  
        let var = L.build_alloca (ltype_of_typ ty) nm env.ebuilder in
        let env = add_variable env nm var in
        expr env (t, SAssign(nm, ex)) (* Bootstrap off Assign *)
@@ -249,7 +280,7 @@ let translate prog =
       let env ={env with ebuilder=(L.builder_at_end context merge_bb)} in
       let rv = match ret with
         Some(rv) -> rv
-      | None -> L.const_int (ltype_of_typ Bool) 0 env.ebuilder
+      | None -> L.const_int (ltype_of_typ Bool) 0
       in
       (L.build_load rv "if_tmp" env.ebuilder), env
 
