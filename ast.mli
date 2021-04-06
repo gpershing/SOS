@@ -39,6 +39,7 @@ and expr =
 | AnonStruct of expr list                  (* {expr, ...} *)
 | NamedStruct of id * expr list           (* name{expr, ...} *)
 | Var of id                                (* name *)
+| ArrayAccess of id * expr                 (* name[expr] *)
 | StructField of id * id                   (* name.id *)
 | IntLit of int                            (* int *)
 | FloatLit of string                       (* float *)

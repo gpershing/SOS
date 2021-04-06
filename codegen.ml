@@ -2,13 +2,16 @@
 produces LLVM IR *)
 
 module L = Llvm
+open Ast
 open Sast 
 
 module StringMap = Map.Make(String)
 
 type environment = {
-ebuilder : L.llbuilder
+ebuilder : L.llbuilder;
 evars : L.llvalue StringMap.t; (* The storage associated with a given var *)
+efxns : (L.llvalue * func_bind) StringMap.t;
+ecurrent_fxn : L.llvalue (* The current function *)
 }
 
 (* translate : Sast.program -> Llvm.module *)
@@ -20,18 +23,26 @@ let translate prog =
   let the_module = L.create_module context "SOS" in
 
   (* Get types from the context *)
-  let i32_t      = L.i32_type    context
-  and i8_t       = L.i8_type     context
-  and i1_t       = L.i1_type     context
-  and float_t    = L.double_type context
-  and void_t     = L.void_type   context in
+  let i32_t      = L.i32_type     context
+  and i8_t       = L.i8_type      context
+  and i1_t       = L.i1_type      context
+  and float_t    = L.double_type  context
+  and void_t     = L.void_type    context 
+  and ptr_t      = L.pointer_type 
+  and struct_t   = L.struct_type  context in
+
+  (* Convenient notation for GEP instructions, etc *)
+  let l0         = L.const_int i32_t 0 in
 
   (* Return the LLVM type for a SOS type *)
-  let ltype_of_typ = function
-      Int   -> i32_t
-    | Bool  -> i1_t
-    | Float -> float_t
-    | Void  -> void_t
+  let rec ltype_of_typ = function
+      Int      -> i32_t
+    | Bool     -> i1_t
+    | Float    -> float_t
+    | Void     -> void_t
+    (* An array is a pointer to a struct containing an array (as a pointer)
+      and its length, an int *)
+    | Array(t) -> (struct_t [|ptr_t (ltype_of_typ t); i32_t|])
     | _ -> raise (Failure "Non-basic types not yet supported") (*TODO*)  
 
   in
@@ -55,6 +66,15 @@ let translate prog =
   let get_variable env nm = StringMap.find nm env.evars
   in
 
+  (* Add a function declaration to environment.efxns *)
+  let add_function env nm bind = 
+      {env with efxns = StringMap.add nm bind env.efxns }
+  in
+
+  (* Gets a function's llvalue and fdecl from environment.evars *)
+  let get_function env nm = StringMap.find nm env.efxns
+  in
+
   (* Add a formal argument llvalue to environment.evars *)
   let add_formal env (ty, nm) param =
     L.set_value_name nm param;
@@ -69,6 +89,57 @@ let translate prog =
     | SStructDef(_) -> raise (Failure "Struct def not yet supported")
     in
 
+   (* Operator Maps *)
+   let opstr = function
+     Add -> "Add"
+   | Sub -> "Sub"
+   | Mul -> "Mul"
+   | Div -> "Div"
+   | Mod -> "Mod"
+   | Pow -> "Pow"
+   | Eq -> "Eq"
+   | Neq -> "Neq"
+   | Less -> "Less"
+   | Greater -> "Greater"
+   | LessEq -> "LessEq"
+   | GreaterEq -> "GreaterEq"
+   | And -> "And"
+   | Or -> "Or" 
+   | Seq -> "Seq"
+   in
+
+   let make_opmap l =
+     List.fold_left (fun map (op, fxn) -> StringMap.add (opstr op) fxn map)
+      StringMap.empty l
+   in
+
+   let int_map = make_opmap
+   [(Add, L.build_add); (Sub, L.build_sub);
+    (Mul, L.build_mul); (Div, L.build_sdiv);
+    (Eq, L.build_icmp L.Icmp.Eq); (Neq, L.build_icmp L.Icmp.Ne);
+    (Less, L.build_icmp L.Icmp.Slt); (Greater, L.build_icmp L.Icmp.Sgt);
+    (LessEq, L.build_icmp L.Icmp.Sle); (GreaterEq, L.build_icmp L.Icmp.Sge)
+     ]
+   in
+   
+   let float_map = make_opmap
+   [(Add, L.build_fadd); (Sub, L.build_fsub);
+    (Mul, L.build_fmul); (Div, L.build_fdiv);
+    (Eq, L.build_fcmp L.Fcmp.Oeq); (Neq, L.build_fcmp L.Fcmp.One);
+    (Less, L.build_fcmp L.Fcmp.Olt); (Greater, L.build_fcmp L.Fcmp.Ogt);
+    (LessEq, L.build_fcmp L.Fcmp.Ole); (GreaterEq, L.build_fcmp L.Fcmp.Oge)
+     ]
+   in
+
+   (* Construct code for a binop
+      Return its llvalue and the updated environment *)
+   let binop_expr env typ t1 t2 ll1 op ll2 = (match (t1, t2) with
+      (Int, Int) -> StringMap.find (opstr op) int_map
+    | (Float, Float) -> StringMap.find (opstr op) float_map
+    | _ -> raise (Failure "Given types do not support binops")
+    ) ll1 ll2 "tmp" env.ebuilder, env 
+   in
+
    (* Construct code for an expression
       Return its llvalue and the updated builder *)
    let rec expr env sexpr = 
@@ -77,14 +148,50 @@ let translate prog =
      SIntLit(i) -> L.const_int i32_t i, env
    | SFloatLit(f) -> L.const_float_of_string float_t f, env
    | SBoolLit(b) -> L.const_int i1_t (if b then 1 else 0), env
+   | SArrayCon(expl) -> 
+     let n = List.length expl in
+     let el_typ = match t with Array(et) -> et | _ -> Void in
+     (* Create data *)
+     let data = L.build_array_alloca (ltype_of_typ el_typ)
+       (L.const_int i32_t n) "arrdata" env.ebuilder in 
+     let (_, env) = List.fold_left
+       (fun (n, env) sx -> 
+         let addr = L.build_gep data [|L.const_int i32_t n|]
+         ("el"^(string_of_int n)) env.ebuilder in
+         let (lv, env) = expr env sx in
+         ignore (L.build_store lv addr env.ebuilder);
+         (n+1, env) ) (0, env) expl in
+     (* Create struct *)
+     let arr_struct = L.build_alloca (ltype_of_typ t) "arr"
+       env.ebuilder in
+     let data_addr = L.build_gep arr_struct [|l0; L.const_int i32_t 0|] "datafield"
+       env.ebuilder in
+     ignore (L.build_store data data_addr env.ebuilder);
+     let len_addr = L.build_gep arr_struct [|l0; L.const_int i32_t 1|]
+       "lenfield" env.ebuilder in
+     ignore (L.build_store (L.const_int i32_t n) len_addr env.ebuilder);
+
+     (* We need to return the struct itself, not the pointer *)
+     let arr = L.build_load arr_struct "arrcon" env.ebuilder in
+     arr, env 
+
 
      (* Access *)
    | SVar(nm) -> (L.build_load (get_variable env nm) nm env.ebuilder),env 
+   | SArrayAccess(nm, idx) -> 
+     let (idx_lv, env) = expr env idx in
+     (* Access the struct pointer, then the field *)
+     let elref = L.build_gep (get_variable env nm) [|l0; l0|]
+       (nm^"dataref") env.ebuilder in
+     (* Access data *)
+     let d = L.build_load elref (nm^"data") env.ebuilder in
+     let valref = L.build_gep d [|idx_lv|] (nm^"elref") env.ebuilder in
+     L.build_load valref (nm^"el") env.ebuilder, env
 
      (* Definitions *)
-   | SVarDef(ty, nm, ex) -> 
+   | SVarDef(ty, nm, ex) ->  
        let var = L.build_alloca (ltype_of_typ ty) nm env.ebuilder in
-       add_variable env nm var ;
+       let env = add_variable env nm var in
        expr env (t, SAssign(nm, ex)) (* Bootstrap off Assign *)
 
    | SFxnDef(ty, nm, args, ex) ->
@@ -93,29 +200,107 @@ let translate prog =
        let ftype = L.function_type (ltype_of_typ ty) formal_types in
        let decl = L.define_function nm ftype the_module in
        let new_builder = L.builder_at_end context (L.entry_block decl) in
+       let bind = decl, { ftype = ty; formals = args } in
 
        let new_env = List.fold_left2 add_formal env args (
               Array.to_list (L.params decl)) in
-       let (lv, ret_env) = expr {new_env with ebuilder=new_builder} ex in
+       let new_env = add_function new_env nm bind in
+       let new_env = {new_env with ebuilder = new_builder; ecurrent_fxn=decl} in
+       let (lv, ret_env) = expr new_env ex in
        
        (* End with a return statement *)
-       L.build_ret lv ret_env.ebuilder;
-       (* Return the old environment *) (* TODO update env's fxns *)
-       decl, env 
+       ignore (L.build_ret lv ret_env.ebuilder);
+       (* Add this function to the returned environment *)
+       decl, add_function env nm bind
 
      (* Assignments *)
    | SAssign(nm, ex) ->
        let ex' = expr env ex in
-       let (lv, _) = ex' in
+       let (lv, env) = ex' in
        ignore(L.build_store lv (get_variable env nm) env.ebuilder); ex'
 
+     (* Operators *)
+   | SBinop(exp1, op, exp2) ->
+       (match op with
+         (* Sequencing deals with environment differently than other binops*)
+         Seq -> raise (Failure "Sequencing not yet supported")
+       | _ -> 
+         let (t1, _) = exp1 in let (t2, _) = exp2 in
+         let (ll1, env) = expr env exp1 in
+         let (ll2, env) = expr env exp2 in
+         binop_expr env t t1 t2 ll1 op ll2
+       )
+
      (* Function application *)
+    (* Special functions *)
    | SFxnApp("printf", SOrderedFxnArgs([e])) ->
       let float_format_str =
        L.build_global_stringptr "%g\n" "fmt" env.ebuilder in
-      let arg, _ = expr env e in 
+      let arg, env  = expr env e in 
       L.build_call printf_func [| float_format_str ; arg |]
         "printf" env.ebuilder, env
+
+    (* General functions *)
+   | SFxnApp(nm, SOrderedFxnArgs(args)) -> 
+      let (fdef, fdecl) = get_function env nm in
+      (* Get llvalues of args and accumualte env *)
+      let (llargs_rev, env) = List.fold_left
+        (fun (l, en) a -> let (ll, e) = expr env a in (ll::l, e))
+        ([], env) args in
+      let llargs = List.rev llargs_rev in
+      let result = (match fdecl.ftype with
+                      Void -> ""
+                    | _ -> nm ^ "_result") in
+      L.build_call fdef (Array.of_list llargs) result env.ebuilder, env
+
+    (* Control flow *)
+   | SIfElse (eif, ethen, eelse) ->
+      let (cond, env) = expr env eif in
+      (* Memory to store the value of this expression *)
+      let ret = (if t != Void then
+        Some(L.build_alloca (ltype_of_typ t) "if_tmp" env.ebuilder)
+        else None) in
+      let merge_bb = L.append_block context "merge" env.ecurrent_fxn in
+      let then_bb = L.append_block context "then" env.ecurrent_fxn in
+      let else_bb = L.append_block context "else" env.ecurrent_fxn in
+      ignore (L.build_cond_br cond then_bb else_bb env.ebuilder);
+
+      let (thenv, then_env) = expr {env with ebuilder=(L.builder_at_end context then_bb)} ethen in
+      (match ret with Some(rv) ->
+        ignore (L.build_store thenv rv then_env.ebuilder)
+        | None -> () );
+      ignore (L.build_br merge_bb then_env.ebuilder);
+
+      let (elsev, else_env) = expr {env with ebuilder=(L.builder_at_end context else_bb)} eelse in
+      (match ret with Some(rv) ->
+        ignore (L.build_store elsev rv else_env.ebuilder)
+        | None -> () );
+      ignore (L.build_br merge_bb else_env.ebuilder);
+
+      let env ={env with ebuilder=(L.builder_at_end context merge_bb)} in
+      let rv = match ret with
+        Some(rv) -> rv
+      | None -> L.const_int (ltype_of_typ Bool) 0
+      in
+      (L.build_load rv "if_tmp" env.ebuilder), env
+
+    (* Type casting *)
+   | SCast (ex) -> let t_to = t in let (t_from, _) = ex in 
+      let normal_cast command = 
+        let (lv, _) = expr env ex in
+        (command lv (ltype_of_typ t_to) "cast" env.ebuilder, env)
+      in
+      let il i = (Int, SIntLit(i)) in
+      let fl f = (Float, SFloatLit(f)) in
+      (
+      match (t_to, t_from) with
+        (Int, Float)  -> normal_cast L.build_fptosi 
+      | (Int, Bool)   -> expr env (Int, SIfElse(ex, il 1, il 0))
+      | (Float, Int)  -> normal_cast L.build_sitofp
+      | (Bool, Int)   -> expr env (Bool, SBinop(ex, Neq, il 0))
+      | (Bool, Float) -> expr env (Bool, SBinop(ex, Neq, fl "0"))
+      | _             -> raise (Failure "Unknown type cast")
+      )
    
    | _ -> raise (Failure "Found an unsupported expression")
    in
@@ -133,10 +318,11 @@ let translate prog =
      (* Init the builder at the beginning of main() *)
      let builder = L.builder_at_end context (L.entry_block main) in
      (* Use the builder to add the statements of main() *)
-     let start_env = { ebuilder = builder; evars = StringMap.empty } in
-     let end_env = List.fold_left build_stmt env stmts in
+     let start_env = { ebuilder = builder; evars = StringMap.empty;
+       efxns = StringMap.empty; ecurrent_fxn = main } in
+     let end_env = List.fold_left build_stmt start_env stmts in
      (* Add a return statement *)
-     L.build_ret (L.const_int i32_t 0) env.ebuilder    
+     L.build_ret (L.const_int i32_t 0) end_env.ebuilder    
 
    in
    ignore(build_main prog);
