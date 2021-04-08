@@ -1,3 +1,6 @@
+//function with parameter
+
 int foo(int x) = 5
 
 int a = foo(1)
+print(a) //5

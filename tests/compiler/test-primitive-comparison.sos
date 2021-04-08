@@ -1,0 +1,82 @@
+/* 
+==, !=, <, <=, >, >=
+primitives are passed by value
+*/
+
+/*int*/
+int a = 5
+int b = 5
+int c = 7
+
+bool out1 = a == a
+printb(out1) //True
+
+bool out2 = a == b
+printb(out2) //True
+
+bool out3 = a == c
+printb(out3) //False
+
+
+bool x = 5 != 6
+printb(x)
+
+x = 5 <= 6
+printb(x)
+
+x = 6 >= 6
+printb(x)
+
+x = 6 > 5
+printb(x)
+
+x = 5 < 6
+printb(x)
+
+
+
+/*float*/
+float d = 1.2
+float e = 1.2
+float f = 2.3
+
+bool out4 = d == d
+printb(out4) //True
+
+bool out5 = d == e
+printb(out5) //True
+
+bool out6 = e == f
+printb(out6) //False
+
+
+x = 5.0 != 6.0
+printb(x)
+
+x = 5.0 <= 6.0
+printb(x)
+
+x = 6.0 >= 6.0
+printb(x)
+
+x = 6.0 > 5.0 
+printb(x)
+
+x = 5.0 < 6.0
+printb(x)
+
+
+
+/*bool*/
+bool g = True
+bool h = True
+bool i = False
+
+bool out7 = g == g
+printb(out7) //True
+
+bool out8 = g == h
+printb(out8) //True
+
+bool out9 = g == i
+printb(out9) //False

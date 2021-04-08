@@ -1,3 +1,6 @@
+//function with body dependent on parameter
+
 int foo(int x) = x
 
 int a = foo(5)
+print(a) //5

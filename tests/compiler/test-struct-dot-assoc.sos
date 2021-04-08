@@ -5,4 +5,5 @@ struct stuff = {int field1, more field2}
 more temp1 = {2}
 stuff temp2 = {1, temp1}
 
-stuff.field2.more = 5
+int ans = temp2.field2.field1
+print(ans) //2

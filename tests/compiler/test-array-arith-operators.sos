@@ -1,0 +1,21 @@
+int printingarray(array int arr, int length, int current) =
+if current == length
+    then 1
+else
+    print(arr[curent]); current = current + 1; printingarray(arr, length, current)
+
+array arr = [1,2,3,4,5]
+int x = printingarray(arr, 5, 0)
+
+array arr2 = 5 + arr
+x = printingarray(arr2, 5, 0)
+
+array arr3 = arr - 2
+x = printingarray(arr3, 5, 0)
+
+array arr4 = 2 * arr
+x = printingarray(arr4, 5, 0)
+
+array arr5 = arr/2
+x = printingarray(arr5, 5, 0)
+

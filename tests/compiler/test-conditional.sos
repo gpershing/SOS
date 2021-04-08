@@ -1,3 +1,9 @@
 int x = 0
 
+//if then
 int y = if x == 1 then 1 else 0
+print(y) //1
+
+//else
+int z = if y != 1 then 1 else 0
+print(z) //0

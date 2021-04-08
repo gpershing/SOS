@@ -4,19 +4,21 @@ struct normal = {int field}
 normal func1(int x) = 
     normal temp = {x}; temp
 
+normal a = func1(5)
+print(a.field) //5
+
+
 //defining struct in function with known expression return type
 int func2(int x) = 
     struct s = {int field};
     s temp = {field:x};
     s.field
 
-//defining struct in function function return type of that struct
-s func3(int x) = 
-    struct s = {int field};
-    s temp = {x};
-    s
+int x = func2(5)
+print(x) //5
 
-//fancy
+
+//fancy: outer scruct has an assigned field during declaration
 struct outer = {
     int field,
     int func2() = 
@@ -26,3 +28,5 @@ struct outer = {
 }
 
 outer temp  = {5, 5}
+print(temp.field) //5
+print(temp.func2()) //5

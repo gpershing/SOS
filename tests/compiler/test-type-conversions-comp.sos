@@ -1,0 +1,14 @@
+/*float over int*/
+bool b = 3.5 > 3
+printb(b) //True
+
+b = 3 < 3.5
+printb(b) //True
+
+/*int over bool*/
+b = 2 > True
+printb(b) //True
+
+/*float over bool*/
+b = 2.1 > True
+printb(b) //True
