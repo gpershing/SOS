@@ -34,7 +34,8 @@ let basic_print sast =
   | SBinop (e1, op, e2) -> let opstr  = match op with
       Add -> "+" | Sub -> "-" | Mul -> "*" | Div -> "/" | Mod -> "%" | Pow -> "^" |
       Eq -> "==" | Neq -> "!=" | Less -> "<" | Greater -> ">" | LessEq -> "<=" |
-      GreaterEq -> ">=" | And -> "&&" | Or -> "||" | Seq -> ";" in
+      GreaterEq -> ">=" | And -> "&&" | Or -> "||" | Seq -> ";" |
+      Of -> "of" | Concat -> "@" in
     "("^typeid_string t^") ("^sexp_string e1^" "^opstr^" "^sexp_string e2^")"
   | SFxnApp (nm, args) -> "("^typeid_string t^") "^nm^"("^
     (match args with
@@ -54,6 +55,9 @@ let basic_print sast =
   | SIntLit(i) -> string_of_int i
   | SFloatLit(f) -> f
   | SBoolLit(b) -> string_of_bool b
+  | SArrayAccess(nm, idx) -> "("^typeid_string t^") "^nm^"["^sexp_string idx^"]"
+  | SArrayLength(nm) -> nm^".length"
+  | SCast(exp) -> sexp_string exp
   in
 
   let print_sstmt = function

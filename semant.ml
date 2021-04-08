@@ -42,19 +42,6 @@ let check prog =
   let global_env = { typemap = built_in_types; varmap = StringMap.empty; funcmap =  built_in_decls }
   in
 
-  (* maybe we could also add std graph lib here? *)
-  let stdlib = ()
-  in
-
-  (* check a list of function formals & locals has no undecleared type and no duplicates *)
-  (* Un decleared types are those not in stdlib and undecleared alias & struct *)
-  let check_fxn_argtype (kind : string) (binds : argtype list) = ()
-  in
-
-  (* check if rvalue type could be assigned to lvalue type *)
-  let check_assign lvaluet rvaluet err = ()
-  in
-
   (* resolve the type of a tid to a typeid *)
   let rec resolve_typeid t map = match t with
     TypeID(s) -> if StringMap.mem s map
@@ -64,8 +51,8 @@ let check prog =
   in
 
   (* should add a function to add three things above dynamically *)
-  let add_id_type = ()
-  in
+  (* let add_id_type = ()
+  in *)
 
   (* function to lookup *)
   let type_of_id s map = 
@@ -192,7 +179,6 @@ let check prog =
      
       VarDef (tstr, name, exp) -> 
         let (sexp, _) = expr env exp in
-        let (exptype, _) = sexp in
         let t = resolve_typeid tstr env.typemap in
         ((t, SVarDef(t, name, cast_to t sexp
                      ("Could not resolve type when defining "^name))),
@@ -335,7 +321,7 @@ let check prog =
   in
 
   (* check a single statement and update the environment *)
-  let rec stmt env = function
+  let stmt env = function
       Expression(e) -> let (se, en) = expr env e in (SExpression (se), en)
     | Typedef(td) -> (STypeDef(make_stypedef env td), {env with typemap = add_typedef td env.typemap})
     | Import(_) -> raisestr ("Import statements not currently supported") (* TODO *)

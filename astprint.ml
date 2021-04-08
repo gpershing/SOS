@@ -23,6 +23,7 @@ let basic_print prog =
     | Assign(a, b) -> a ^ " = " ^ expr_str b
     | AssignStruct(a, b, c) -> a ^ "." ^ b ^ " = " ^ expr_str c
     | AssignArray(a, b, c) -> a^"["^expr_str b ^"] = "^ expr_str c
+    | ArrayAccess(nm, idx) -> nm^"["^expr_str idx^"]"
     | Uop(a, b) -> let uoperator_str = function Not -> "!" | Neg -> "-" in uoperator_str a ^ expr_str b
     | Binop(a, b, c) -> let operator_str = function
         Add -> "+"
@@ -39,6 +40,8 @@ let basic_print prog =
       | GreaterEq -> ">="
       | And -> "&&"
       | Or -> "||"
+      | Of -> "of"
+      | Concat -> "@"
       | Seq -> ";" in
       "(" ^ expr_str a ^ " " ^ operator_str b ^ " " ^ expr_str c ^ ")"
     | FxnApp(a, c) -> (match c with

@@ -86,7 +86,7 @@ let translate prog =
 
     (* Add a new type definition, return ? *)
     let add_typedef = function 
-      SAlias(_) -> raise (Failure "Alias not yet supported")
+      SAlias(_) -> ()
     | SStructDef(_) -> raise (Failure "Struct def not yet supported")
     in
 
@@ -141,7 +141,7 @@ let translate prog =
      L.build_load lenref ("len") env.ebuilder, env
    in
 
-   let build_of t1 t2 ll1 ll2 env = 
+   let build_of t2 ll1 ll2 env = 
      (* Get ll2's length *)
      let (len, env) = build_array_len env ll2 in
     
@@ -202,7 +202,7 @@ let translate prog =
      arr_struct, env
    in
 
-   let build_concat t1 t2 ll1 ll2 env =
+   let build_concat t2 ll1 ll2 env =
      (* Get lengths *)
      let (len1, _) = build_array_len env ll1 in
      let (len2, _) = build_array_len env ll2 in
@@ -270,9 +270,11 @@ let translate prog =
      arr_struct, env
    in
 
+   (*
    let array_map = make_opmap
    [(Of, build_of); (Concat, build_concat)]
    in
+   *)
 
    (* Construct code for an expression
       Return its llvalue and the updated builder *)
@@ -373,8 +375,8 @@ let translate prog =
              "tmp" env.ebuilder, env
          | (_, Array(_)) -> 
            (match op with
-             Of -> build_of t1 t2 ll1 ll2 env
-           | Concat -> build_concat t1 t2 ll1 ll2 env
+             Of -> build_of t2 ll1 ll2 env
+           | Concat -> build_concat t2 ll1 ll2 env
            | _ -> raise (Failure "Unsupported operation")
            )
 
@@ -396,7 +398,7 @@ let translate prog =
       let (fdef, fdecl) = get_function env nm in
       (* Get llvalues of args and accumualte env *)
       let (llargs_rev, env) = List.fold_left
-        (fun (l, en) a -> let (ll, e) = expr env a in (ll::l, e))
+        (fun (l, env) a -> let (ll, e) = expr env a in (ll::l, e))
         ([], env) args in
       let llargs = List.rev llargs_rev in
       let result = (match fdecl.ftype with
@@ -461,7 +463,7 @@ let translate prog =
      STypeDef(td) -> add_typedef td; env
    | SExpression(ex) -> let (_, env) = expr env ex 
      in env
-   | SImport(im) -> raise (Failure "Import not yet supported") (*TODO*)
+   | SImport(im) -> ignore(im); raise (Failure "Import not yet supported") (*TODO*)
    in
   
    (* Build the main function, the entry point for the whole program *)
