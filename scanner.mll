@@ -26,6 +26,7 @@ rule token = parse
 | '/'      { DIV }
 | '%'      { MOD }
 | '^'      { POW }
+| '@'      { CONCAT }
 | ';'      { SEQ }
 | "=="     { EQEQ }
 | "!="     { NEQ }
@@ -37,6 +38,7 @@ rule token = parse
 | ">="     { GTEQ }
 | "&&"     { AND }
 | "||"     { OR }
+| "of"     { OF }
 | "if"     { IF }
 | "then"   { THEN }
 | "else"   { ELSE }

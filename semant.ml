@@ -105,6 +105,21 @@ let check prog =
     | _ -> vmap
   in
 
+  (* Returns a sexp that casts sexp to typ, if possible. *)
+  (* Returns sexp if no cast is required *)
+  let cast_to typ sexp err_str = 
+   let (expt, _) = sexp in
+   if expt=typ then sexp else (
+   (match (typ, expt) with
+     (Int, Float)   -> ()
+   | (Int, Bool)    -> ()
+   | (Bool, Int)    -> ()
+   | (Bool, Float)  -> ()
+   | (Float, Int)   -> ()
+   | _ -> raisestr err_str );
+   (typ, SCast(sexp)))
+  in
+
   let addsub_expr env exp1 op exp2 = 
       let (t1, _) = exp1 in let (t2, _) = exp2 in
       match (t1, t2) with
@@ -131,6 +146,18 @@ let check prog =
       (Bool, SBinop(exp1, op, exp2)), env
   in
 
+  let array_expr env exp1 op exp2 = 
+      let (t1, _) = exp1 in let (t2, _) = exp2 in
+      (match t2 with Array(_) -> ()
+       | _ -> raisestr ("Cannot perform array operations on non-array types")      ) ;
+      match op with
+        Concat     -> if t1 = t2 then (t2, SBinop(exp1, op, exp2)), env
+        else raisestr ("Cannot concatenate arrays of different types")
+      | _ (* Of *) -> (t2, SBinop((cast_to Int exp1
+                    "First operand of of operator must be an int"),
+                  op, exp2)), env
+  in
+
   let binop_expr env exp1 op exp2 = match op with
       Add -> addsub_expr env exp1 op exp2
     | Sub -> addsub_expr env exp1 op exp2
@@ -140,22 +167,9 @@ let check prog =
     | Greater   -> comp_expr env exp1 op exp2
     | LessEq    -> comp_expr env exp1 op exp2
     | GreaterEq -> comp_expr env exp1 op exp2
+    | Of     -> array_expr env exp1 op exp2
+    | Concat -> array_expr env exp1 op exp2
     | _ -> raisestr ("Undefined operator")
-  in
-
-  (* Returns a sexp that casts sexp to typ, if possible. *)
-  (* Returns sexp if no cast is required *)
-  let cast_to typ sexp err_str = 
-   let (expt, _) = sexp in
-   if expt=typ then sexp else (
-   (match (typ, expt) with
-     (Int, Float)   -> ()
-   | (Int, Bool)    -> ()
-   | (Bool, Int)    -> ()
-   | (Bool, Float)  -> ()
-   | (Float, Int)   -> ()
-   | _ -> raisestr err_str );
-   (typ, SCast(sexp)))
   in
 
   (* Takes a pair of sexprs and makes their types agree by adding casts,
@@ -299,8 +313,15 @@ let check prog =
       in
       ((el_t, SArrayAccess(nm, cast_to Int sidx
          "Could not cast array index to an integer")), env)
-    | StructField (nm, fl) -> ((type_of_field nm fl env.varmap, SStructField(nm ,fl)), env)
-   
+    | StructField (nm, fl) -> 
+       let t = (type_of_id nm env.varmap) in (match t with
+         Struct(_) ->
+          ((type_of_field nm fl env.varmap, SStructField(nm ,fl)), env)
+       | Array(_) -> if fl="length" then
+          (Int, SArrayLength(nm)), env
+          else raisestr ("Cannot access fields for a non-struct variable")
+       | _ -> raisestr ("Cannot access fields for a non-struct variable")
+      )
 
     | IntLit i -> ((Int, SIntLit i), env)
     | FloatLit f -> ((Float, SFloatLit f), env)

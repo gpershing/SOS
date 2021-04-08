@@ -35,6 +35,7 @@ and sx =
 | SNamedStruct of id * sexpr list           (* name{expr, ...} *)
 | SVar of id                                (* name *)
 | SArrayAccess of id * sexpr                (* name[expr] *)
+| SArrayLength of id                        (* name.length *)
 | SStructField of id * id                   (* name.id *)
 | SIntLit of int                            (* int *)
 | SFloatLit of string                       (* float *)

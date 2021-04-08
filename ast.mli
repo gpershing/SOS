@@ -5,6 +5,8 @@ Add | Sub | Mul | Div | Mod | Pow
 | Eq | Neq | Less | Greater | LessEq | GreaterEq 
 (*boolean operators*)
 | And | Or 
+(* array combination *)
+| Concat | Of
 (*sequencing*)
 | Seq
 

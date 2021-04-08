@@ -7,6 +7,7 @@
 /* %token statements... */
 %token ADD SUB MUL DIV MOD POW SEQ
 %token NOT EQ LT GT LTEQ GTEQ EQEQ NEQ AND OR
+%token CONCAT OF
 %token DOT COMMA
 %token LPAREN RPAREN LBRACE RBRACE LBRACK RBRACK
 %token IF THEN ELSE
@@ -30,6 +31,8 @@
 %left AND OR
 %left EQEQ NEQ
 %left LT GT LTEQ GTEQ
+%left OF
+%left CONCAT
 %left ADD SUB
 %left MUL DIV MOD
 %right POW
@@ -79,6 +82,8 @@ expr:
   | expr AND expr { Binop($1,And,$3) }
   | expr OR expr { Binop($1,Or,$3) }
   | expr SEQ expr { Binop($1,Seq,$3) }
+  | expr CONCAT expr {Binop($1,Concat,$3) }
+  | expr OF expr { Binop($1,Of,$3) }
   | LPAREN expr RPAREN { $2 }
   | VAR LBRACE args RBRACE { NamedStruct($1, $3) }
   | VAR LBRACK expr RBRACK { ArrayAccess($1, $3) }

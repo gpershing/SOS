@@ -33,6 +33,7 @@ let translate prog =
 
   (* Convenient notation for GEP instructions, etc *)
   let l0         = L.const_int i32_t 0 in
+  let l1         = L.const_int i32_t 1 in
 
   (* Return the LLVM type for a SOS type *)
   let rec ltype_of_typ = function
@@ -42,7 +43,7 @@ let translate prog =
     | Void     -> void_t
     (* An array is a pointer to a struct containing an array (as a pointer)
       and its length, an int *)
-    | Array(t) -> (struct_t [|ptr_t (ltype_of_typ t); i32_t|])
+    | Array(t) -> ptr_t (struct_t [|ptr_t (ltype_of_typ t); i32_t|])
     | _ -> raise (Failure "Non-basic types not yet supported") (*TODO*)  
 
   in
@@ -105,6 +106,8 @@ let translate prog =
    | GreaterEq -> "GreaterEq"
    | And -> "And"
    | Or -> "Or" 
+   | Of -> "Of"
+   | Concat -> "Concat"
    | Seq -> "Seq"
    in
 
@@ -131,13 +134,144 @@ let translate prog =
      ]
    in
 
-   (* Construct code for a binop
-      Return its llvalue and the updated environment *)
-   let binop_expr env typ t1 t2 ll1 op ll2 = (match (t1, t2) with
-      (Int, Int) -> StringMap.find (opstr op) int_map
-    | (Float, Float) -> StringMap.find (opstr op) float_map
-    | _ -> raise (Failure "Given types do not support binops")
-    ) ll1 ll2 "tmp" env.ebuilder, env 
+   (* Array operataions *)
+   let build_array_len env lv = (* Re-used in build_of and expr *)
+     let lenref = L.build_gep lv [|l0; l1|]
+      ("lengep") env.ebuilder in
+     L.build_load lenref ("len") env.ebuilder, env
+   in
+
+   let build_of t1 t2 ll1 ll2 env = 
+     (* Get ll2's length *)
+     let (len, env) = build_array_len env ll2 in
+    
+     (* Compute new length *)
+     let n = L.build_mul ll1 len "oflen" env.ebuilder in
+     (* Pre-GEP the array *)
+     let old_data_ref = L.build_gep ll2 [|l0; l0|] ("oldrf") env.ebuilder in
+     let old_data = L.build_load old_data_ref ("olddata") env.ebuilder in
+     
+     (* Create a new array *)
+     let el_typ = match t2 with Array(et) -> et | _ -> Void in
+     let data = L.build_array_alloca (ltype_of_typ el_typ) n
+       "arrdata" env.ebuilder in
+     (* Set up loop *)
+     let i_addr = L.build_alloca i32_t "i" env.ebuilder in
+     ignore (L.build_store l0 i_addr env.ebuilder);
+     let j_addr = L.build_alloca i32_t "j" env.ebuilder in
+     ignore (L.build_store l0 j_addr env.ebuilder); 
+     let loop_bb = L.append_block context "loop" env.ecurrent_fxn in
+     let inner_bb = L.append_block context "inner" env.ecurrent_fxn in
+     let continue_bb = L.append_block context "continue" env.ecurrent_fxn in
+     ignore (L.build_br inner_bb env.ebuilder);
+
+     (* Inner loop *)
+     let builder = L.builder_at_end context inner_bb in
+     let i = L.build_load i_addr "i" builder in
+     let j = L.build_load j_addr "j" builder in
+     let elref = L.build_gep old_data [|j|] ("elref") builder in
+     let el = L.build_load elref ("el") builder in
+     let newref = L.build_gep data [|i|] ("newref") builder in
+     ignore(L.build_store el newref builder); 
+     ignore(L.build_store (L.build_add j l1 "j" builder) j_addr builder);
+     ignore(L.build_store (L.build_add i l1 "i" builder) i_addr builder);
+     let j = L.build_load j_addr "j" builder in
+     ignore(L.build_cond_br (L.build_icmp L.Icmp.Slt j len "tmp" builder)
+       inner_bb loop_bb builder);
+
+     (* Outer loop *)
+     let builder = L.builder_at_end context loop_bb in
+     let i = L.build_load i_addr "i" builder in
+     ignore (L.build_store l0 j_addr builder);
+     ignore (L.build_cond_br (L.build_icmp L.Icmp.Slt i n "tmp" builder)
+       inner_bb continue_bb builder);
+
+     (* Continue *)
+     let builder = L.builder_at_end context continue_bb in
+     let env = { env with ebuilder = builder } in
+     (* Create array struct *)
+     let arr_struct = L.build_alloca (L.element_type (ltype_of_typ t2))
+       "arr" env.ebuilder in
+     let data_addr = L.build_gep arr_struct [|l0; l0|] "datafield"
+       env.ebuilder in
+     ignore (L.build_store data data_addr env.ebuilder);
+     let len_addr = L.build_gep arr_struct [|l0; L.const_int i32_t 1|]
+       "lenfield" env.ebuilder in
+     ignore (L.build_store n len_addr env.ebuilder);
+
+     arr_struct, env
+   in
+
+   let build_concat t1 t2 ll1 ll2 env =
+     (* Get lengths *)
+     let (len1, _) = build_array_len env ll1 in
+     let (len2, _) = build_array_len env ll2 in
+     let n = L.build_add len1 len2 "n" env.ebuilder in
+     (* Pre-GEP the arrays *)
+     let data_ref1 = L.build_gep ll1 [|l0; l0|] ("dataref1") env.ebuilder in
+     let data_ref2 = L.build_gep ll2 [|l0; l0|] ("dataref2") env.ebuilder in
+     let data1 = L.build_load data_ref1 ("data1") env.ebuilder in
+     let data2 = L.build_load data_ref2 ("data2") env.ebuilder in
+     (* Create a new array *)
+     let el_typ = match t2 with Array(et) -> et | _ -> Void in
+     let data = L.build_array_alloca (ltype_of_typ el_typ) n
+       "data" env.ebuilder in 
+     (* Set up loop *)
+     let i_addr = L.build_alloca i32_t "i" env.ebuilder in
+     ignore (L.build_store l0 i_addr env.ebuilder);
+     let j_addr = L.build_alloca i32_t "j" env.ebuilder in
+     ignore (L.build_store l0 j_addr env.ebuilder);
+
+     let loop1 = L.append_block context "loop1" env.ecurrent_fxn in
+     let inbtw = L.append_block context "inbtw" env.ecurrent_fxn in
+     let loop2 = L.append_block context "loop2" env.ecurrent_fxn in
+     let contb = L.append_block context "contb" env.ecurrent_fxn in
+     ignore (L.build_br loop1 env.ebuilder);
+
+     let make_concat_loop sbb tbb from_data len =
+       let builder = L.builder_at_end context sbb in
+       let i = L.build_load i_addr "i" builder in
+       let j = L.build_load j_addr "j" builder in
+       let elref = L.build_gep from_data [|j|] "elref" builder in
+       let el = L.build_load elref "el" builder in
+       let newref = L.build_gep data [|i|] "newref" builder in
+       ignore (L.build_store el newref builder);
+       ignore (L.build_store (L.build_add j l1 "tmp" builder)
+               j_addr builder);
+       ignore (L.build_store (L.build_add i l1 "tmp" builder)
+               i_addr builder);
+       let j = L.build_load j_addr "j" builder in
+       ignore (L.build_cond_br 
+               (L.build_icmp L.Icmp.Slt j len "tmp" builder)
+               sbb tbb builder)
+     in
+     (* Loop 1 *)
+     make_concat_loop loop1 inbtw data1 len1 ;
+     
+     let builder = L.builder_at_end context inbtw in
+     ignore(L.build_store l0 j_addr builder);
+     ignore(L.build_br loop2 builder);
+     (* Loop 2 *)
+     make_concat_loop loop2 contb data2 len2 ;
+
+     (* Continue *)
+     let builder = L.builder_at_end context contb in
+     let env = { env with ebuilder = builder } in
+     (* Create array struct *)
+     let arr_struct = L.build_alloca (L.element_type (ltype_of_typ t2))
+       "arr" env.ebuilder in
+     let data_addr = L.build_gep arr_struct [|l0; l0|] "datafield"
+       env.ebuilder in
+     ignore (L.build_store data data_addr env.ebuilder);
+     let len_addr = L.build_gep arr_struct [|l0; L.const_int i32_t 1|]
+       "lenfield" env.ebuilder in
+     ignore (L.build_store n len_addr env.ebuilder);
+
+     arr_struct, env
+   in
+
+   let array_map = make_opmap
+   [(Of, build_of); (Concat, build_concat)]
    in
 
    (* Construct code for an expression
@@ -152,7 +286,8 @@ let translate prog =
      let n = List.length expl in
      let el_typ = match t with Array(et) -> et | _ -> Void in
      (* Create data *)
-     let data = L.build_array_alloca (ltype_of_typ el_typ)
+     let data = L.build_array_alloca
+       (ltype_of_typ el_typ)
        (L.const_int i32_t n) "arrdata" env.ebuilder in 
      let (_, env) = List.fold_left
        (fun (n, env) sx -> 
@@ -162,7 +297,8 @@ let translate prog =
          ignore (L.build_store lv addr env.ebuilder);
          (n+1, env) ) (0, env) expl in
      (* Create struct *)
-     let arr_struct = L.build_alloca (ltype_of_typ t) "arr"
+     let arr_struct = L.build_alloca 
+       (L.element_type (ltype_of_typ t)) "arr"
        env.ebuilder in
      let data_addr = L.build_gep arr_struct [|l0; L.const_int i32_t 0|] "datafield"
        env.ebuilder in
@@ -171,22 +307,23 @@ let translate prog =
        "lenfield" env.ebuilder in
      ignore (L.build_store (L.const_int i32_t n) len_addr env.ebuilder);
 
-     (* We need to return the struct itself, not the pointer *)
-     let arr = L.build_load arr_struct "arrcon" env.ebuilder in
-     arr, env 
-
+     arr_struct, env
 
      (* Access *)
    | SVar(nm) -> (L.build_load (get_variable env nm) nm env.ebuilder),env 
    | SArrayAccess(nm, idx) -> 
      let (idx_lv, env) = expr env idx in
      (* Access the struct pointer, then the field *)
-     let elref = L.build_gep (get_variable env nm) [|l0; l0|]
+     let arr = L.build_load (get_variable env nm) "arr" env.ebuilder in
+     let elref = L.build_gep arr [|l0; l0|]
        (nm^"dataref") env.ebuilder in
      (* Access data *)
      let d = L.build_load elref (nm^"data") env.ebuilder in
      let valref = L.build_gep d [|idx_lv|] (nm^"elref") env.ebuilder in
      L.build_load valref (nm^"el") env.ebuilder, env
+
+   | SArrayLength (nm) -> build_array_len env
+       (L.build_load (get_variable env nm) nm env.ebuilder)
 
      (* Definitions *)
    | SVarDef(ty, nm, ex) ->  
@@ -228,7 +365,21 @@ let translate prog =
          let (t1, _) = exp1 in let (t2, _) = exp2 in
          let (ll1, env) = expr env exp1 in
          let (ll2, env) = expr env exp2 in
-         binop_expr env t t1 t2 ll1 op ll2
+(*         binop_expr env t t1 t2 ll1 op ll2 *)
+         (match (t1, t2) with
+           (Int, Int) -> StringMap.find (opstr op) int_map ll1 ll2 "tmp"
+             env.ebuilder, env
+         | (Float, Float) -> StringMap.find (opstr op) float_map ll1 ll2
+             "tmp" env.ebuilder, env
+         | (_, Array(_)) -> 
+           (match op with
+             Of -> build_of t1 t2 ll1 ll2 env
+           | Concat -> build_concat t1 t2 ll1 ll2 env
+           | _ -> raise (Failure "Unsupported operation")
+           )
+
+         | _ -> raise (Failure "Unsupported operation")
+        )       
        )
 
      (* Function application *)
