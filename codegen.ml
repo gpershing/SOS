@@ -341,7 +341,8 @@ let translate prog =
        let new_builder = L.builder_at_end context (L.entry_block decl) in
        let bind = decl, { ftype = ty; formals = args } in
 
-       let new_env = List.fold_left2 add_formal env args (
+       let new_env = { env with ebuilder=new_builder } in
+       let new_env = List.fold_left2 add_formal new_env args (
               Array.to_list (L.params decl)) in
        let new_env = add_function new_env nm bind in
        let new_env = {new_env with ebuilder = new_builder; ecurrent_fxn=decl} in
