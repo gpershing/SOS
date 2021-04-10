@@ -153,7 +153,7 @@ let translate prog =
      
      (* Create a new array *)
      let el_typ = match t2 with Array(et) -> et | _ -> Void in
-     let data = L.build_array_alloca (ltype_of_typ el_typ) n
+     let data = L.build_array_malloc (ltype_of_typ el_typ) n
        "arrdata" env.ebuilder in
      (* Set up loop *)
      let i_addr = L.build_alloca i32_t "i" env.ebuilder in
@@ -190,7 +190,7 @@ let translate prog =
      let builder = L.builder_at_end context continue_bb in
      let env = { env with ebuilder = builder } in
      (* Create array struct *)
-     let arr_struct = L.build_alloca (L.element_type (ltype_of_typ t2))
+     let arr_struct = L.build_malloc (L.element_type (ltype_of_typ t2))
        "arr" env.ebuilder in
      let data_addr = L.build_gep arr_struct [|l0; l0|] "datafield"
        env.ebuilder in
@@ -214,7 +214,7 @@ let translate prog =
      let data2 = L.build_load data_ref2 ("data2") env.ebuilder in
      (* Create a new array *)
      let el_typ = match t2 with Array(et) -> et | _ -> Void in
-     let data = L.build_array_alloca (ltype_of_typ el_typ) n
+     let data = L.build_array_malloc (ltype_of_typ el_typ) n
        "data" env.ebuilder in 
      (* Set up loop *)
      let i_addr = L.build_alloca i32_t "i" env.ebuilder in
@@ -258,7 +258,7 @@ let translate prog =
      let builder = L.builder_at_end context contb in
      let env = { env with ebuilder = builder } in
      (* Create array struct *)
-     let arr_struct = L.build_alloca (L.element_type (ltype_of_typ t2))
+     let arr_struct = L.build_malloc (L.element_type (ltype_of_typ t2))
        "arr" env.ebuilder in
      let data_addr = L.build_gep arr_struct [|l0; l0|] "datafield"
        env.ebuilder in
@@ -288,7 +288,7 @@ let translate prog =
      let n = List.length expl in
      let el_typ = match t with Array(et) -> et | _ -> Void in
      (* Create data *)
-     let data = L.build_array_alloca
+     let data = L.build_array_malloc
        (ltype_of_typ el_typ)
        (L.const_int i32_t n) "arrdata" env.ebuilder in 
      let (_, env) = List.fold_left
@@ -299,7 +299,7 @@ let translate prog =
          ignore (L.build_store lv addr env.ebuilder);
          (n+1, env) ) (0, env) expl in
      (* Create struct *)
-     let arr_struct = L.build_alloca 
+     let arr_struct = L.build_malloc 
        (L.element_type (ltype_of_typ t)) "arr"
        env.ebuilder in
      let data_addr = L.build_gep arr_struct [|l0; L.const_int i32_t 0|] "datafield"
