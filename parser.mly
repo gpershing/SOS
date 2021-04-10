@@ -24,10 +24,10 @@
 %type <Ast.program> program
 
 /* Associativity and Precedence */
-%left SEQ
 %nonassoc IF THEN ELSE
 %left COMMA 
 %right EQ
+%left SEQ
 %left AND OR
 %left EQEQ NEQ
 %left LT GT LTEQ GTEQ

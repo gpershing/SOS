@@ -362,8 +362,9 @@ let translate prog =
      (* Operators *)
    | SBinop(exp1, op, exp2) ->
        (match op with
-         (* Sequencing deals with environment differently than other binops*)
-         Seq -> raise (Failure "Sequencing not yet supported")
+         Seq ->
+           let (_, env) = expr env exp1 in
+           expr env exp2 
        | _ -> 
          let (t1, _) = exp1 in let (t2, _) = exp2 in
          let (ll1, env) = expr env exp1 in
