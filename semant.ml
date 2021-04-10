@@ -61,8 +61,7 @@ let check prog =
   in
 
   (* function to lookup the type of a struct field *)
-  let type_of_field s f map = 
-    let stype = type_of_id s map in
+  let type_of_field stype f = 
     match stype with
       Struct(sargs) -> 
       let rec find_field f = function
@@ -249,11 +248,13 @@ let check prog =
                       ("Could not match type when assigning variable "^name))),
           env)
 
-    | AssignStruct (name, field, exp) ->
+    | AssignStruct (struct_exp, field, exp) ->
          let ((exptype, sexp), _) = expr env exp in
-         let t = type_of_field name field env.varmap in
-         ((t, SAssignStruct(name, field, cast_to t (exptype, sexp)
-                            ("Could not match type when assigning field "^name^"."^field))), env)
+         let (struct_sexp, _)  = expr env struct_exp in 
+         let (strt, _) = struct_sexp in
+         let t = type_of_field strt field in
+         ((t, SAssignStruct(struct_sexp, field, cast_to t (exptype, sexp)
+                            ("Could not match type when assigning field "^field))), env)
 
     | Uop(_) -> raisestr ("Unary operations not yet supported") (* TODO *)
 
@@ -340,20 +341,23 @@ let check prog =
      )
 
     | Var i -> ((type_of_id i env.varmap, SVar(i)), env)
-    | ArrayAccess (nm, idx) -> 
+    | ArrayAccess (arr, idx) -> 
       let (sidx, _) = expr env idx in
-      let t = type_of_id nm env.varmap in
+      let (sarr, _) = expr env arr in
+      let (t, _) = sarr in
       let el_t = (match t with Array(e) -> e
-        | _ -> raisestr ("Cannot access elements of non-array variable "^nm))
+        | _ -> raisestr ("Cannot access elements of non-array variable"))
       in
-      ((el_t, SArrayAccess(nm, cast_to Int sidx
+      ((el_t, SArrayAccess(sarr, cast_to Int sidx
          "Could not cast array index to an integer")), env)
-    | StructField (nm, fl) -> 
-       let t = (type_of_id nm env.varmap) in (match t with
+    | StructField (str, fl) -> 
+       let (sstr, _) = expr env str in
+       let (t, _) = sstr in
+       (match t with
          Struct(_) ->
-          ((type_of_field nm fl env.varmap, SStructField(nm ,fl)), env)
+          ((type_of_field t fl, SStructField(sstr ,fl)), env)
        | Array(_) -> if fl="length" then
-          (Int, SArrayLength(nm)), env
+          (Int, SArrayLength(sstr)), env
           else raisestr ("Cannot access fields for a non-struct variable")
        | _ -> raisestr ("Cannot access fields for a non-struct variable")
       )

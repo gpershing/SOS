@@ -11,7 +11,7 @@ type environment = {
 ebuilder : L.llbuilder;
 evars : L.llvalue StringMap.t; (* The storage associated with a given var *)
 efxns : (L.llvalue * func_bind) StringMap.t;
-ecurrent_fxn : L.llvalue (* The current function *)
+ecurrent_fxn : L.llvalue; (* The current function *)
 }
 
 (* translate : Sast.program -> Llvm.module *)
@@ -44,6 +44,8 @@ let translate prog =
     (* An array is a pointer to a struct containing an array (as a pointer)
       and its length, an int *)
     | Array(t) -> ptr_t (struct_t [|ptr_t (ltype_of_typ t); i32_t|])
+    | Struct(l) -> ptr_t (struct_t
+       (Array.of_list (List.map (fun (tid, _) -> ltype_of_typ tid) l)))
     | _ -> raise (Failure "Non-basic types not yet supported") (*TODO*)  
 
   in
@@ -83,12 +85,6 @@ let translate prog =
     ignore (L.build_store param local env.ebuilder);
     add_variable env nm local
   in
-
-    (* Add a new type definition, return ? *)
-    let add_typedef = function 
-      SAlias(_) -> ()
-    | SStructDef(_) -> raise (Failure "Struct def not yet supported")
-    in
 
    (* Operator Maps *)
    let opstr = function
@@ -270,6 +266,17 @@ let translate prog =
      arr_struct, env
    in
 
+   (* Finds the integer field index *)
+   let find_field struct_typ field = 
+       let sargl = match struct_typ with Struct(l) -> l | _  -> [] in
+       let rec find_field_inner sargl field n = match sargl with sarg :: tl ->
+         let (_, nm) = sarg in
+         if nm = field then n else find_field_inner tl field n+1
+       | _ -> raise (Failure "Field not found")
+       in
+       find_field_inner sargl field 0
+   in
+
    (*
    let array_map = make_opmap
    [(Of, build_of); (Concat, build_concat)]
@@ -311,21 +318,43 @@ let translate prog =
 
      arr_struct, env
 
+   | SNamedStruct(nm, expl) ->
+     let struc = L.build_malloc (L.element_type (ltype_of_typ t)) nm env.ebuilder in
+     let rec set_fields env n = function
+       exp :: tl -> 
+         let fieldaddr = L.build_gep struc [|l0; L.const_int i32_t n|]
+           "fieldaddr" env.ebuilder in 
+         let (lv, env) = expr env exp in
+         ignore(L.build_store lv fieldaddr env.ebuilder);
+         set_fields env (n+1) tl
+       | [] -> env
+     in
+     let env = set_fields env 0 expl in
+     struc, env
+
      (* Access *)
    | SVar(nm) -> (L.build_load (get_variable env nm) nm env.ebuilder),env 
-   | SArrayAccess(nm, idx) -> 
+   | SArrayAccess(arr_exp, idx) -> 
+     let (arr, env) = expr env arr_exp in
      let (idx_lv, env) = expr env idx in
      (* Access the struct pointer, then the field *)
-     let arr = L.build_load (get_variable env nm) "arr" env.ebuilder in
      let elref = L.build_gep arr [|l0; l0|]
-       (nm^"dataref") env.ebuilder in
+       ("dataref") env.ebuilder in
      (* Access data *)
-     let d = L.build_load elref (nm^"data") env.ebuilder in
-     let valref = L.build_gep d [|idx_lv|] (nm^"elref") env.ebuilder in
-     L.build_load valref (nm^"el") env.ebuilder, env
+     let d = L.build_load elref ("data") env.ebuilder in
+     let valref = L.build_gep d [|idx_lv|] ("elref") env.ebuilder in
+     L.build_load valref ("el") env.ebuilder, env
 
-   | SArrayLength (nm) -> build_array_len env
-       (L.build_load (get_variable env nm) nm env.ebuilder)
+   | SArrayLength (arr_exp) -> let (arr, env) = expr env arr_exp in
+     build_array_len env arr
+
+   | SStructField (str_exp, fl) ->
+       let (stype, _) = str_exp in
+       let (struc, env) = expr env str_exp in
+       let idx = find_field stype fl in
+       let adr = L.build_gep struc [|l0; L.const_int i32_t idx|]
+         "fieldadr" env.ebuilder in
+         L.build_load adr (fl) env.ebuilder, env
 
      (* Definitions *)
    | SVarDef(ty, nm, ex) ->  
@@ -358,6 +387,18 @@ let translate prog =
        let ex' = expr env ex in
        let (lv, env) = ex' in
        ignore(L.build_store lv (get_variable env nm) env.ebuilder); ex'
+
+   | SAssignStruct (str_exp, fl, ex) ->
+       let (stype, _) = str_exp in
+       let (struc, env) = expr env str_exp in
+       let ex' = expr env ex in
+       let (lv, env) = ex' in
+       (* Find field index *)
+       let idx = find_field stype fl in
+       (* GEP *)
+       let adr = L.build_gep struc [|l0; L.const_int i32_t idx|]
+         "fieldadr" env.ebuilder in
+       ignore(L.build_store lv adr env.ebuilder); ex'
 
      (* Operators *)
    | SBinop(exp1, op, exp2) ->
@@ -462,7 +503,7 @@ let translate prog =
 
    (* Builds an SOS statement and returns the updated environment *)
    let build_stmt env = function
-     STypeDef(td) -> add_typedef td; env
+     STypeDef(_) -> env (* Everything handled in semant *)
    | SExpression(ex) -> let (_, env) = expr env ex 
      in env
    | SImport(im) -> ignore(im); raise (Failure "Import not yet supported") (*TODO*)
