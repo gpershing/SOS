@@ -21,9 +21,9 @@ let basic_print prog =
       VarDef(a, b, c) -> typeid_str(a) ^ " " ^ b ^ " = " ^ expr_str c
     | FxnDef(a, b, c, d) -> typeid_str(a) ^ " " ^ b ^ "(" ^ comma_list_str (fun (a, b) -> typeid_str(a) ^ " " ^ b) c ^ ") = " ^ expr_str d
     | Assign(a, b) -> a ^ " = " ^ expr_str b
-    | AssignStruct(a, b, c) -> a ^ "." ^ b ^ " = " ^ expr_str c
-    | AssignArray(a, b, c) -> a^"["^expr_str b ^"] = "^ expr_str c
-    | ArrayAccess(nm, idx) -> nm^"["^expr_str idx^"]"
+    | AssignStruct(a, b, c) -> expr_str a ^ "." ^ b ^ " = " ^ expr_str c
+    | AssignArray(a, b, c) -> expr_str a^"["^expr_str b ^"] = "^ expr_str c
+    | ArrayAccess(nm, idx) -> expr_str nm^"["^expr_str idx^"]"
     | Uop(a, b) -> let uoperator_str = function Not -> "!" | Neg -> "-" in uoperator_str a ^ expr_str b
     | Binop(a, b, c) -> let operator_str = function
         Add -> "+"
@@ -52,7 +52,7 @@ let basic_print prog =
     | AnonStruct(a) -> "{" ^ comma_list_str expr_str a ^ "}"
     | NamedStruct(a, b) -> a ^ "{" ^ comma_list_str expr_str b ^ "}"
     | Var(a) -> a
-    | StructField(a, b) -> a ^ "." ^ b
+    | StructField(a, b) -> expr_str a ^ "." ^ b
     | IntLit(i) -> string_of_int i
     | FloatLit(f) -> f
     | BoolLit(true) -> "true"

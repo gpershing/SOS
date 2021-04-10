@@ -27,8 +27,8 @@ let basic_print sast =
   | SFxnDef(_, var, sargl, exp) ->
       typeid_string t ^" "^var^"("^sargl_string sargl^") = "^sexp_string exp^"\n"
   | SAssign(var, exp) -> "("^typeid_string t^") "^var^" = "^sexp_string exp^"\n"
-  | SAssignStruct(var, f, exp) -> "("^typeid_string t^") "^var^"."^f^" = "^sexp_string exp^"\n"
-  | SAssignArray(var, e1, e2) -> "("^typeid_string t^") "^var^"["^sexp_string e1^"] = "^sexp_string e2^"\n"
+  | SAssignStruct(var, f, exp) -> "("^typeid_string t^") "^sexp_string var^"."^f^" = "^sexp_string exp^"\n"
+  | SAssignArray(var, e1, e2) -> "("^typeid_string t^") "^sexp_string var^"["^sexp_string e1^"] = "^sexp_string e2^"\n"
   | SUop(op, exp) -> "("^typeid_string t^")"^
     (match op with Not -> "!" | Neg -> "-")^sexp_string exp
   | SBinop (e1, op, e2) -> let opstr  = match op with
@@ -51,12 +51,12 @@ let basic_print sast =
   | SNamedStruct(nm, expl) -> 
       "("^typeid_string t^") "^nm^"{"^explstr expl^"}"
   | SVar(id) -> "("^typeid_string t^") "^id
-  | SStructField(id, f) -> "("^typeid_string t^") "^id^"."^f
+  | SStructField(id, f) -> "("^typeid_string t^") "^sexp_string id^"."^f
   | SIntLit(i) -> string_of_int i
   | SFloatLit(f) -> f
   | SBoolLit(b) -> string_of_bool b
-  | SArrayAccess(nm, idx) -> "("^typeid_string t^") "^nm^"["^sexp_string idx^"]"
-  | SArrayLength(nm) -> nm^".length"
+  | SArrayAccess(nm, idx) -> "("^typeid_string t^") "^sexp_string nm^"["^sexp_string idx^"]"
+  | SArrayLength(nm) -> sexp_string nm^".length"
   | SCast(exp) -> sexp_string exp
   in
 
