@@ -50,7 +50,7 @@ typeid:
   | ARRAY typeid { ArrayTypeID($2) }
 
 stexpr:
-    VAR DOT VAR EQ expr { AssignStruct($1, $3, $5) }
+    VAR DOT VAR EQ expr { AssignStruct(Var($1), $3, $5) }
   | VAR LBRACK expr RBRACK EQ expr { AssignArray($1, $3, $6) }
   | VAR EQ expr { Assign($1, $3) }
   | VAR VAR EQ expr { VarDef(TypeID($1),$2,$4) }
@@ -65,7 +65,7 @@ expr:
   | FLOATLIT { FloatLit($1) }
   | BOOLLIT { BoolLit($1) }
   | VAR { Var($1) }
-  | VAR DOT VAR { StructField($1,$3) }
+  | expr DOT VAR { StructField($1,$3) }
   | NOT expr { Uop(Not,$2) }
   | SUB expr { Uop(Neg,$2) }
   | expr ADD expr { Binop($1,Add,$3) }
@@ -85,6 +85,7 @@ expr:
   | expr SEQ expr { Binop($1,Seq,$3) }
   | expr CONCAT expr {Binop($1,Concat,$3) }
   | expr OF expr { Binop($1,Of,$3) }
+  | expr DOT VAR EQ expr { AssignStruct($1, $3, $5) }
   | LPAREN expr RPAREN { $2 }
   | VAR LBRACE args RBRACE { NamedStruct($1, $3) }
   | VAR LBRACK expr RBRACK { ArrayAccess($1, $3) }
