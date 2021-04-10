@@ -115,6 +115,37 @@ let check prog =
       | _ -> raisestr ("Cannot add or subtract these types")
   in
 
+  let mul_expr env exp1 op exp2 = 
+      let (t1, _) = exp1 in let (t2, _) = exp2 in
+      match (t1, t2) with
+        (Int, Int) -> (Int, SBinop(exp1, op, exp2)), env
+      | (Float, Float) -> (Float, SBinop(exp1, op, exp2)), env
+      | _ -> raisestr ("Cannot multiply these types")
+  in
+
+  let div_expr env exp1 op exp2 = 
+      let (t1, _) = exp1 in let (t2, _) = exp2 in
+      match (t1, t2) with
+        (Int, Int) -> (Int, SBinop(exp1, op, exp2)), env
+      | (Float, Float) -> (Float, SBinop(exp1, op, exp2)), env
+      | _ -> raisestr ("Cannot multiply these types")
+  in
+
+  let mod_expr env exp1 op exp2 = 
+      let (t1, _) = exp1 in let (t2, _) = exp2 in
+      match (t1, t2) with
+        (Int, Int) -> (Int, SBinop(exp1, op, exp2)), env
+      | _ -> raisestr ("Can only take the modulo with integers")
+  in
+
+  let pow_expr env exp1 op exp2 = 
+      let (t1, _) = exp1 in let (t2, _) = exp2 in
+      match (t1, t2) with
+        (Int, Int) -> (Int, SBinop(exp1, op, exp2)), env
+      | (Float, Int) -> (Float, SBinop(exp1, op, exp2)), env
+      | _ -> raisestr ("Cannot exponentiate this type")
+  in
+
   let eq_expr env exp1 op exp2 = 
       let (t1, _) = exp1 in let (t2, _) = exp2 in
       (match (t1, t2) with
@@ -133,6 +164,11 @@ let check prog =
       (Bool, SBinop(exp1, op, exp2)), env
   in
 
+  let logic_expr env exp1 op exp2 = 
+      let err_str = "Could not resolve boolean operands to boolean values" in
+      (Bool, SBinop(cast_to Bool exp1 err_str, op, cast_to Bool exp2 err_str)), env
+  in
+
   let array_expr env exp1 op exp2 = 
       let (t1, _) = exp1 in let (t2, _) = exp2 in
       (match t2 with Array(_) -> ()
@@ -148,15 +184,21 @@ let check prog =
   let binop_expr env exp1 op exp2 = match op with
       Add -> addsub_expr env exp1 op exp2
     | Sub -> addsub_expr env exp1 op exp2
+    | Mul -> mul_expr    env exp1 op exp2
+    | Div -> div_expr    env exp1 op exp2
+    | Mod -> mod_expr    env exp1 op exp2
+    | Pow -> pow_expr    env exp1 op exp2
     | Eq  -> eq_expr     env exp1 op exp2
     | Neq -> eq_expr     env exp1 op exp2
     | Less      -> comp_expr env exp1 op exp2
     | Greater   -> comp_expr env exp1 op exp2
     | LessEq    -> comp_expr env exp1 op exp2
     | GreaterEq -> comp_expr env exp1 op exp2
+    | Or ->  logic_expr env exp1 op exp2
+    | And -> logic_expr env exp1 op exp2
     | Of     -> array_expr env exp1 op exp2
     | Concat -> array_expr env exp1 op exp2
-    | _ -> raisestr ("Undefined operator")
+    | Seq -> raisestr ("Sequence is a special case, this should never happen")
   in
 
   (* Takes a pair of sexprs and makes their types agree by adding casts,
@@ -216,6 +258,13 @@ let check prog =
     | Uop(_) -> raisestr ("Unary operations not yet supported") (* TODO *)
 
     | Binop(exp1, op, exp2) -> 
+      if op = Seq then
+         (* Need to pass new environments *)
+         let (e1, env) = expr env exp1 in
+         let (e2, env) = expr env exp2 in
+         let (t, _) = e2 in
+         (t, SBinop(e1, Seq, e2)), env
+      else
          let (e1, _) = expr env exp1 in
          let (e2, _) = expr env exp2 in
          binop_expr env e1 op e2
