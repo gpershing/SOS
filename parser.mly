@@ -51,7 +51,7 @@ typeid:
 
 stexpr:
     VAR DOT VAR EQ expr { AssignStruct(Var($1), $3, $5) }
-  | VAR LBRACK expr RBRACK EQ expr { AssignArray($1, $3, $6) }
+  | VAR LBRACK expr RBRACK EQ expr { AssignArray(Var($1), $3, $6) }
   | VAR EQ expr { Assign($1, $3) }
   | VAR VAR EQ expr { VarDef(TypeID($1),$2,$4) }
   | ARRAY typeid VAR EQ expr { VarDef(ArrayTypeID($2), $3, $5) }
@@ -86,9 +86,10 @@ expr:
   | expr CONCAT expr {Binop($1,Concat,$3) }
   | expr OF expr { Binop($1,Of,$3) }
   | expr DOT VAR EQ expr { AssignStruct($1, $3, $5) }
+  | expr LBRACK expr RBRACK EQ expr { AssignArray($1, $3, $6) }
   | LPAREN expr RPAREN { $2 }
   | VAR LBRACE args RBRACE { NamedStruct($1, $3) }
-  | VAR LBRACK expr RBRACK { ArrayAccess($1, $3) }
+  | expr LBRACK expr RBRACK { ArrayAccess($1, $3) }
   | LBRACE args RBRACE { AnonStruct($2) }
   | LBRACK args RBRACK { ArrayCon($2) }
   | stexpr { $1 }
