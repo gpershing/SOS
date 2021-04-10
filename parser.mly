@@ -38,7 +38,8 @@
 %right POW
 %nonassoc LBRACK RBRACK LPAREN RPAREN LBRACE RBRACE
 %right NOT
-%left DOT VAR
+%left DOT
+%right VAR
 
 
 %%
