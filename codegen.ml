@@ -378,7 +378,10 @@ let translate prog =
        let (lv, ret_env) = expr new_env ex in
        
        (* End with a return statement *)
-       ignore (L.build_ret lv ret_env.ebuilder);
+       ( if ty=Void then
+       ignore (L.build_ret_void ret_env.ebuilder)
+       else
+       ignore (L.build_ret lv ret_env.ebuilder) );
        (* Add this function to the returned environment *)
        decl, add_function env nm bind
 
@@ -399,6 +402,15 @@ let translate prog =
        let adr = L.build_gep struc [|l0; L.const_int i32_t idx|]
          "fieldadr" env.ebuilder in
        ignore(L.build_store lv adr env.ebuilder); ex'
+
+   | SAssignArray (arr_exp, idx, ex) ->
+       let (arr, env) = expr env arr_exp in
+       let dataref = L.build_gep arr [|l0; l0|] "dataref" env.ebuilder in
+       let data = L.build_load dataref "data" env.ebuilder in
+       let (i, env) = expr env idx in
+       let (el, env) = expr env ex in
+       let elref = L.build_gep data [|i|] "elref" env.ebuilder in
+       ignore (L.build_store el elref env.ebuilder); (el, env)
 
      (* Operators *)
    | SBinop(exp1, op, exp2) ->
@@ -435,6 +447,89 @@ let translate prog =
       let arg, env  = expr env e in 
       L.build_call printf_func [| float_format_str ; arg |]
         "printf" env.ebuilder, env
+
+   | SFxnApp("copy", SOrderedFxnArgs([e])) ->
+      let (ctype, _) = e in
+      let arg, env = expr env e in
+      (
+      match ctype with
+        Array(atype)    -> 
+          let n, env = build_array_len env arg in
+          (* Pre-GEP the array *)
+          let cdata_ref = L.build_gep arg [|l0; l0|] ("crf") env.ebuilder in
+          let cdata = L.build_load cdata_ref ("cdata") env.ebuilder in
+     
+          (* Create a new array *)
+          let data = L.build_array_malloc (ltype_of_typ atype) n
+            "arrdata" env.ebuilder in
+          (* Set up loop *)
+          let i_addr = L.build_alloca i32_t "i" env.ebuilder in
+          ignore (L.build_store l0 i_addr env.ebuilder);
+          let loop_bb = L.append_block context "loop" env.ecurrent_fxn in
+          let continue_bb = L.append_block context "continue" env.ecurrent_fxn in
+          ignore (L.build_br loop_bb env.ebuilder);
+
+          (* Loop *)
+          let builder = L.builder_at_end context loop_bb in
+          let i = L.build_load i_addr "i" builder in
+          let elref = L.build_gep cdata [|i|] ("elref") builder in
+          let el = L.build_load elref ("el") builder in
+          let newref = L.build_gep data [|i|] ("newref") builder in
+          ignore(L.build_store el newref builder); 
+          ignore(L.build_store (L.build_add i l1 "i" builder) i_addr builder);
+          let i = L.build_load i_addr "i" builder in
+          ignore(L.build_cond_br (L.build_icmp L.Icmp.Slt i n "tmp" builder)
+            loop_bb continue_bb builder);
+
+         (* Continue *)
+         let builder = L.builder_at_end context continue_bb in
+         let env = { env with ebuilder = builder } in
+         (* Create array struct *)
+         let arr_struct = L.build_malloc (L.element_type (ltype_of_typ t))
+           "arr" env.ebuilder in
+         let data_addr = L.build_gep arr_struct [|l0; l0|] "datafield"
+           env.ebuilder in
+         ignore (L.build_store data data_addr env.ebuilder);
+         let len_addr = L.build_gep arr_struct [|l0; L.const_int i32_t 1|]
+          "lenfield" env.ebuilder in
+         ignore (L.build_store n len_addr env.ebuilder);
+
+         arr_struct, env
+          
+      | Struct(sfields) ->
+         let n = List.length sfields in
+         let ln = L.const_int i32_t n in
+
+         (* Create a new struct *)
+         let struc = L.build_malloc (L.element_type (ltype_of_typ t))
+           "struct" env.ebuilder in
+         
+         (* Set up loop *)
+         let i_addr = L.build_alloca i32_t "i" env.ebuilder in
+         ignore (L.build_store l0 i_addr env.ebuilder);
+         let loop_bb = L.append_block context "loop" env.ecurrent_fxn in
+         let cont_bb = L.append_block context "continu" env.ecurrent_fxn in
+         ignore (L.build_br loop_bb env.ebuilder);
+
+         (* Loop *)
+         let builder = L.builder_at_end context loop_bb in
+         let i = L.build_load i_addr "i" builder in
+         let flref = L.build_gep arg [|l0; i|] ("flref") builder in
+         let fl = L.build_load flref ("fl") builder in
+         let newref = L.build_gep struc [|l0; i|] ("newref") builder in
+         ignore (L.build_store fl newref builder);
+         ignore (L.build_store (L.build_add i l1 "i" builder) i_addr builder);
+         let i = L.build_load i_addr "i" builder in
+         ignore (L.build_cond_br (L.build_icmp L.Icmp.Slt i ln "tmp" builder)
+           loop_bb cont_bb builder);
+
+         (* Continue *)
+         let builder = L.builder_at_end context cont_bb in
+         let env = { env with ebuilder = builder } in
+         struc, env
+
+      | _ -> raise (Failure "Copy constructor only works on reference types")
+      )
 
     (* General functions *)
    | SFxnApp(nm, SOrderedFxnArgs(args)) -> 

@@ -256,6 +256,17 @@ let check prog =
          ((t, SAssignStruct(struct_sexp, field, cast_to t (exptype, sexp)
                             ("Could not match type when assigning field "^field))), env)
 
+    | AssignArray (array_exp, idx, exp) ->
+        let ((exptype, sexp), _) = expr env exp in
+        let (array_sexp, _) = expr env array_exp in
+        let (arrt, _) = array_sexp in
+        let (sidx, _) = expr env idx in
+        (match sidx with (Int, _) -> () | _ ->
+           raisestr ("Array index must be an integer ") );
+        let eltype = match arrt with Array(el) -> el | _ -> Void in
+        ((eltype, SAssignArray(array_sexp, sidx, cast_to eltype (exptype, sexp)
+              "Could not match type when assigning array")), env)
+
     | Uop(_) -> raisestr ("Unary operations not yet supported") (* TODO *)
 
     | Binop(exp1, op, exp2) -> 
@@ -271,6 +282,25 @@ let check prog =
          binop_expr env e1 op e2
 
     | FxnApp (name, args) -> 
+         let check_len args = 
+           match args with OrderedFxnArgs(l) -> (List.length l)=1
+             | _ -> false
+         in
+         if name="copy" && check_len args then (* Copy constructor *)
+         (match args with
+           OrderedFxnArgs([ex]) ->
+            let (sexp, _) = expr env ex in
+            let (t, _) = sexp in
+            (match t with
+              Array(_) -> ()
+            | Struct(_) -> ()
+            | _ -> raisestr ("Can only use Copy constructor on reference types"));
+             ((t, SFxnApp(name, SOrderedFxnArgs([sexp]))), env)
+
+         | _ -> raisestr ("Too many arguments for Copy constructor")
+         )
+
+         else (* All other functions *)
          let fxn = sig_of_func name env.funcmap in
          (match args with
            OrderedFxnArgs(exps) ->
@@ -365,7 +395,6 @@ let check prog =
     | IntLit i -> ((Int, SIntLit i), env)
     | FloatLit f -> ((Float, SFloatLit f), env)
     | BoolLit b -> ((Bool, SBoolLit b), env)
-    | _ -> raisestr ("There is an unsupported expression in this program")
   in
 
   let make_stypedef env = function
