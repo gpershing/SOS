@@ -31,8 +31,9 @@ and sx =
 | SFxnApp of id * sfxnargs
 | SIfElse of sexpr * sexpr * sexpr             (* if expr then expr else expr *)
 | SArrayCon of sexpr list                    (* [expr, ...] *)
-| SAnonStruct of sexpr list                  (* {expr, ...} *)
-| SNamedStruct of id * sexpr list           (* name{expr, ...} *)
+(* | SAnonStruct of sexpr list                  (* {expr, ...} *)
+| SNamedStruct of id * sexpr list           (* name{expr, ...} *) *)
+| SStruct of id * sexpr list
 | SVar of id                                (* name *)
 | SArrayAccess of sexpr * sexpr                (* name[expr] *)
 | SArrayLength of sexpr                        (* name.length *)

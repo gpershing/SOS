@@ -46,9 +46,7 @@ let basic_print sast =
   | SIfElse(e1, e2, e3) -> "("^typeid_string t^") if "^sexp_string e1^"\nthen "^sexp_string e2^"\nelse "^sexp_string e3^"\n"
   | SArrayCon(expl) -> 
       "("^typeid_string t^") ["^explstr expl^"]"
-  | SAnonStruct(expl) ->
-      "("^typeid_string t^") {"^explstr expl^"}"
-  | SNamedStruct(nm, expl) -> 
+  | SStruct(nm, expl) -> 
       "("^typeid_string t^") "^nm^"{"^explstr expl^"}"
   | SVar(id) -> "("^typeid_string t^") "^id
   | SStructField(id, f) -> "("^typeid_string t^") "^sexp_string id^"."^f
