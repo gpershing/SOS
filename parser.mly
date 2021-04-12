@@ -24,6 +24,7 @@
 %type <Ast.program> program
 
 /* Associativity and Precedence */
+%right VAR
 %nonassoc IF THEN ELSE
 %left COMMA 
 %right EQ
@@ -39,7 +40,6 @@
 %nonassoc LBRACK RBRACK LPAREN RPAREN LBRACE RBRACE
 %right NOT
 %left DOT
-%right VAR
 
 
 %%
@@ -49,14 +49,41 @@ typeid:
     VAR { TypeID($1) }
   | ARRAY typeid { ArrayTypeID($2) }
 
-stexpr:
-    VAR DOT VAR EQ expr { AssignStruct(Var($1), $3, $5) }
-  | VAR LBRACK expr RBRACK EQ expr { AssignArray(Var($1), $3, $6) }
-  | VAR EQ expr { Assign($1, $3) }
-  | VAR VAR EQ expr { VarDef(TypeID($1),$2,$4) }
-  | ARRAY typeid VAR EQ expr { VarDef(ArrayTypeID($2), $3, $5) }
+/* There are three types of expressions:
+ * A statement expression (stexpr)
+   - These can only start an expression or be used in a safe context
+ * A safe statement expression (safe_stexpr)
+   -  A statement expression that can be used as an expression
+ * A normal (non-statement) expression
+   - All other expressions
+ * Certain expressions can introduce protected expressions
+   - Mainly through parens
+   - Only place where any expression can be used */
+
+/* While convoluted, it allows for a syntax without expression endings
+   Notice that stexprs that start with VAR VAR can be ambiguous in many
+   cases. */
+
+protected_expr: /* Any chance here MUST be reproduced in stexpr */
+    VAR VAR EQ expr { VarDef (TypeID($1), $2, $4) }
   | VAR VAR LPAREN fxn_args RPAREN EQ expr { FxnDef(TypeID($1),$2,$4,$7) }
-  | ARRAY typeid VAR LPAREN fxn_args RPAREN EQ expr { FxnDef(ArrayTypeID($2), $3, $5, $8) }
+  | ARRAY typeid VAR EQ expr { VarDef (ArrayTypeID($2), $3, $5) }
+  | ARRAY typeid VAR LPAREN fxn_args RPAREN EQ expr 
+    { FxnDef(ArrayTypeID($2), $3, $5, $8) }
+  | expr { $1 }
+
+stexpr:
+    VAR VAR EQ expr { VarDef (TypeID($1), $2, $4) }
+  | VAR VAR LPAREN fxn_args RPAREN EQ expr { FxnDef(TypeID($1),$2,$4,$7) }
+  | ARRAY typeid VAR EQ expr { VarDef (ArrayTypeID($2), $3, $5) }
+  | ARRAY typeid VAR LPAREN fxn_args RPAREN EQ expr 
+    { FxnDef(ArrayTypeID($2), $3, $5, $8) }
+  | safe_stexpr { $1 }
+
+safe_stexpr:
+    VAR DOT VAR EQ expr { AssignStruct(Var($1), $3, $5) }
+  | VAR LBRACK protected_expr RBRACK EQ expr { AssignArray(Var($1),$3,$6) }
+  | VAR EQ expr { Assign($1, $3) }
   | VAR LPAREN either_args RPAREN { FxnApp($1, $3) }
   | IF expr THEN expr ELSE expr { IfElse($2,$4,$6) }
   
@@ -66,6 +93,7 @@ expr:
   | BOOLLIT { BoolLit($1) }
   | VAR { Var($1) }
   | expr DOT VAR { StructField($1,$3) }
+  | VAR DOT VAR { StructField(Var($1), $3) }
   | NOT expr { Uop(Not,$2) }
   | SUB expr { Uop(Neg,$2) }
   | expr ADD expr { Binop($1,Add,$3) }
@@ -86,16 +114,18 @@ expr:
   | expr CONCAT expr {Binop($1,Concat,$3) }
   | expr OF expr { Binop($1,Of,$3) }
   | expr DOT VAR EQ expr { AssignStruct($1, $3, $5) }
-  | expr LBRACK expr RBRACK EQ expr { AssignArray($1, $3, $6) }
-  | LPAREN expr RPAREN { $2 }
+  | expr LBRACK protected_expr RBRACK EQ expr { AssignArray($1, $3, $6) }
+  | LPAREN protected_expr RPAREN { $2 }
   | VAR LBRACE args RBRACE { NamedStruct($1, $3) }
-  | expr LBRACK expr RBRACK { ArrayAccess($1, $3) }
+  | VAR LBRACK protected_expr RBRACK { ArrayAccess (Var($1), $3) }
+  | expr LBRACK protected_expr RBRACK { ArrayAccess($1, $3) }
   | LBRACE args RBRACE { AnonStruct($2) }
   | LBRACK args RBRACK { ArrayCon($2) }
-  | stexpr { $1 }
+  | safe_stexpr { $1 }
+    
 
 either_args:
-  | VARCOLON expr COMMA named_args { NamedFxnArgs (($1, $2) :: $4) }
+  | VARCOLON protected_expr COMMA named_args { NamedFxnArgs (($1, $2) :: $4) }
   | args { OrderedFxnArgs ($1) }
 
 fxn_args:
@@ -111,7 +141,7 @@ named_args:
   | named_args_list {List.rev $1}
 
 named_args_list:
-    VARCOLON expr { [($1,$2)] }
+    VARCOLON protected_expr { [($1,$2)] }
   | named_args_list COMMA VARCOLON expr { ($3,$4) :: $1 }
 
 args:
@@ -119,8 +149,8 @@ args:
   | args_list {List.rev $1}
 
 args_list:
-    expr { [$1] }
-  | args_list COMMA expr { $3 :: $1 }
+    protected_expr { [$1] }
+  | args_list COMMA protected_expr { $3 :: $1 }
 
 typedef:
     ALIAS VAR EQ typeid { Alias($2,$4) }
