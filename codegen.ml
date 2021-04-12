@@ -318,7 +318,7 @@ let translate prog =
 
      arr_struct, env
 
-   | SNamedStruct(nm, expl) ->
+   | SStruct(nm, expl) ->
      let struc = L.build_malloc (L.element_type (ltype_of_typ t)) nm env.ebuilder in
      let rec set_fields env n = function
        exp :: tl -> 

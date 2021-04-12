@@ -91,11 +91,28 @@ let check prog =
     | _ -> vmap
   in
 
+  (* Matches a struct type component-wise without names *)
+  (* Can also work within arrays or other structs *)
+  let rec match_str_type t1 t2 =
+    match (t1, t2) with
+      (Int, Int) -> true
+    | (Float, Float) -> true
+    | (Bool, Bool) -> true
+    | (Void, Void) -> true
+    | (Array(a1), Array(a2)) -> match_str_type a1 a2
+    | (Struct(s1), Struct(s2)) -> 
+        List.fold_left2
+          (fun b (st1, _) (st2, _) -> if match_str_type st1 st2 then
+             b else false) true s1 s2
+    | _ -> false
+  in
+
   (* Returns a sexp that casts sexp to typ, if possible. *)
   (* Returns sexp if no cast is required *)
   let cast_to typ sexp err_str = 
-   let (expt, _) = sexp in
+   let (expt, sx) = sexp in
    if expt=typ then sexp else
+   if match_str_type expt typ then (typ, sx) else
    if expt=EmptyArray then
     match typ with
       Array(t) -> (Array(t), SArrayCon([]))
@@ -364,7 +381,7 @@ let check prog =
       | _ -> [], []
       in
       let (typel, expl) = create_anon_struct 1 l in
-      ((Struct(typel), SAnonStruct(expl)), env)
+      ((Struct(typel), SStruct("anon", expl)), env)
 
     | NamedStruct (name, l)  ->
       let st = resolve_typeid (TypeID(name)) env.typemap in
@@ -382,7 +399,7 @@ let check prog =
            | _ -> raisestr ("Not enough arguments for struct "^name))
         in
         let sexprs = create_named_struct sargs l
-        in ((st, SNamedStruct(name, sexprs)), env)
+        in ((st, SStruct(name, sexprs)), env)
       | _ -> raisestr ("Cannot resolve the struct name "^name)
      )
 
