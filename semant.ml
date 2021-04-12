@@ -95,7 +95,13 @@ let check prog =
   (* Returns sexp if no cast is required *)
   let cast_to typ sexp err_str = 
    let (expt, _) = sexp in
-   if expt=typ then sexp else (
+   if expt=typ then sexp else
+   if expt=EmptyArray then
+    match typ with
+      Array(t) -> (Array(t), SArrayCon([]))
+    | _ -> raisestr ("Cannot cast empty array to non-array type")
+   else
+   (
    (match (typ, expt) with
      (Int, Float)   -> ()
    | (Int, Bool)    -> ()
