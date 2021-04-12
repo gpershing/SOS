@@ -128,21 +128,37 @@ let check prog =
    | _ -> raisestr err_str );
    (typ, SCast(sexp)))
   in
+  
+  (* Converts a type to a string *)
+  let rec type_str = function
+    Int        -> "int"
+  | Float      -> "float"
+  | Bool       -> "bool"
+  | Void       -> "void"
+  | Array(t)   -> "array "^type_str t
+  | Struct(sl) -> "struct {"^
+    (let rec struct_typ_str = function
+      (hdt, _) :: (h::t) -> type_str hdt ^ ", " ^struct_typ_str (h::t) 
+    | (hdt, _) :: _ -> type_str hdt
+    | _ -> ""
+    in struct_typ_str sl)^"}"
+  | EmptyArray -> "[]"
+  in
 
   let addsub_expr env exp1 op exp2 = 
       let (t1, _) = exp1 in let (t2, _) = exp2 in
       match (t1, t2) with
         (Int, Int) -> (Int, SBinop(exp1, op, exp2)), env
       | (Float, Float) -> (Float, SBinop(exp1, op, exp2)), env
-      | _ -> raisestr ("Cannot add or subtract these types")
+      | _ -> raisestr ("Cannot add or subtract "^type_str t1^" and "^type_str t2)
   in
 
   let mul_expr env exp1 op exp2 = 
-      let (t1, _) = exp1 in let (t2, _) = exp2 in
-      match (t1, t2) with
-        (Int, Int) -> (Int, SBinop(exp1, op, exp2)), env
-      | (Float, Float) -> (Float, SBinop(exp1, op, exp2)), env
-      | _ -> raisestr ("Cannot multiply these types")
+    let (t1, _) = exp1 in let (t2, _) = exp2 in
+    match (t1, t2) with
+      (Int, Int) -> (Int, SBinop(exp1, op, exp2)), env
+    | (Float, Float) -> (Float, SBinop(exp1, op, exp2)), env
+    | _ -> raisestr ("Cannot multiply "^type_str t1^" and "^type_str t2)
   in
 
   let div_expr env exp1 op exp2 = 
@@ -150,7 +166,7 @@ let check prog =
       match (t1, t2) with
         (Int, Int) -> (Int, SBinop(exp1, op, exp2)), env
       | (Float, Float) -> (Float, SBinop(exp1, op, exp2)), env
-      | _ -> raisestr ("Cannot multiply these types")
+      | _ -> raisestr ("Cannot divide "^type_str t1^" and "^type_str t2)
   in
 
   let mod_expr env exp1 op exp2 = 
@@ -165,7 +181,8 @@ let check prog =
       match (t1, t2) with
         (Int, Int) -> (Int, SBinop(exp1, op, exp2)), env
       | (Float, Int) -> (Float, SBinop(exp1, op, exp2)), env
-      | _ -> raisestr ("Cannot exponentiate this type")
+      | (_, Int) -> raisestr ("Cannot exponentiate "^type_str t1)
+      | _ -> raisestr ("Cannot exponentiate to a non-integer power")
   in
 
   let eq_expr env exp1 op exp2 = 
@@ -173,7 +190,7 @@ let check prog =
       (match (t1, t2) with
         (Int, Int) -> ()
       | (Float, Float) -> ()
-      | _ -> raisestr ("Cannot equate these types") );
+      | _ -> raisestr ("Cannot equate "^type_str t1^" and "^type_str t2) );
       (Bool, SBinop(exp1, op, exp2)), env
   in
 
@@ -182,7 +199,7 @@ let check prog =
       (match (t1, t2) with
         (Int, Int) -> ()
       | (Float, Float) -> ()
-      | _ -> raisestr ("Cannot compare these types") );
+      | _ -> raisestr ("Cannot compare "^type_str t1^" and "^type_str t2) );
       (Bool, SBinop(exp1, op, exp2)), env
   in
 
@@ -194,7 +211,7 @@ let check prog =
   let array_expr env exp1 op exp2 = 
       let (t1, _) = exp1 in let (t2, _) = exp2 in
       (match t2 with Array(_) -> ()
-       | _ -> raisestr ("Cannot perform array operations on non-array types")      ) ;
+       | _ -> raisestr ("Cannot perform array operations on non-array type "^type_str t2)      ) ;
       match op with
         Concat     -> if t1 = t2 then (t2, SBinop(exp1, op, exp2)), env
         else raisestr ("Cannot concatenate arrays of different types")
@@ -244,8 +261,10 @@ let check prog =
       VarDef (tstr, name, exp) -> 
         let (sexp, _) = expr env exp in
         let t = resolve_typeid tstr env.typemap in
+        let (exptype, _) = sexp in
         ((t, SVarDef(t, name, cast_to t sexp
-                     ("Could not resolve type when defining "^name))),
+                     ("Could not resolve type when defining "^name^
+                      "(Found "^type_str exptype^", expected "^type_str t^")"))),
          { env with varmap = StringMap.add name t env.varmap } )
           (* TODO may want to deal with overriding variables differently *)
 
@@ -261,15 +280,16 @@ let check prog =
            varmap = add_formals args env.varmap env.typemap; } exp
         in
         ((t, SFxnDef(t, name, sargs, cast_to t (exptype, sx)
-                     ("Incorrect return type for function "^name))),
+                     ("Incorrect return type for function "^name
+                     ^" (Found "^type_str exptype^", expected "^type_str t^")"))),
          { env with funcmap = newfxnmap } )
 
     | Assign (name, exp) ->
          let ((exptype, sexp), _) = expr env exp in
          let t = type_of_id name env.varmap in
          ((t, SAssign(name, cast_to t (exptype, sexp)
-                      ("Could not match type when assigning variable "^name))),
-          env)
+                  ("Could not match type when assigning variable "^name^
+                  " (Found "^type_str exptype^", expected "^type_str t^")"))),env)
 
     | AssignStruct (struct_exp, field, exp) ->
          let ((exptype, sexp), _) = expr env exp in
@@ -277,7 +297,8 @@ let check prog =
          let (strt, _) = struct_sexp in
          let t = type_of_field strt field in
          ((t, SAssignStruct(struct_sexp, field, cast_to t (exptype, sexp)
-                            ("Could not match type when assigning field "^field))), env)
+                ("Could not match type when assigning field "^field^
+                 " (Found "^type_str exptype^", expected "^type_str t^")"))), env)
 
     | AssignArray (array_exp, idx, exp) ->
         let ((exptype, sexp), _) = expr env exp in
@@ -288,7 +309,8 @@ let check prog =
            raisestr ("Array index must be an integer ") );
         let eltype = match arrt with Array(el) -> el | _ -> Void in
         ((eltype, SAssignArray(array_sexp, sidx, cast_to eltype (exptype, sexp)
-              "Could not match type when assigning array")), env)
+    ("Could not match type when assigning array "^
+    "(Found "^type_str exptype^", expected"^type_str eltype^")"))), env)
 
     | Uop(op, exp) ->
         let (sexp, _) = expr env exp in (
