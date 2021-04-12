@@ -413,6 +413,13 @@ let translate prog =
        ignore (L.build_store el elref env.ebuilder); (el, env)
 
      (* Operators *)
+   | SUop (op, exp) ->
+       let (l, env) = expr env exp in
+       (match op with
+         Neg when t = Float -> L.build_fneg
+       | Neg                -> L.build_neg
+       | Not                -> L.build_not) l "tmp" env.ebuilder, env
+
    | SBinop(exp1, op, exp2) ->
        (match op with
          Seq ->
@@ -569,11 +576,9 @@ let translate prog =
       ignore (L.build_br merge_bb else_env.ebuilder);
 
       let env ={env with ebuilder=(L.builder_at_end context merge_bb)} in
-      let rv = match ret with
-        Some(rv) -> rv
-      | None -> L.const_int (ltype_of_typ Bool) 0
-      in
-      (L.build_load rv "if_tmp" env.ebuilder), env
+      (match ret with
+        Some(rv) -> (L.build_load rv "if_tmp" env.ebuilder), env
+      | None -> (L.const_int (ltype_of_typ Bool) 0), env)
 
     (* Type casting *)
    | SCast (ex) -> let t_to = t in let (t_from, _) = ex in 

@@ -267,7 +267,17 @@ let check prog =
         ((eltype, SAssignArray(array_sexp, sidx, cast_to eltype (exptype, sexp)
               "Could not match type when assigning array")), env)
 
-    | Uop(_) -> raisestr ("Unary operations not yet supported") (* TODO *)
+    | Uop(op, exp) ->
+        let (sexp, _) = expr env exp in (
+        match op with
+          Not -> (Bool, SUop(op, cast_to Bool sexp 
+            "Could not resolve expression to bool")), env
+        | Neg -> let (t, _) = sexp in
+          (match t with
+            Int -> ()
+          | Float -> ()
+          | _ -> raisestr "Cannot negate non-arithmetic types" );
+          (t, SUop(op, sexp)), env )
 
     | Binop(exp1, op, exp2) -> 
       if op = Seq then
