@@ -145,8 +145,45 @@ let check prog =
   | EmptyArray -> "[]"
   in
 
+  (* Identifies structs with only ints or only floats *)
+  let arith_struct t1 at = 
+      match t1 with
+        Struct(l) -> 
+          List.fold_left (fun b (ft, _) -> if ft=at then b else false)
+            true l
+      | _ -> false
+  in
+  let either_struct t1 t2 = 
+    match t1 with Struct(_) -> true
+    | _ -> match t2 with Struct(_) -> true
+    | _ -> false
+  in
+  let is_struct t1 = match t1 with Struct(_) -> true | _ -> false
+  in
+
+  let assert_arith t1 = 
+    if arith_struct t1 Float then () else
+    if arith_struct t1 Int then () else
+    raisestr ("Can only operate on arithmetic structs")
+  in
+
+  let sop_type t1 =
+    if arith_struct t1 Float then Float else
+    if arith_struct t1 Int then Int else
+    Void
+  in
+
   let addsub_expr env exp1 op exp2 = 
       let (t1, _) = exp1 in let (t2, _) = exp2 in
+      (* Can add structs component-wise *)
+      if either_struct t1 t2 then
+        if match_str_type t1 t2 then
+          (assert_arith t1 ;
+          (t1, SBinop(exp1, op, exp2)), env)
+        else
+        raisestr ("Can only add or subtract structs of matching type")
+
+      else
       match (t1, t2) with
         (Int, Int) -> (Int, SBinop(exp1, op, exp2)), env
       | (Float, Float) -> (Float, SBinop(exp1, op, exp2)), env
@@ -155,6 +192,21 @@ let check prog =
 
   let mul_expr env exp1 op exp2 = 
     let (t1, _) = exp1 in let (t2, _) = exp2 in
+    (* Can scale structs and take the dot product *)
+    if either_struct t1 t2 then
+      if match_str_type t1 t2 then
+        (assert_arith t1 ;
+        (sop_type t1, SBinop(exp1, op, exp2)), env)
+
+      else if is_struct t1 then
+        (assert_arith t1 ;
+        (t1, SBinop(exp1, op, cast_to (sop_type t1) exp2
+          "Cannot scale a struct by a non-scalar")), env)
+      else
+        (assert_arith t2 ;
+        (t2, SBinop(exp2, op, cast_to (sop_type t2) exp1
+          "Cannot scale a struct by a non-scalar")), env)
+    else
     match (t1, t2) with
       (Int, Int) -> (Int, SBinop(exp1, op, exp2)), env
     | (Float, Float) -> (Float, SBinop(exp1, op, exp2)), env
@@ -163,6 +215,12 @@ let check prog =
 
   let div_expr env exp1 op exp2 = 
       let (t1, _) = exp1 in let (t2, _) = exp2 in
+      (* Can scale structs *)
+      if is_struct t1 then
+        (assert_arith t1 ;
+        (t1, SBinop(exp1, op, cast_to (sop_type t1) exp2
+          "Cannot scale a struct by a non-scalar")), env)
+      else
       match (t1, t2) with
         (Int, Int) -> (Int, SBinop(exp1, op, exp2)), env
       | (Float, Float) -> (Float, SBinop(exp1, op, exp2)), env
