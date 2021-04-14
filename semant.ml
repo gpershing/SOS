@@ -18,6 +18,12 @@ type environment = {
   funcmap : func_bind StringMap.t;
 }
 
+(* External function signatures *)
+(* This is re-used in Codegen *)
+type func_decl = func_bind * string
+let external_functions : func_decl list =
+[ { ftype = Int; formals = [Int, "x"; Int, "y"] }, "example" ]
+
 let raisestr s = raise (Failure s) 
 
 let check prog =
@@ -30,6 +36,11 @@ let check prog =
     in List.fold_left add_bind StringMap.empty [ ("print", Int);
 			                         ("printb", Bool);
 			                         ("printf", Float)] )
+  in
+  (* add external functions *)
+  let built_in_decls = List.fold_left
+    (fun map (decl, nm) -> StringMap.add nm decl map)
+    built_in_decls external_functions
   in
 
   (* add built-in types such as int, float *)

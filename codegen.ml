@@ -55,6 +55,16 @@ let translate prog =
   let printf_func : L.llvalue = 
       L.declare_function "printf" printf_t the_module in
 
+  (* External Functions *)
+  let add_external_fxn map (decl, name)  =
+      let ftype = L.function_type (ltype_of_typ decl.ftype)
+        (Array.of_list (List.map (fun (t, _) -> ltype_of_typ t) decl.formals)) in
+      let lldecl = L.declare_function name ftype the_module in
+      StringMap.add name (lldecl, decl)  map
+  in
+  let ext_fxn_map = List.fold_left add_external_fxn StringMap.empty Semant.external_functions
+  in 
+
   (* Setup main function *)
   let main =
       L.define_function "main" (L.function_type i32_t [||]) the_module
@@ -600,7 +610,7 @@ let translate prog =
      let builder = L.builder_at_end context (L.entry_block main) in
      (* Use the builder to add the statements of main() *)
      let start_env = { ebuilder = builder; evars = StringMap.empty;
-       efxns = StringMap.empty; ecurrent_fxn = main } in
+       efxns = ext_fxn_map; ecurrent_fxn = main } in
      let end_env = List.fold_left build_stmt start_env stmts in
      (* Add a return statement *)
      L.build_ret (L.const_int i32_t 0) end_env.ebuilder    
