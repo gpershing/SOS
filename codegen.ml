@@ -304,6 +304,66 @@ let translate prog =
    [(Of, build_of); (Concat, build_concat)]
    in
    *)
+   
+   (* Struct ops *)
+   let dot_product stype slist env =
+     let atype = match slist with
+       (hd, _) :: _ -> if hd = Float then Float else Int
+     | _ -> Float in
+     let len = List.length slist in
+     
+     let name = "__dot"^(if atype=Float then "f" else "i")^(string_of_int len) in
+
+     if StringMap.mem name env.esfxns then
+       StringMap.find name env.esfxns, env
+     else (* Make new function *)
+       let ltype = ltype_of_typ stype in
+       let formals = [|ltype; ltype|] in
+       let ftype = L.function_type (ltype_of_typ atype) formals in
+       let decl = L.define_function name ftype the_module in
+       let builder = L.builder_at_end context (L.entry_block decl) in
+
+       let bind = { ftype = atype; formals = [stype, "a"; stype, "b"] } in
+
+       let parama = (Array.get (L.params decl) 0) in
+       L.set_value_name "a" parama ;
+       let locala = L.build_alloca ltype "a" builder in
+       ignore (L.build_store parama locala builder);
+       let a = L.build_load locala "a" builder in
+
+       let paramb = (Array.get (L.params decl) 1) in
+       L.set_value_name "b" paramb ;
+       let localb = L.build_alloca ltype "b" builder in
+       ignore (L.build_store paramb localb builder);
+       let b = L.build_load localb "b" builder in
+
+       let res = L.build_alloca (ltype_of_typ atype) "dot" builder in
+       let tmp = L.build_alloca (ltype_of_typ atype) "tmp" builder in
+       ignore(L.build_store (if atype=Float then L.const_float (ltype_of_typ Float) 0.0 else L.const_int i32_t 0) res builder) ;
+       let map = (if atype=Float then float_map else int_map) in
+       let opmul = StringMap.find "Mul" map in
+       let opadd = StringMap.find "Add" map in
+       let rec dot_prod n = 
+         if n < len then 
+           let aref = L.build_gep a [|l0; L.const_int i32_t n|] "aref" builder in
+           let bref = L.build_gep b [|l0; L.const_int i32_t n|] "bref" builder in
+           let aval = L.build_load aref "aval" builder in
+           let bval = L.build_load bref "bval" builder in
+           ignore (L.build_store (opmul aval bval "tmp" builder) tmp builder);
+           let tmpv = L.build_load tmp "tmp" builder in
+           let resv = L.build_load res "res" builder in
+           ignore (L.build_store (opadd tmpv resv "tmp" builder) res builder);
+           dot_prod (n+1)
+         else ()
+       in
+       dot_prod 0 ;
+
+       (* Return *)
+       let resv = L.build_load res "res" builder in
+       ignore (L.build_ret resv builder) ;
+       (decl, bind), { env with esfxns = StringMap.add name (decl, bind) env.esfxns }
+   in
+
 
    (* Construct code for an expression
       Return its llvalue and the updated builder *)
@@ -445,6 +505,8 @@ let translate prog =
              env.ebuilder, env
          | (Float, Float) -> StringMap.find (opstr op) float_map ll1 ll2
              "tmp" env.ebuilder, env
+         | (Struct(l1), Struct(_)) -> let (decl, _), env = dot_product t1 l1 env in
+           L.build_call decl [|ll1; ll2|] "dot" env.ebuilder, env
          | (_, Array(_)) -> 
            (match op with
              Of -> build_of t2 ll1 ll2 env
@@ -504,8 +566,8 @@ let translate prog =
          let len = List.length sfields in
          let name = "__copy"^(string_of_int len) in
 
-         let (decl, bind) = if StringMap.mem name env.esfxns
-         then StringMap.find name env.esfxns
+         let (decl, bind), env = if StringMap.mem name env.esfxns
+         then StringMap.find name env.esfxns, env
          else (* Make a new copy fxns *)
            let formals = [|ltype_of_typ ctype|] in
            let ftype = L.function_type (ltype_of_typ ctype) formals in
@@ -535,7 +597,7 @@ let translate prog =
 
            (* Return *)
            ignore (L.build_ret struc builder) ;
-           (decl, bind)
+           (decl, bind), { env with esfxns = StringMap.add name (decl, bind) env.esfxns }
          in
          L.build_call decl [|arg|] "copied" env.ebuilder, env
 
