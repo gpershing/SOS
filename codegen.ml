@@ -10,7 +10,8 @@ module StringMap = Map.Make(String)
 type environment = {
 ebuilder : L.llbuilder;
 evars : L.llvalue StringMap.t; (* The storage associated with a given var *)
-efxns : (L.llvalue * func_bind) StringMap.t;
+efxns : (L.llvalue * func_bind) StringMap.t; (* Decls for normal functions *)
+esfxns : (L.llvalue * func_bind) StringMap.t; (* Decls for struct op fxns *)
 ecurrent_fxn : L.llvalue; (* The current function *)
 }
 
@@ -500,32 +501,44 @@ let translate prog =
          arr_struct, env
           
       | Struct(sfields) ->
-         let n = List.length sfields in
-         let ln = L.const_int i32_t n in
+         let len = List.length sfields in
+         let name = "__copy"^(string_of_int len) in
 
-         (* Create a new struct *)
-         let struc = L.build_malloc (L.element_type (ltype_of_typ t))
-           "struct" env.ebuilder in
-         
-         (* Set up loop *)
-         let i_addr = L.build_alloca i32_t "i" env.ebuilder in
-         ignore (L.build_store l0 i_addr env.ebuilder);
-         let loop_bb = L.append_block context "loop" env.ecurrent_fxn in
-         let cont_bb = L.append_block context "continu" env.ecurrent_fxn in
-         ignore (L.build_br loop_bb env.ebuilder);
+         let (decl, bind) = if StringMap.mem name env.esfxns
+         then StringMap.find name env.esfxns
+         else (* Make a new copy fxns *)
+           let formals = [|ltype_of_typ ctype|] in
+           let ftype = L.function_type (ltype_of_typ ctype) formals in
+           let decl = L.define_function name ftype the_module in
+           let builder = L.builder_at_end context (L.entry_block decl) in
 
-         (* Loop *)
-         build_loop i_addr ln "i" loop_bb cont_bb
-           (fun i builder ->
-             let flref = L.build_gep arg [|l0; i|] ("flref") builder in
+           let bind = { ftype = ctype; formals = [ctype, "to_copy"] } in
+
+           let param = (Array.get (L.params decl) 0) in
+           L.set_value_name "to_copy" param ;
+           let local = L.build_alloca (ltype_of_typ ctype) "to_copy" builder in
+           ignore (L.build_store param local builder);
+           let tocopy = L.build_load local "to_copy" builder in
+
+           (* Create a new struct *)
+           let struc = L.build_malloc (L.element_type (ltype_of_typ ctype))
+             "struct" builder in
+           let rec copy_struct n =
+             if n < len then
+             let flref = L.build_gep tocopy [|l0; L.const_int i32_t n|] ("flref") builder in
              let fl = L.build_load flref ("fl") builder in
-             let newref = L.build_gep struc [|l0; i|] ("newref") builder in
-              ignore (L.build_store fl newref builder); ) ;
+             let newref = L.build_gep struc [|l0; L.const_int i32_t n|] ("newref") builder in
+             ignore (L.build_store fl newref builder); copy_struct (n+1)
+             else ()
+           in
+           copy_struct 0 ;
 
-         (* Continue *)
-         let builder = L.builder_at_end context cont_bb in
-         let env = { env with ebuilder = builder } in
-         struc, env
+           (* Return *)
+           ignore (L.build_ret struc builder) ;
+           (decl, bind)
+         in
+         L.build_call decl [|arg|] "copied" env.ebuilder, env
+
 
       | _ -> raise (Failure "Copy constructor only works on reference types")
       )
@@ -610,7 +623,7 @@ let translate prog =
      let builder = L.builder_at_end context (L.entry_block main) in
      (* Use the builder to add the statements of main() *)
      let start_env = { ebuilder = builder; evars = StringMap.empty;
-       efxns = ext_fxn_map; ecurrent_fxn = main } in
+       efxns = ext_fxn_map; esfxns = StringMap.empty; ecurrent_fxn = main } in
      let end_env = List.fold_left build_stmt start_env stmts in
      (* Add a return statement *)
      L.build_ret (L.const_int i32_t 0) end_env.ebuilder    
