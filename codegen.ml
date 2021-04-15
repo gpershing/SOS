@@ -364,6 +364,110 @@ let translate prog =
        (decl, bind), { env with esfxns = StringMap.add name (decl, bind) env.esfxns }
    in
 
+   let struct_sum stype slist op env =
+     let atype = match slist with
+       (hd, _) :: _ -> if hd = Float then Float else Int
+     | _ -> Float in
+     let len = List.length slist in
+     
+     let name = "__"^(if op=Add then "add" else "sub")^
+      (if atype=Float then "f" else "i")^(string_of_int len) in
+
+     if StringMap.mem name env.esfxns then
+       StringMap.find name env.esfxns, env
+     else (* Make new function *)
+       let ltype = ltype_of_typ stype in
+       let formals = [|ltype; ltype|] in
+       let ftype = L.function_type ltype formals in
+       let decl = L.define_function name ftype the_module in
+       let builder = L.builder_at_end context (L.entry_block decl) in
+
+       let bind = { ftype = stype; formals = [stype, "a"; stype, "b"] } in
+
+       let parama = (Array.get (L.params decl) 0) in
+       L.set_value_name "a" parama ;
+       let locala = L.build_alloca ltype "a" builder in
+       ignore (L.build_store parama locala builder);
+       let a = L.build_load locala "a" builder in
+
+       let paramb = (Array.get (L.params decl) 1) in
+       L.set_value_name "b" paramb ;
+       let localb = L.build_alloca ltype "b" builder in
+       ignore (L.build_store paramb localb builder);
+       let b = L.build_load localb "b" builder in
+
+       let struc = L.build_malloc (L.element_type ltype) "ret" builder in
+       let map = (if atype=Float then float_map else int_map) in
+       let sumop = StringMap.find (opstr op) map in
+       let rec strsum n = 
+         if n < len then 
+           let aref = L.build_gep a [|l0; L.const_int i32_t n|] "aref" builder in
+           let bref = L.build_gep b [|l0; L.const_int i32_t n|] "bref" builder in
+           let aval = L.build_load aref "aval" builder in
+           let bval = L.build_load bref "bval" builder in
+           let rref = L.build_gep struc [|l0; L.const_int i32_t n|] "rref" builder in
+           ignore (L.build_store (sumop aval bval "tmp" builder) rref builder);
+           strsum (n+1)
+         else ()
+       in
+       strsum 0 ;
+
+       (* Return *)
+       ignore (L.build_ret struc builder) ;
+       (decl, bind), { env with esfxns = StringMap.add name (decl, bind) env.esfxns }
+   in
+
+   let struct_scale stype slist op env =
+     let atype = match slist with
+       (hd, _) :: _ -> if hd = Float then Float else Int
+     | _ -> Float in
+     let len = List.length slist in
+     
+     let name = "__"^(if op=Mul then "mul" else "div")^
+      (if atype=Float then "f" else "i")^(string_of_int len) in
+
+     if StringMap.mem name env.esfxns then
+       StringMap.find name env.esfxns, env
+     else (* Make new function *)
+       let ltype = ltype_of_typ stype in
+       let altype = ltype_of_typ atype in
+       let formals = [|ltype; altype|] in
+       let ftype = L.function_type ltype formals in
+       let decl = L.define_function name ftype the_module in
+       let builder = L.builder_at_end context (L.entry_block decl) in
+
+       let bind = { ftype = stype; formals = [stype, "a"; stype, "b"] } in
+
+       let parama = (Array.get (L.params decl) 0) in
+       L.set_value_name "a" parama ;
+       let locala = L.build_alloca ltype "a" builder in
+       ignore (L.build_store parama locala builder);
+       let a = L.build_load locala "a" builder in
+
+       let paramb = (Array.get (L.params decl) 1) in
+       L.set_value_name "b" paramb ;
+       let localb = L.build_alloca altype "b" builder in
+       ignore (L.build_store paramb localb builder);
+       let b = L.build_load localb "b" builder in
+
+       let struc = L.build_malloc (L.element_type ltype) "ret" builder in
+       let map = (if atype=Float then float_map else int_map) in
+       let sumop = StringMap.find (opstr op) map in
+       let rec strscl n = 
+         if n < len then 
+           let aref = L.build_gep a [|l0; L.const_int i32_t n|] "aref" builder in
+           let aval = L.build_load aref "aval" builder in
+           let rref = L.build_gep struc [|l0; L.const_int i32_t n|] "rref" builder in
+           ignore (L.build_store (sumop aval b "tmp" builder) rref builder);
+           strscl (n+1)
+         else ()
+       in
+       strscl 0 ;
+
+       (* Return *)
+       ignore (L.build_ret struc builder) ;
+       (decl, bind), { env with esfxns = StringMap.add name (decl, bind) env.esfxns }
+   in
 
    (* Construct code for an expression
       Return its llvalue and the updated builder *)
@@ -505,8 +609,11 @@ let translate prog =
              env.ebuilder, env
          | (Float, Float) -> StringMap.find (opstr op) float_map ll1 ll2
              "tmp" env.ebuilder, env
-         | (Struct(l1), Struct(_)) -> let (decl, _), env = dot_product t1 l1 env in
-           L.build_call decl [|ll1; ll2|] "dot" env.ebuilder, env
+         | (Struct(l1), Struct(_)) -> let (decl, _), env = 
+           if op=Mul then dot_product t1 l1 env 
+           else struct_sum t1 l1 op env in
+           L.build_call decl [|ll1; ll2|] "result" env.ebuilder, env
+         | (Struct(l1), _) -> let (decl, _), env = struct_scale t1 l1 op env in L.build_call decl [|ll1; ll2|] "result" env.ebuilder, env
          | (_, Array(_)) -> 
            (match op with
              Of -> build_of t2 ll1 ll2 env
