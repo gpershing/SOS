@@ -48,7 +48,8 @@ RUN pip install meson
 RUN wget https://dri.freedesktop.org/libdrm/libdrm-2.4.105.tar.xz
 RUN tar xf libdrm-2.4.105.tar.xz && rm libdrm-2.4.105.tar.xz
 RUN cd libdrm-2.4.105
-RUN meson build/
+RUN meson install
+RUN cd build
 RUN ninja
 RUN ninja install
 RUN cd ~

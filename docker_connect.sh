@@ -1,3 +1,3 @@
 #!/bin/sh
 
-docker run --rm -it -v `pwd`:/home/microc -w=/home/microc columbiasedwards/plt
+docker run --rm -it -v `pwd`:/home/sos -w=/home/sos columbiasedwards/plt
