@@ -43,21 +43,19 @@ RUN wget https://bootstrap.pypa.io/get-pip.py
 RUN python3 get-pip.py
 RUN pip install Mako
 RUN pip install meson
+RUN apt-get install libpciaccess-dev -y
 
 # download and install newest libdrm
 RUN wget https://dri.freedesktop.org/libdrm/libdrm-2.4.105.tar.xz
 RUN tar xf libdrm-2.4.105.tar.xz && rm libdrm-2.4.105.tar.xz
-RUN cd libdrm-2.4.105
-RUN meson install
-RUN cd build
-RUN ninja
-RUN ninja install
-RUN cd ~
+WORKDIR libdrm-2.4.105/
+RUN cat meson.build
+RUN meson build/ && cd build && ninja && ninja install
 
 # download mesa
 RUN wget https://archive.mesa3d.org//mesa-20.3.5.tar.xz
 RUN tar xf mesa-20.3.5.tar.xz && rm mesa-20.3.5.tar.xz
-RUN cd mesa-20.3.5
+WORKDIR mesa-20.3.5
 
 # add things to sources.list
 RUN cp /etc/apt/sources.list /etc/apt/sources.list~
@@ -71,10 +69,7 @@ RUN apt-get install -y libxcb-shm0-dev libxcb-dri3-dev libxcb-present-dev libxsh
 RUN apt-get build-dep mesa -y
 
 # build, compile and install
-RUN meson builddir/
-RUN cd builddir
-RUN ninja
-RUN ninja install
+RUN meson build/ && cd build && ninja && ninja install
 
 WORKDIR /root
 
