@@ -17,6 +17,8 @@ pull/build image `sheronw1174/sos-env` with
     ./docker_image_fetching.sh build
 ```
 
+<del>**it's like 7GB so both options take a long while!!!**</del>
+
 3. inside docker, compile the SOS language with
 
 ```
@@ -53,7 +55,7 @@ should see
 2. run docker image (to be pushed)
 
 ```
-    docker run --rm -it -v `pwd`:/home/sos -w=/home/sos columbiasedwards/plt
+    docker run --rm -it -v `pwd`:/home/sos -w=/home/sos sheronw1174/sos-env
 ```
 
 3. copy file inside of a running docker image
@@ -62,8 +64,22 @@ should see
     docker cp [image id]:[src_path_inside_docker] [desc_path]
 ```
 
-4. compile a OSMesa file with GL & GLU libaries
+4. pull docker image
 
 ```
+    docker pull sheronw1174/sos-env
+```
+
+## MESA & OpenGL
+
+1. compile code with GL and GLU libraries linked
+
+```
+
     gcc -o [filename] [filename].c -I/usr/local/include/ -L/user/local/lib/ -lOSMesa -lGLU -lm
+
+```
+
+```
+
 ```

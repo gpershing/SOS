@@ -23,15 +23,6 @@ RUN apt-get -yq update && \
     python3-distutils \
     ninja-build
 
-RUN ln -s /usr/bin/lli-10.0 /usr/bin/lli
-RUN ln -s /usr/bin/llc-10.0 /usr/bin/llc
-
-RUN opam init --disable-sandboxing -vv
-RUN opam install \
-    llvm.10.0.0 \
-    ocamlfind -y
-RUN eval `opam config env`
-
 ##################################################################
 # for building MESA
 ##################################################################
@@ -49,7 +40,6 @@ RUN apt-get install libpciaccess-dev -y
 RUN wget https://dri.freedesktop.org/libdrm/libdrm-2.4.105.tar.xz
 RUN tar xf libdrm-2.4.105.tar.xz && rm libdrm-2.4.105.tar.xz
 WORKDIR libdrm-2.4.105/
-RUN cat meson.build
 RUN meson build/ && cd build && ninja && ninja install
 WORKDIR ../
 RUN rm -r libdrm-2.4.105/
@@ -81,6 +71,18 @@ RUN rm -r glu mesa-20.3.5 get-pip.py
 
 # install vim for testing
 RUN apt-get install vim -y
+
+##################################################################
+# for building LLVM & others
+##################################################################
+RUN ln -s /usr/bin/lli-10.0 /usr/bin/lli
+RUN ln -s /usr/bin/llc-10.0 /usr/bin/llc
+
+RUN opam init --disable-sandboxing -y
+RUN opam install \
+    llvm.10.0.0 \
+    ocamlfind -y
+RUN eval `opam config env`
 
 WORKDIR /root
 
