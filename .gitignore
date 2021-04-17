@@ -18,3 +18,8 @@ tests/fail-*.diff
 tests/helloworld.ll
 tests/test-*.ll
 tests/testall.log
+
+_build
+*.ll
+*.native
+*.exe

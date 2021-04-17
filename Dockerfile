@@ -70,18 +70,19 @@ RUN cd glu && ./autogen.sh && ./configure --enable-osmesa --prefix=/usr/local/ &
 RUN rm -r glu mesa-20.3.5 get-pip.py
 
 # install vim for testing
-RUN apt-get install vim -y
+# RUN apt-get install vim -y
 
 ##################################################################
 # for building LLVM & others
 ##################################################################
-RUN ln -s /usr/bin/lli-10.0 /usr/bin/lli
-RUN ln -s /usr/bin/llc-10.0 /usr/bin/llc
+RUN ln -s /usr/bin/lli-10 /usr/bin/lli
+RUN ln -s /usr/bin/llc-10 /usr/bin/llc
 
 RUN opam init --disable-sandboxing -y
 RUN opam install \
     llvm.10.0.0 \
-    ocamlfind -y
+    ocamlfind \
+    ocamlbuild -y
 RUN eval `opam config env`
 
 WORKDIR /root
