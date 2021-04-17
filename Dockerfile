@@ -51,6 +51,8 @@ RUN tar xf libdrm-2.4.105.tar.xz && rm libdrm-2.4.105.tar.xz
 WORKDIR libdrm-2.4.105/
 RUN cat meson.build
 RUN meson build/ && cd build && ninja && ninja install
+WORKDIR ../
+RUN rm -r libdrm-2.4.105/
 
 # download mesa
 RUN wget https://archive.mesa3d.org//mesa-20.3.5.tar.xz
@@ -69,7 +71,16 @@ RUN apt-get install -y libxcb-shm0-dev libxcb-dri3-dev libxcb-present-dev libxsh
 RUN apt-get build-dep mesa -y
 
 # build, compile and install
-RUN meson build/ && cd build && ninja && ninja install
+RUN meson build/ -Dosmesa=classic && ninja -C build/ && ninja -C build/ install
+WORKDIR ../
+
+# install MESA GLU
+RUN git clone https://gitlab.freedesktop.org/mesa/glu.git
+RUN cd glu && ./autogen.sh && ./configure --enable-osmesa --prefix=/usr/local/ && make && make install
+RUN rm -r glu mesa-20.3.5 get-pip.py
+
+# install vim for testing
+RUN apt-get install vim -y
 
 WORKDIR /root
 
