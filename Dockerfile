@@ -71,7 +71,7 @@ RUN cd glu && ./autogen.sh && ./configure --enable-osmesa --prefix=/usr/local/ &
 RUN rm -r glu mesa-20.3.5 get-pip.py
 
 # add glu and osmesa to path
-RUN export LD_LIBRARY_PATH=/usr/local/lib/:/usr/local/lib/x86_64-linux-gnu/:$LD_LIBRARY_PATH >> ~/.bashrc
+RUN echo "export LD_LIBRARY_PATH=/usr/local/lib/:/usr/local/lib/x86_64-linux-gnu/:$LD_LIBRARY_PATH" >> ~/.bashrc
 
 # install vim for testing
 # RUN apt-get install vim -y
