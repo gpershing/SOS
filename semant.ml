@@ -184,7 +184,7 @@ let check prog =
     Void
   in
 
-  let addsub_expr env exp1 op exp2 = 
+  let rec addsub_expr env exp1 op exp2 = 
       let (t1, _) = exp1 in let (t2, _) = exp2 in
       (* Can add structs component-wise *)
       if either_struct t1 t2 then
@@ -195,10 +195,20 @@ let check prog =
         raisestr ("Can only add or subtract structs of matching type")
 
       else
+      let e = SVar("empty") in
+      let err = "Cannot add or subtract "^type_str t1^" and "^type_str t2 in
       match (t1, t2) with
-        (Int, Int) -> (Int, SBinop(exp1, op, exp2)), env
-      | (Float, Float) -> (Float, SBinop(exp1, op, exp2)), env
-      | _ -> raisestr ("Cannot add or subtract "^type_str t1^" and "^type_str t2)
+      | (Array(t), _) -> 
+        let (ot, _), _ = addsub_expr env (t, e) op exp2 in
+        (Array(ot), SBinop(exp1, op, exp2)), env
+      | (_, Array(t)) ->
+        let (ot, _), _ = addsub_expr env exp1 op (t, e) in
+        (Array(ot), SBinop(exp1, op, exp2)), env
+      | (Float, _) -> (Float, SBinop(exp1, op, cast_to Float exp2 err)), env
+      | (_, Float) -> (Float, SBinop(cast_to Float exp1 err, op, exp2)), env
+      | (Int, _)   -> (Int,   SBinop(exp1, op, cast_to Int   exp2 err)), env
+      | (_, Int)   -> (Int,   SBinop(cast_to Int exp1 err, op,   exp2)), env
+      | _ -> raisestr (err)
   in
 
   let mul_expr env exp1 op exp2 = 

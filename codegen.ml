@@ -146,13 +146,13 @@ let translate prog =
     * i_addr : the address of the int to be iterated on
     * length : the value of i to branch at
     * nm     : the name of the iterated variable, to make the LL readable
-    * build  : a llvalue -> llbuilder -> () that builds all the statements using i
+    * build  : a llvalue -> llbuilder -> llbuilder that builds all the statements using i
     * loop_bb: the basic block to build in
     * end_bb : the basic block to go to *)
    let build_loop i_addr length nm loop_bb end_bb build = 
      let builder = L.builder_at_end context loop_bb in
      let i = L.build_load i_addr "i" builder in
-     build i builder;
+     let builder = build i builder in
      ignore(L.build_store (L.build_add i l1 nm builder) i_addr builder);
      let i = L.build_load i_addr nm builder in
      ignore (L.build_cond_br (L.build_icmp L.Icmp.Slt i length "tmp" builder)
@@ -216,6 +216,7 @@ let translate prog =
         let el = build_array_load old_data j "el" builder in
         build_array_store data i el builder ;
         ignore(L.build_store (L.build_add i l1 "i" builder) i_addr builder);
+        builder 
        ) ;
 
      (* Outer loop *)
@@ -269,7 +270,8 @@ let translate prog =
        let el = build_array_load from_data j "el" builder in
        build_array_store data i el builder ;
        ignore (L.build_store (L.build_add i l1 "tmp" builder)
-               i_addr builder); )
+               i_addr builder) ;
+       builder )
      in
      (* Loop 1 *)
      make_concat_loop loop1 inbtw data1 len1 ;
@@ -469,6 +471,97 @@ let translate prog =
        (decl, bind), { env with esfxns = StringMap.add name (decl, bind) env.esfxns }
    in
 
+   (* Binops *)
+   let rec binop op rt t1 t2 ll1 ll2 env = 
+     if op = Of then build_of t2 ll1 ll2 env
+     else if op = Concat then build_concat t2 ll1 ll2 env
+     else
+     (match (t1, t2) with
+       (Int, Int) -> StringMap.find (opstr op) int_map ll1 ll2 "tmp"
+         env.ebuilder, env
+     | (Float, Float) -> StringMap.find (opstr op) float_map ll1 ll2
+         "tmp" env.ebuilder, env
+     | (Struct(l1), Struct(_)) -> let (decl, _), env = 
+       if op=Mul then dot_product t1 l1 env 
+       else struct_sum t1 l1 op env in
+       L.build_call decl [|ll1; ll2|] "result" env.ebuilder, env
+     | (Struct(l1), _) -> let (decl, _), env = struct_scale t1 l1 op env 
+       in L.build_call decl [|ll1; ll2|] "result" env.ebuilder, env
+     | (Array(_), _) ->
+       let (len, env) = build_array_len env ll1 in
+      
+       (* Pre-GEP the array *)
+       let argref = L.build_gep ll1 [|l0; l0|] ("argref") env.ebuilder in
+       let argdata = L.build_load argref ("argdata") env.ebuilder in
+       let el_typ = match t1 with Array(et) -> et | _ -> Void in
+     
+       (* Create a new array *)
+       let rtel_typ = match rt with Array(et) -> et | _ -> Void in
+       let data = L.build_array_malloc (ltype_of_typ el_typ) len
+         "arrdata" env.ebuilder in
+       (* Set up loop *)
+       let i_addr = L.build_alloca i32_t "i" env.ebuilder in
+       ignore (L.build_store l0 i_addr env.ebuilder);
+       let loop_bb = L.append_block context "loop" env.ecurrent_fxn in
+       let cont_bb = L.append_block context "cont" env.ecurrent_fxn in
+       ignore (L.build_br loop_bb env.ebuilder);
+       (* Build loop *)
+       build_loop i_addr len "i" loop_bb cont_bb (
+         fun i builder -> 
+         let vref = L.build_gep argdata [|i|] ("vref") builder in
+         let v = L.build_load vref "v" builder in
+         let fenv = { env with ebuilder = builder } in
+         let llv, fenv = binop op rtel_typ el_typ t2 v ll2 fenv in
+         let builder = fenv.ebuilder in
+         let dref = L.build_gep data [|i|] ("dref") builder in
+         ignore (L.build_store llv dref builder);
+         builder ) ;
+       (* Continue *)
+       let builder = L.builder_at_end context cont_bb in
+       let env = { env with ebuilder = builder } in
+       (* Create array struct *)
+       let arr_struct = build_array_struct (ltype_of_typ rt) data len "arr" env in
+       arr_struct, env
+
+     | (_, Array(_)) -> 
+       let (len, env) = build_array_len env ll2 in
+      
+       (* Pre-GEP the array *)
+       let argref = L.build_gep ll2 [|l0; l0|] ("argref") env.ebuilder in
+       let argdata = L.build_load argref ("argdata") env.ebuilder in
+       let el_typ = match t2 with Array(et) -> et | _ -> Void in
+     
+       (* Create a new array *)
+       let rtel_typ = match rt with Array(et) -> et | _ -> Void in
+       let data = L.build_array_malloc (ltype_of_typ el_typ) len
+         "arrdata" env.ebuilder in
+       (* Set up loop *)
+       let i_addr = L.build_alloca i32_t "i" env.ebuilder in
+       ignore (L.build_store l0 i_addr env.ebuilder);
+       let loop_bb = L.append_block context "loop" env.ecurrent_fxn in
+       let cont_bb = L.append_block context "cont" env.ecurrent_fxn in
+       ignore (L.build_br loop_bb env.ebuilder);
+       (* Build loop *)
+       build_loop i_addr len "i" loop_bb cont_bb (
+         fun i builder -> 
+         let vref = L.build_gep argdata [|i|] ("vref") builder in
+         let v = L.build_load vref "v" builder in
+         let fenv = { env with ebuilder = builder } in
+         let llv, fenv = binop op rtel_typ t1 el_typ ll1 v fenv in
+         let builder = fenv.ebuilder in
+         let dref = L.build_gep data [|i|] ("dref") builder in
+         ignore (L.build_store llv dref builder);
+         builder ) ;
+       (* Continue *)
+       let builder = L.builder_at_end context cont_bb in
+       let env = { env with ebuilder = builder } in
+       (* Create array struct *)
+       let arr_struct = build_array_struct (ltype_of_typ rt) data len "arr" env in
+       arr_struct, env
+     | _ -> raise (Failure "Unsupported operation")
+     )
+   in
+
    (* Construct code for an expression
       Return its llvalue and the updated builder *)
    let rec expr env sexpr = 
@@ -603,26 +696,7 @@ let translate prog =
          let (t1, _) = exp1 in let (t2, _) = exp2 in
          let (ll1, env) = expr env exp1 in
          let (ll2, env) = expr env exp2 in
-(*         binop_expr env t t1 t2 ll1 op ll2 *)
-         (match (t1, t2) with
-           (Int, Int) -> StringMap.find (opstr op) int_map ll1 ll2 "tmp"
-             env.ebuilder, env
-         | (Float, Float) -> StringMap.find (opstr op) float_map ll1 ll2
-             "tmp" env.ebuilder, env
-         | (Struct(l1), Struct(_)) -> let (decl, _), env = 
-           if op=Mul then dot_product t1 l1 env 
-           else struct_sum t1 l1 op env in
-           L.build_call decl [|ll1; ll2|] "result" env.ebuilder, env
-         | (Struct(l1), _) -> let (decl, _), env = struct_scale t1 l1 op env in L.build_call decl [|ll1; ll2|] "result" env.ebuilder, env
-         | (_, Array(_)) -> 
-           (match op with
-             Of -> build_of t2 ll1 ll2 env
-           | Concat -> build_concat t2 ll1 ll2 env
-           | _ -> raise (Failure "Unsupported operation")
-           )
-
-         | _ -> raise (Failure "Unsupported operation")
-        )       
+         binop op t t1 t2 ll1 ll2 env       
        )
 
      (* Function application *)
@@ -659,7 +733,7 @@ let translate prog =
           build_loop i_addr n "i" loop_bb continue_bb
             (fun i builder ->
              let el = build_array_load cdata i "el" builder in
-             build_array_store data i el builder ; ) ;
+             build_array_store data i el builder ; builder ) ;
 
          (* Continue *)
          let builder = L.builder_at_end context continue_bb in
