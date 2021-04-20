@@ -244,11 +244,19 @@ let check prog =
     | _ -> raisestr ("Cannot multiply "^type_str t1^" and "^type_str t2)
   in
 
-  let mmul_expr env exp1 op exp2 =
+  let rec mmul_expr env exp1 op exp2 =
     let (t1, _) = exp1 in let (t2, _) = exp2 in
     (* Can multiply two n * n matrices OR
        Can multiply an n*n matrix with an n*1 vector *)
-    match t1 with Struct(l1) -> (match t2 with Struct(l2) ->
+    let e = SVar("empty") in
+    match (t1, t2) with
+      (Array(t), _) ->
+      let (ot, _), _ = mmul_expr env (t, e) op exp2 in
+      (Array(ot), SBinop(exp1, op, exp2)), env
+    | (_, Array(t)) ->
+      let (ot, _), _ = mmul_expr env exp1 op (t, e) in
+      (Array(ot), SBinop(exp1, op, exp2)), env
+    | (Struct(l1), Struct(l2)) ->
       let n1 = List.length l1 in let n2 = List.length l2 in
       let int_sqrt n =
         let rec int_sqrt_inner n m = 
@@ -269,7 +277,6 @@ let check prog =
         | None -> raisestr ("Can only multiply square matrices")
       )
 
-    | _ -> raisestr ("Cannot matrix multiply non-structs") )
     | _ -> raisestr ("Cannot matrix multiply non-structs")
   in
 
