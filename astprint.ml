@@ -29,6 +29,7 @@ let basic_print prog =
         Add -> "+"
       | Sub -> "-"
       | Mul -> "*"
+      | MMul -> "**"
       | Div -> "/"
       | Mod -> "%"
       | Pow -> "^"

@@ -1,6 +1,6 @@
 type operator = 
 (*num operators*)
-Add | Sub | Mul | Div | Mod | Pow 
+Add | Sub | Mul | Div | Mod | Pow | MMul
 (*relational operators*)
 | Eq | Neq | Less | Greater | LessEq | GreaterEq 
 (*boolean operators*)

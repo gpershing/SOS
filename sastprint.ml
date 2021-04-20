@@ -33,6 +33,7 @@ let basic_print sast =
     (match op with Not -> "!" | Neg -> "-")^sexp_string exp
   | SBinop (e1, op, e2) -> let opstr  = match op with
       Add -> "+" | Sub -> "-" | Mul -> "*" | Div -> "/" | Mod -> "%" | Pow -> "^" |
+      MMul -> "**" |
       Eq -> "==" | Neq -> "!=" | Less -> "<" | Greater -> ">" | LessEq -> "<=" |
       GreaterEq -> ">=" | And -> "&&" | Or -> "||" | Seq -> ";" |
       Of -> "of" | Concat -> "@" in

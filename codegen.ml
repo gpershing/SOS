@@ -102,6 +102,7 @@ let translate prog =
      Add -> "Add"
    | Sub -> "Sub"
    | Mul -> "Mul"
+   | MMul-> "MMul"
    | Div -> "Div"
    | Mod -> "Mod"
    | Pow -> "Pow"
@@ -471,6 +472,91 @@ let translate prog =
        (decl, bind), { env with esfxns = StringMap.add name (decl, bind) env.esfxns }
    in
 
+   let mat_mul rtype slist1 slist2 env =
+     let atype = match slist1 with
+       (hd, _) :: _ -> if hd = Float then Float else Int
+     | _ -> Float in
+     let size = List.length slist1 in
+     let int_sqrt n = 
+       let rec int_sqrt_inner n m = 
+         if m * m = n then m
+         else if m * m < n then int_sqrt_inner n (m+1)
+         else raise (Failure "Unexpected struct size")
+       in int_sqrt_inner n 1
+     in
+     let n = int_sqrt size in
+     let m = List.length slist2 in
+
+     let name = "__"^(if m=n then "vec" else "mat")^
+       (if atype=Float then "f" else "i")^(string_of_int n) in
+     if StringMap.mem name env.esfxns then
+       StringMap.find name env.esfxns, env
+     else (* Make new function *)
+       let rltype = ltype_of_typ rtype in
+       let ltype1 = ltype_of_typ (Struct(slist1)) in
+       let ltype2 = ltype_of_typ (Struct(slist2)) in
+       let altype = ltype_of_typ atype in
+       let formals = [|ltype1; ltype2|] in
+       let ftype = L.function_type rltype formals in
+       let decl = L.define_function name ftype the_module in
+       let builder = L.builder_at_end context (L.entry_block decl) in
+
+       let bind =
+        { ftype = rtype; formals = [Struct(slist1), "A"; Struct(slist2), "B"] } in
+       
+       let parama = (Array.get (L.params decl) 0) in
+       L.set_value_name "A" parama ;
+       let locala = L.build_alloca ltype1 "A" builder in
+       ignore (L.build_store parama locala builder);
+       let a = L.build_load locala "A" builder in
+
+       let paramb = (Array.get (L.params decl) 1) in
+       L.set_value_name "B" paramb ;
+       let localb = L.build_alloca ltype2 "B" builder in
+       ignore (L.build_store paramb localb builder);
+       let b = L.build_load localb "B" builder in
+
+       let struc = L.build_malloc (L.element_type rltype) "ret" builder in
+       let map = (if atype=Float then float_map else int_map) in
+       let sumop = StringMap.find (opstr Add) map in
+       let mulop = StringMap.find (opstr Mul) map in
+       let height = n in
+       let width = (if m=n then 1 else n) in
+       let tmp = L.build_alloca altype "tmp" builder in
+       let rec mmul i j =
+         if i < width then
+         if j < height then (
+         ignore(L.build_store (if atype=Float then L.const_float altype 0.0 else L.const_int altype 0) tmp builder) ;
+         let rec mmul_inner k = 
+           if k < height then (
+           let aref = L.build_gep a [|l0; L.const_int i32_t (j+k*n)|] "aref" builder
+           in
+           let bref = L.build_gep b [|l0; L.const_int i32_t (k+i*n)|] "bref" builder
+           in
+           let aval = L.build_load aref "aval" builder in
+           let bval = L.build_load bref "bval" builder in
+           let mval = mulop aval bval "tmp2" builder in
+           let tval = L.build_load tmp "tval" builder in
+           ignore (L.build_store (sumop mval tval "tmp" builder) tmp builder);
+           mmul_inner (k+1))
+           else ()
+         in mmul_inner 0 ;
+         let rref = L.build_gep struc [|l0; L.const_int i32_t (j+i*n)|] "rref" builder
+         in
+         let tval = L.build_load tmp "tval" builder in
+         ignore (L.build_store tval rref builder) ; 
+         mmul (i+1) j )
+         else (* j >= height *) ()
+         else (* i >= width *)  mmul 0 (j+1)
+       in
+       mmul 0 0 ;
+
+       (* Return *)
+       ignore (L.build_ret struc builder) ;
+       (decl, bind), { env with esfxns = StringMap.add name (decl, bind) env.esfxns }
+   in
+
+
    (* Binops *)
    let rec binop op rt t1 t2 ll1 ll2 env = 
      if op = Of then build_of t2 ll1 ll2 env
@@ -481,8 +567,9 @@ let translate prog =
          env.ebuilder, env
      | (Float, Float) -> StringMap.find (opstr op) float_map ll1 ll2
          "tmp" env.ebuilder, env
-     | (Struct(l1), Struct(_)) -> let (decl, _), env = 
+     | (Struct(l1), Struct(l2)) -> let (decl, _), env = 
        if op=Mul then dot_product t1 l1 env 
+       else if op=MMul then mat_mul rt l1 l2 env 
        else struct_sum t1 l1 op env in
        L.build_call decl [|ll1; ll2|] "result" env.ebuilder, env
      | (Struct(l1), _) -> let (decl, _), env = struct_scale t1 l1 op env 

@@ -26,6 +26,7 @@ rule token = parse
 | '.'      { DOT }
 | '+'      { ADD }
 | '-'      { SUB }
+| "**"     { MMUL }
 | '*'      { MUL }
 | '/'      { DIV }
 | '%'      { MOD }

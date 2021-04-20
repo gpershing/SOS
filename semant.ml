@@ -244,6 +244,35 @@ let check prog =
     | _ -> raisestr ("Cannot multiply "^type_str t1^" and "^type_str t2)
   in
 
+  let mmul_expr env exp1 op exp2 =
+    let (t1, _) = exp1 in let (t2, _) = exp2 in
+    (* Can multiply two n * n matrices OR
+       Can multiply an n*n matrix with an n*1 vector *)
+    match t1 with Struct(l1) -> (match t2 with Struct(l2) ->
+      let n1 = List.length l1 in let n2 = List.length l2 in
+      let int_sqrt n =
+        let rec int_sqrt_inner n m = 
+          if m * m = n then Some(m)
+          else if m * m < n then int_sqrt_inner n (m+1)
+          else None
+        in int_sqrt_inner n 1
+      in
+      let sq1 = int_sqrt n1 in (match sq1 with
+        | Some(m1) -> 
+          if n1 = n2 then
+            (Struct(l1), SBinop(exp1, op, exp2)), env
+
+          else if m1 = n2 then
+            (Struct(l2), SBinop(exp1, op, exp2)), env
+
+          else raisestr ("Can only multiply a "^string_of_int m1^" by "^string_of_int m1^" matrix with a square matrix or vector of the same height")
+        | None -> raisestr ("Can only multiply square matrices")
+      )
+
+    | _ -> raisestr ("Cannot matrix multiply non-structs") )
+    | _ -> raisestr ("Cannot matrix multiply non-structs")
+  in
+
   let rec div_expr env exp1 op exp2 = 
       let (t1, _) = exp1 in let (t2, _) = exp2 in
       (* Can scale structs *)
@@ -323,6 +352,7 @@ let check prog =
       Add -> addsub_expr env exp1 op exp2
     | Sub -> addsub_expr env exp1 op exp2
     | Mul -> mul_expr    env exp1 op exp2
+    | MMul-> mmul_expr   env exp1 op exp2
     | Div -> div_expr    env exp1 op exp2
     | Mod -> mod_expr    env exp1 op exp2
     | Pow -> pow_expr    env exp1 op exp2
