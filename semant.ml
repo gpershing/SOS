@@ -184,7 +184,7 @@ let check prog =
     Void
   in
 
-  let addsub_expr env exp1 op exp2 = 
+  let rec addsub_expr env exp1 op exp2 = 
       let (t1, _) = exp1 in let (t2, _) = exp2 in
       (* Can add structs component-wise *)
       if either_struct t1 t2 then
@@ -195,13 +195,23 @@ let check prog =
         raisestr ("Can only add or subtract structs of matching type")
 
       else
+      let e = SVar("empty") in
+      let err = "Cannot add or subtract "^type_str t1^" and "^type_str t2 in
       match (t1, t2) with
-        (Int, Int) -> (Int, SBinop(exp1, op, exp2)), env
-      | (Float, Float) -> (Float, SBinop(exp1, op, exp2)), env
-      | _ -> raisestr ("Cannot add or subtract "^type_str t1^" and "^type_str t2)
+      | (Array(t), _) -> 
+        let (ot, _), _ = addsub_expr env (t, e) op exp2 in
+        (Array(ot), SBinop(exp1, op, exp2)), env
+      | (_, Array(t)) ->
+        let (ot, _), _ = addsub_expr env exp1 op (t, e) in
+        (Array(ot), SBinop(exp1, op, exp2)), env
+      | (Float, _) -> (Float, SBinop(exp1, op, cast_to Float exp2 err)), env
+      | (_, Float) -> (Float, SBinop(cast_to Float exp1 err, op, exp2)), env
+      | (Int, _)   -> (Int,   SBinop(exp1, op, cast_to Int   exp2 err)), env
+      | (_, Int)   -> (Int,   SBinop(cast_to Int exp1 err, op,   exp2)), env
+      | _ -> raisestr (err)
   in
 
-  let mul_expr env exp1 op exp2 = 
+  let rec mul_expr env exp1 op exp2 = 
     let (t1, _) = exp1 in let (t2, _) = exp2 in
     (* Can scale structs and take the dot product *)
     if either_struct t1 t2 then
@@ -218,13 +228,52 @@ let check prog =
         (t2, SBinop(exp2, op, cast_to (sop_type t2) exp1
           "Cannot scale a struct by a non-scalar")), env)
     else
+    let e = SVar("empty") in
+    let err = "Cannot multiply "^type_str t1^" and "^type_str t2 in
     match (t1, t2) with
-      (Int, Int) -> (Int, SBinop(exp1, op, exp2)), env
-    | (Float, Float) -> (Float, SBinop(exp1, op, exp2)), env
+      (Array(t), _) ->
+      let (ot, _), _ = mul_expr env (t, e) op exp2 in
+      (Array(ot), SBinop(exp1, op, exp2)), env
+    | (_, Array(t)) ->
+      let (ot, _), _ = mul_expr env exp1 op (t, e) in
+      (Array(ot), SBinop(exp1, op, exp2)), env
+    | (Float, _) -> (Float, SBinop(exp1, op, cast_to Float exp2 err)), env
+    | (_, Float) -> (Float, SBinop(cast_to Float exp1 err, op, exp2)), env
+    | (Int, _)   -> (Int,   SBinop(exp1, op, cast_to Int   exp2 err)), env
+    | (_, Int)   -> (Int,   SBinop(cast_to Int exp1 err, op,   exp2)), env
     | _ -> raisestr ("Cannot multiply "^type_str t1^" and "^type_str t2)
   in
 
-  let div_expr env exp1 op exp2 = 
+  let mmul_expr env exp1 op exp2 =
+    let (t1, _) = exp1 in let (t2, _) = exp2 in
+    (* Can multiply two n * n matrices OR
+       Can multiply an n*n matrix with an n*1 vector *)
+    match t1 with Struct(l1) -> (match t2 with Struct(l2) ->
+      let n1 = List.length l1 in let n2 = List.length l2 in
+      let int_sqrt n =
+        let rec int_sqrt_inner n m = 
+          if m * m = n then Some(m)
+          else if m * m < n then int_sqrt_inner n (m+1)
+          else None
+        in int_sqrt_inner n 1
+      in
+      let sq1 = int_sqrt n1 in (match sq1 with
+        | Some(m1) -> 
+          if n1 = n2 then
+            (Struct(l1), SBinop(exp1, op, exp2)), env
+
+          else if m1 = n2 then
+            (Struct(l2), SBinop(exp1, op, exp2)), env
+
+          else raisestr ("Can only multiply a "^string_of_int m1^" by "^string_of_int m1^" matrix with a square matrix or vector of the same height")
+        | None -> raisestr ("Can only multiply square matrices")
+      )
+
+    | _ -> raisestr ("Cannot matrix multiply non-structs") )
+    | _ -> raisestr ("Cannot matrix multiply non-structs")
+  in
+
+  let rec div_expr env exp1 op exp2 = 
       let (t1, _) = exp1 in let (t2, _) = exp2 in
       (* Can scale structs *)
       if is_struct t1 then
@@ -232,9 +281,19 @@ let check prog =
         (t1, SBinop(exp1, op, cast_to (sop_type t1) exp2
           "Cannot scale a struct by a non-scalar")), env)
       else
+      let e = SVar("empty") in
+      let err = "Cannot divide "^type_str t1^" and "^type_str t2 in
       match (t1, t2) with
-        (Int, Int) -> (Int, SBinop(exp1, op, exp2)), env
-      | (Float, Float) -> (Float, SBinop(exp1, op, exp2)), env
+      (Array(t), _) ->
+        let (ot, _), _ = div_expr env (t, e) op exp2 in
+        (Array(ot), SBinop(exp1, op, exp2)), env
+      | (_, Array(t)) ->
+        let (ot, _), _ = div_expr env exp1 op (t, e) in
+        (Array(ot), SBinop(exp1, op, exp2)), env
+      | (Float, _) -> (Float, SBinop(exp1, op, cast_to Float exp2 err)), env
+      | (_, Float) -> (Float, SBinop(cast_to Float exp1 err, op, exp2)), env
+      | (Int, _)   -> (Int,   SBinop(exp1, op, cast_to Int   exp2 err)), env
+      | (_, Int)   -> (Int,   SBinop(cast_to Int exp1 err, op,   exp2)), env
       | _ -> raisestr ("Cannot divide "^type_str t1^" and "^type_str t2)
   in
 
@@ -293,6 +352,7 @@ let check prog =
       Add -> addsub_expr env exp1 op exp2
     | Sub -> addsub_expr env exp1 op exp2
     | Mul -> mul_expr    env exp1 op exp2
+    | MMul-> mmul_expr   env exp1 op exp2
     | Div -> div_expr    env exp1 op exp2
     | Mod -> mod_expr    env exp1 op exp2
     | Pow -> pow_expr    env exp1 op exp2
