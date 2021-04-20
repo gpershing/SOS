@@ -1,0 +1,5 @@
+struct s = {int x}
+
+int b = 1
+
+b.x

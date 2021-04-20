@@ -1,0 +1,11 @@
+int printingarray(array int arr, int length, int current) =
+    if current == length
+    then 1
+    else print(arr[curent]); printingarray(arr, length, current+1)
+
+array int x = [1, 2]
+array int y = [3, 4]
+
+array int z = x@y
+
+x = printingarray(z, 4, 0)

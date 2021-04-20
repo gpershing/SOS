@@ -1,0 +1,1 @@
+int sum(int x) = sum(x - 1) + x //stack overflow crash

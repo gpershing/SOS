@@ -1,0 +1,12 @@
+int scale = 2
+struct s1 = {int a, int b}
+
+s1 first= {-2, 4}
+
+s1 scaledup = first*scale
+s1 scaleddown = first/scale
+
+print(scaledup.a)
+print(scaledup.b)
+print(scaleddown.a)
+print(scaleddown.b)

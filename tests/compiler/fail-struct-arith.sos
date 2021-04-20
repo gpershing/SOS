@@ -1,0 +1,5 @@
+struct s1 = {int a, float b}
+
+struct s2 = {int a, int b}
+
+s1 + s2

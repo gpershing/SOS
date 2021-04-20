@@ -1,0 +1,6 @@
+struct point = {float x, float y}
+point p = {1,2}
+
+int pow(int x, int y ) = x^y
+
+pow(3, p)

@@ -1,0 +1,5 @@
+struct a = {int x}
+
+a s = {1}
+
+int b = s.y
