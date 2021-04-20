@@ -12,6 +12,10 @@ rule token = parse
   [' ' '\t' '\r' '\n'] { token lexbuf }
 | "/*"     { comment 0 lexbuf }           (* Comments *)
 | "//"     { single_comment lexbuf }            (* Single line comments *)
+| "import " (_+".sos" as file) { 
+  let read = Lexing.from_channel (open_in file) in
+  let parsed = Parser.program token read in
+  IMPORT parsed } 
 | '('      { LPAREN }
 | ')'      { RPAREN }
 | '{'      { LBRACE }
@@ -45,7 +49,6 @@ rule token = parse
 | "struct" { STRUCT }
 | "alias"  { ALIAS }
 | "array"  { ARRAY }
-| "import" { IMPORT }
 | digits as lxm { INTLIT(int_of_string lxm) } 
 | digits '.'  digit* ( ['e' 'E'] ['+' '-']? digits )? as lxm { FLOATLIT(lxm) }
 | "true"   { BOOLLIT(true) }

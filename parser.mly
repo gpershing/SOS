@@ -12,7 +12,7 @@
 %token LPAREN RPAREN LBRACE RBRACE LBRACK RBRACK
 %token IF THEN ELSE
 %token STRUCT ALIAS ARRAY
-%token IMPORT
+%token <Ast.program> IMPORT
 %token <int> INTLIT
 %token <string> FLOATLIT
 %token <bool> BOOLLIT
@@ -159,7 +159,6 @@ typedef:
 stmt:
     typedef { Typedef($1) }
   | stexpr { Expression($1) }
-  | IMPORT VAR { Import($2) }
 
 stmts:
     stmt { [$1] }
@@ -167,3 +166,4 @@ stmts:
 
 program:
     stmts EOF { List.rev $1 }
+  | IMPORT program { $1 @ $2 }
