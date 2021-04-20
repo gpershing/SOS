@@ -884,7 +884,55 @@ let translate prog =
       let result = (match fdecl.ftype with
                       Void -> ""
                     | _ -> nm ^ "_result") in
+      if t = fdecl.ftype then
+
+      (* Normal function application *)
       L.build_call fdef (Array.of_list llargs) result env.ebuilder, env
+
+      else
+
+      (* Iterated fxn application *)
+      let arr_args = List.map2 (fun (ty, _) (fty, _) -> ty=Array(fty) )
+           args fdecl.formals in
+      let rec find_first bools = function 
+        (hd :: tl) -> if List.hd bools then hd else find_first (List.tl bools) tl
+      | _ -> raise (Failure "Unexpected arguments")
+      in let first = find_first arr_args llargs in
+      let len, env = build_array_len env first in
+      (* Pre-GEP all the arrays *)
+      let datalist = List.map2
+        (fun llarg b -> if b then 
+          let cdata_ref = L.build_gep llarg [|l0; l0|] ("rf") env.ebuilder in
+          Some(L.build_load cdata_ref ("data") env.ebuilder)
+         else None) llargs arr_args in
+
+      (* Create a new array *)
+      let data = L.build_array_malloc (ltype_of_typ fdecl.ftype) len
+       "arrdata" env.ebuilder in
+      (* Set up loop *)
+      let i_addr = L.build_alloca i32_t "i" env.ebuilder in
+      ignore (L.build_store l0 i_addr env.ebuilder);
+      let loop_bb = L.append_block context "loop" env.ecurrent_fxn in
+      let cont_bb = L.append_block context "continue" env.ecurrent_fxn in
+      ignore (L.build_br loop_bb env.ebuilder);
+
+      (* Loop *)
+      build_loop i_addr len "i" loop_bb cont_bb
+        (fun i builder ->
+          let llargs_i = List.map2
+           (fun llarg data_opt -> match data_opt with
+             Some(data) -> build_array_load data i "el" builder
+           | None -> llarg ) llargs datalist in
+          let ret = L.build_call fdef (Array.of_list llargs_i) result builder in
+          build_array_store data i ret builder ; builder ) ;    
+
+     (* Continue *)
+     let builder = L.builder_at_end context cont_bb in
+     let env = { env with ebuilder = builder } in
+     (* Create array struct *)
+     let arr_struct = build_array_struct (ltype_of_typ t) data len
+       "arr" env in
+     arr_struct, env
 
    | SFxnApp(nm, SNamedFxnArgs(nargs)) ->
       ignore (nm); ignore (nargs);

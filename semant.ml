@@ -495,16 +495,22 @@ let check prog =
          let fxn = sig_of_func name env.funcmap in
          (match args with
            OrderedFxnArgs(exps) ->
-             let rec check_args sigl expl env = match expl with
-               hd :: tl -> let ((exptype, sexp), _) = expr env hd in
-                 (match sigl with
-                   (typ, nm) :: sigtl ->
-                      (cast_to typ (exptype, sexp)
-                       ("Could not match type of argument "^nm)) ::
-                       check_args sigtl tl env
-                   | _ -> raisestr ("Too many arguments for function signature"))
-             | [] -> if sigl = [] then [] else raisestr ("Function currying not yet supported")
-           in ((fxn.ftype, SFxnApp(name, SOrderedFxnArgs(check_args fxn.formals exps env))), env) 
+             let check_args sigl expl env =
+               if (List.length sigl) != (List.length expl) then
+               raisestr ("Incorrect number of arguments for function "^name)
+               else
+               let (l, b) = List.fold_left2 
+               (fun (l, arr) (typ, nm) e ->
+                let ((exptype, sexp), _) = expr env e in
+                if exptype = Array(typ) then (exptype, sexp) :: l, true
+                else (cast_to typ (exptype, sexp) 
+                    ("Could not match type of argument "^nm)) :: l, arr ) 
+                ([], false) sigl expl
+               in (List.rev l, b)
+             in
+             let cargs, arrmode = check_args fxn.formals exps env in
+             let rtype = if arrmode then Array(fxn.ftype) else fxn.ftype in
+             ((rtype, SFxnApp(name, SOrderedFxnArgs(cargs))), env)
          | NamedFxnArgs(_) -> raisestr ("Named function arguments not yet supported") (* TODO *)
          )
 
