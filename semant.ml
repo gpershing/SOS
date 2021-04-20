@@ -211,7 +211,7 @@ let check prog =
       | _ -> raisestr (err)
   in
 
-  let mul_expr env exp1 op exp2 = 
+  let rec mul_expr env exp1 op exp2 = 
     let (t1, _) = exp1 in let (t2, _) = exp2 in
     (* Can scale structs and take the dot product *)
     if either_struct t1 t2 then
@@ -228,13 +228,23 @@ let check prog =
         (t2, SBinop(exp2, op, cast_to (sop_type t2) exp1
           "Cannot scale a struct by a non-scalar")), env)
     else
+    let e = SVar("empty") in
+    let err = "Cannot multiply "^type_str t1^" and "^type_str t2 in
     match (t1, t2) with
-      (Int, Int) -> (Int, SBinop(exp1, op, exp2)), env
-    | (Float, Float) -> (Float, SBinop(exp1, op, exp2)), env
+      (Array(t), _) ->
+      let (ot, _), _ = mul_expr env (t, e) op exp2 in
+      (Array(ot), SBinop(exp1, op, exp2)), env
+    | (_, Array(t)) ->
+      let (ot, _), _ = mul_expr env exp1 op (t, e) in
+      (Array(ot), SBinop(exp1, op, exp2)), env
+    | (Float, _) -> (Float, SBinop(exp1, op, cast_to Float exp2 err)), env
+    | (_, Float) -> (Float, SBinop(cast_to Float exp1 err, op, exp2)), env
+    | (Int, _)   -> (Int,   SBinop(exp1, op, cast_to Int   exp2 err)), env
+    | (_, Int)   -> (Int,   SBinop(cast_to Int exp1 err, op,   exp2)), env
     | _ -> raisestr ("Cannot multiply "^type_str t1^" and "^type_str t2)
   in
 
-  let div_expr env exp1 op exp2 = 
+  let rec div_expr env exp1 op exp2 = 
       let (t1, _) = exp1 in let (t2, _) = exp2 in
       (* Can scale structs *)
       if is_struct t1 then
@@ -242,9 +252,19 @@ let check prog =
         (t1, SBinop(exp1, op, cast_to (sop_type t1) exp2
           "Cannot scale a struct by a non-scalar")), env)
       else
+      let e = SVar("empty") in
+      let err = "Cannot divide "^type_str t1^" and "^type_str t2 in
       match (t1, t2) with
-        (Int, Int) -> (Int, SBinop(exp1, op, exp2)), env
-      | (Float, Float) -> (Float, SBinop(exp1, op, exp2)), env
+      (Array(t), _) ->
+        let (ot, _), _ = div_expr env (t, e) op exp2 in
+        (Array(ot), SBinop(exp1, op, exp2)), env
+      | (_, Array(t)) ->
+        let (ot, _), _ = div_expr env exp1 op (t, e) in
+        (Array(ot), SBinop(exp1, op, exp2)), env
+      | (Float, _) -> (Float, SBinop(exp1, op, cast_to Float exp2 err)), env
+      | (_, Float) -> (Float, SBinop(cast_to Float exp1 err, op, exp2)), env
+      | (Int, _)   -> (Int,   SBinop(exp1, op, cast_to Int   exp2 err)), env
+      | (_, Int)   -> (Int,   SBinop(cast_to Int exp1 err, op,   exp2)), env
       | _ -> raisestr ("Cannot divide "^type_str t1^" and "^type_str t2)
   in
 
