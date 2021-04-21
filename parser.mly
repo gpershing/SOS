@@ -17,7 +17,6 @@
 %token <string> FLOATLIT
 %token <bool> BOOLLIT
 %token <string> VAR
-%token <string> VARCOLON
 %token EOF
 
 %start program
@@ -84,7 +83,7 @@ safe_stexpr:
     VAR DOT VAR EQ expr { AssignStruct(Var($1), $3, $5) }
   | VAR LBRACK protected_expr RBRACK EQ expr { AssignArray(Var($1),$3,$6) }
   | VAR EQ expr { Assign($1, $3) }
-  | VAR LPAREN either_args RPAREN { FxnApp($1, $3) }
+  | VAR LPAREN args RPAREN { FxnApp($1, $3) }
   | IF expr THEN expr ELSE expr { IfElse($2,$4,$6) }
   
 expr:
@@ -124,10 +123,6 @@ expr:
   | safe_stexpr { $1 }
     
 
-either_args:
-  | VARCOLON protected_expr COMMA named_args { NamedFxnArgs (($1, $2) :: $4) }
-  | args { OrderedFxnArgs ($1) }
-
 fxn_args:
     /* nothing */ { [] }
   | fxn_args_list {List.rev $1}
@@ -135,14 +130,6 @@ fxn_args:
 fxn_args_list:
     typeid VAR { [($1,$2)] }
   | fxn_args_list COMMA typeid VAR { ($3,$4) :: $1 }
-
-named_args:
-    /* nothing */ { [] }
-  | named_args_list {List.rev $1}
-
-named_args_list:
-    VARCOLON protected_expr { [($1,$2)] }
-  | named_args_list COMMA VARCOLON expr { ($3,$4) :: $1 }
 
 args:
     /* nothing */ { [] }

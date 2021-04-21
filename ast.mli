@@ -21,8 +21,6 @@ type import = string
 
 (* type name pair *)
 type argtype = tid * id
-(* name:expr pair *)
-type namedArg = id * expr
 
 (* all possible expression statements, found in LRM sec 4 *)
 and expr = 
@@ -33,9 +31,7 @@ and expr =
 | AssignArray of expr * expr * expr          (* id[expr] = expr *)
 | Uop of uop * expr                        (* uop expr *)
 | Binop of expr * operator * expr          (* expr op expr *)
-(*| OrderedFxnApp of id * expr list          (* name(expr, ...) *)
-| NamedFxnApp of id * namedArg list  *)      (* name(id:expr, ...) *)
-| FxnApp of id * fxnargs
+| FxnApp of id * expr list
 | IfElse of expr * expr * expr             (* if expr then expr else expr *)
 | ArrayCon of expr list                    (* [expr, ...] *)
 | AnonStruct of expr list                  (* {expr, ...} *)
@@ -46,10 +42,6 @@ and expr =
 | IntLit of int                            (* int *)
 | FloatLit of string                       (* float *)
 | BoolLit of bool                          (* bool *)
-
-and fxnargs = 
-  OrderedFxnArgs of expr list
-| NamedFxnArgs of namedArg list
 
 type typedef = 
   Alias of id * tid                       (* alias name = type *)

@@ -474,46 +474,38 @@ let check prog =
          binop_expr env e1 op e2
 
     | FxnApp (name, args) -> 
-         let check_len args = 
-           match args with OrderedFxnArgs(l) -> (List.length l)=1
-             | _ -> false
-         in
-         if name="copy" && check_len args then (* Copy constructor *)
+         if name="copy" && (List.length args) = 1 then (* Copy constructor *)
          (match args with
-           OrderedFxnArgs([ex]) ->
+           [ex] ->
             let (sexp, _) = expr env ex in
             let (t, _) = sexp in
             (match t with
               Array(_) -> ()
             | Struct(_) -> ()
             | _ -> raisestr ("Can only use Copy constructor on reference types"));
-             ((t, SFxnApp(name, SOrderedFxnArgs([sexp]))), env)
+             ((t, SFxnApp(name, [sexp])), env)
 
          | _ -> raisestr ("Too many arguments for Copy constructor")
          )
 
          else (* All other functions *)
          let fxn = sig_of_func name env.funcmap in
-         (match args with
-           OrderedFxnArgs(exps) ->
-             let check_args sigl expl env =
-               if (List.length sigl) != (List.length expl) then
-               raisestr ("Incorrect number of arguments for function "^name)
-               else
-               let (l, b) = List.fold_left2 
-               (fun (l, arr) (typ, nm) e ->
-                let ((exptype, sexp), _) = expr env e in
-                if exptype = Array(typ) then (exptype, sexp) :: l, true
-                else (cast_to typ (exptype, sexp) 
-                    ("Could not match type of argument "^nm)) :: l, arr ) 
-                ([], false) sigl expl
-               in (List.rev l, b)
-             in
-             let cargs, arrmode = check_args fxn.formals exps env in
-             let rtype = if arrmode then Array(fxn.ftype) else fxn.ftype in
-             ((rtype, SFxnApp(name, SOrderedFxnArgs(cargs))), env)
-         | NamedFxnArgs(_) -> raisestr ("Named function arguments not yet supported") (* TODO *)
-         )
+         let check_args sigl expl env =
+           if (List.length sigl) != (List.length expl) then
+           raisestr ("Incorrect number of arguments for function "^name)
+           else
+           let (l, b) = List.fold_left2 
+           (fun (l, arr) (typ, nm) e ->
+            let ((exptype, sexp), _) = expr env e in
+            if exptype = Array(typ) then (exptype, sexp) :: l, true
+            else (cast_to typ (exptype, sexp) 
+                ("Could not match type of argument "^nm)) :: l, arr ) 
+            ([], false) sigl expl
+           in (List.rev l, b)
+         in
+         let cargs, arrmode = check_args fxn.formals args env in
+         let rtype = if arrmode then Array(fxn.ftype) else fxn.ftype in
+         ((rtype, SFxnApp(name, cargs)), env)
 
     | IfElse (eif, ethen, eelse) -> 
         let (sif, _) = expr env eif in

@@ -787,14 +787,14 @@ let translate prog =
 
      (* Function application *)
     (* Special functions *)
-   | SFxnApp("printf", SOrderedFxnArgs([e])) ->
+   | SFxnApp("printf", [e]) ->
       let float_format_str =
        L.build_global_stringptr "%g\n" "fmt" env.ebuilder in
       let arg, env  = expr env e in 
       L.build_call printf_func [| float_format_str ; arg |]
         "printf" env.ebuilder, env
 
-   | SFxnApp("copy", SOrderedFxnArgs([e])) ->
+   | SFxnApp("copy", [e]) ->
       let (ctype, _) = e in
       let arg, env = expr env e in
       (
@@ -873,7 +873,7 @@ let translate prog =
       )
 
     (* General functions *)
-   | SFxnApp(nm, SOrderedFxnArgs(args)) -> 
+   | SFxnApp(nm, args) -> 
       let (fdef, fdecl) = get_function env nm in
       (* Get llvalues of args and accumualte env *)
       let (llargs_rev, env) = List.fold_left
@@ -932,10 +932,6 @@ let translate prog =
      let arr_struct = build_array_struct (ltype_of_typ t) data len
        "arr" env in
      arr_struct, env
-
-   | SFxnApp(nm, SNamedFxnArgs(nargs)) ->
-      ignore (nm); ignore (nargs);
-      raise (Failure "Ordered fxn args not yet supported")
 
     (* Control flow *)
    | SIfElse (eif, ethen, eelse) ->

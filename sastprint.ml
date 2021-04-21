@@ -38,12 +38,8 @@ let basic_print sast =
       GreaterEq -> ">=" | And -> "&&" | Or -> "||" | Seq -> ";" |
       Of -> "of" | Concat -> "@" in
     "("^typeid_string t^") ("^sexp_string e1^" "^opstr^" "^sexp_string e2^")"
-  | SFxnApp (nm, args) -> "("^typeid_string t^") "^nm^"("^
-    (match args with
-      SOrderedFxnArgs(expl) -> explstr expl
-    | SNamedFxnArgs(l) -> List.fold_left
-       (fun s (nm, ex) -> (if s="" then s else s^", ")^nm^": "^sexp_string ex) "" l)
-    ^")\n"
+  | SFxnApp (nm, expl) -> "("^typeid_string t^") "^nm^"("^
+    (explstr expl)^")\n"
   | SIfElse(e1, e2, e3) -> "("^typeid_string t^") if "^sexp_string e1^"\nthen "^sexp_string e2^"\nelse "^sexp_string e3^"\n"
   | SArrayCon(expl) -> 
       "("^typeid_string t^") ["^explstr expl^"]"

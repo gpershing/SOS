@@ -28,7 +28,7 @@ and sx =
 | SAssignArray of sexpr * sexpr * sexpr          (* id[expr] = expr *)
 | SUop of uop * sexpr                        (* uop expr *)
 | SBinop of sexpr * operator * sexpr          (* expr op expr *)
-| SFxnApp of id * sfxnargs
+| SFxnApp of id * sexpr list
 | SIfElse of sexpr * sexpr * sexpr             (* if expr then expr else expr *)
 | SArrayCon of sexpr list                    (* [expr, ...] *)
 (* | SAnonStruct of sexpr list                  (* {expr, ...} *)
@@ -42,12 +42,6 @@ and sx =
 | SFloatLit of string                       (* float *)
 | SBoolLit of bool                          (* bool *)
 | SCast of sexpr                            (* type casting *)
-
-and snamedArg = id * sexpr 
-
-and sfxnargs = 
-  SOrderedFxnArgs of sexpr list
-| SNamedFxnArgs of snamedArg list
 
 type stypedef = 
   SAlias of id * typeid

@@ -44,9 +44,8 @@ let basic_print prog =
       | Concat -> "@"
       | Seq -> ";" in
       "(" ^ expr_str a ^ " " ^ operator_str b ^ " " ^ expr_str c ^ ")"
-    | FxnApp(a, c) -> (match c with
-        OrderedFxnArgs(b) -> a ^ "(" ^ comma_list_str expr_str b ^ ")"
-      | NamedFxnArgs(b) -> a ^ "(" ^ comma_list_str (fun x -> let (a, b) = x in a ^":"^ expr_str b) b ^ ")")
+    | FxnApp(a, b) -> 
+        a ^ "(" ^ comma_list_str expr_str b ^ ")"
     | IfElse(a, b, c) -> "if " ^ expr_str a ^ " then " ^ expr_str b ^ " else " ^ expr_str c
     | ArrayCon(a) -> "[" ^ comma_list_str expr_str a ^ "]"
     | AnonStruct(a) -> "{" ^ comma_list_str expr_str a ^ "}"
