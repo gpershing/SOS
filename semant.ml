@@ -22,7 +22,18 @@ type environment = {
 (* This is re-used in Codegen *)
 type func_decl = func_bind * string
 let external_functions : func_decl list =
-[ { ftype = Int; formals = [Int, "x"; Int, "y"] }, "example" ]
+[ { ftype = Int; formals = [Int, "x"; Int, "y"] }, "example" 
+    (*
+     MATH:
+     ( { ftype = Float; formals = [Float, "x",]}, "sine" ) ;
+     ( { ftype = Float; formals = [Float, "x"]}, "cosine" ) ;
+     ( { ftype = Float; formals = [Float, "x"]}, "tan" );
+     ( { ftype = Float; formals = [Float, "x"]}, "toradians" );
+     GL:
+         ( { ftype = Void; formals = [Array(Struct([(Float, "x"); (Float, "y")]))]}, "drawCurve" );
+         drawpoint, drawshape, deletecanvas
+    *)
+]
 
 let raisestr s = raise (Failure s) 
 
