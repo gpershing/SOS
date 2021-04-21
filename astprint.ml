@@ -32,7 +32,6 @@ let basic_print prog =
       | MMul -> "**"
       | Div -> "/"
       | Mod -> "%"
-      | Pow -> "^"
       | Eq -> "="
       | Neq -> "!="
       | Less -> "<"

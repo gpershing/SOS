@@ -5,7 +5,7 @@
 /* Declarations */
 
 /* %token statements... */
-%token ADD SUB MUL MMUL DIV MOD POW SEQ
+%token ADD SUB MUL MMUL DIV MOD SEQ
 %token NOT EQ LT GT LTEQ GTEQ EQEQ NEQ AND OR
 %token CONCAT OF
 %token DOT COMMA
@@ -37,7 +37,6 @@
 %left ADD SUB
 %right MMUL
 %left MUL DIV MOD
-%right POW
 %nonassoc LBRACK RBRACK LPAREN RPAREN LBRACE RBRACE
 %right NOT
 %left DOT
@@ -103,7 +102,6 @@ expr:
   | expr MMUL expr { Binop($1,MMul,$3) }
   | expr DIV expr { Binop($1,Div,$3) }
   | expr MOD expr { Binop($1,Mod,$3) }
-  | expr POW expr { Binop($1,Pow,$3) }
   | expr EQEQ expr { Binop($1,Eq,$3) }
   | expr NEQ expr { Binop($1,Neq,$3) }
   | expr LT expr { Binop($1,Less,$3) }

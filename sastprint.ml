@@ -32,7 +32,7 @@ let basic_print sast =
   | SUop(op, exp) -> "("^typeid_string t^")"^
     (match op with Not -> "!" | Neg -> "-")^sexp_string exp
   | SBinop (e1, op, e2) -> let opstr  = match op with
-      Add -> "+" | Sub -> "-" | Mul -> "*" | Div -> "/" | Mod -> "%" | Pow -> "^" |
+      Add -> "+" | Sub -> "-" | Mul -> "*" | Div -> "/" | Mod -> "%" |
       MMul -> "**" |
       Eq -> "==" | Neq -> "!=" | Less -> "<" | Greater -> ">" | LessEq -> "<=" |
       GreaterEq -> ">=" | And -> "&&" | Or -> "||" | Seq -> ";" |

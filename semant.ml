@@ -322,15 +322,6 @@ let check prog =
       | _ -> raisestr ("Can only take the modulo with integers")
   in
 
-  let pow_expr env exp1 op exp2 = 
-      let (t1, _) = exp1 in let (t2, _) = exp2 in
-      match (t1, t2) with
-        (Int, Int) -> (Int, SBinop(exp1, op, exp2)), env
-      | (Float, Int) -> (Float, SBinop(exp1, op, exp2)), env
-      | (_, Int) -> raisestr ("Cannot exponentiate "^type_str t1)
-      | _ -> raisestr ("Cannot exponentiate to a non-integer power")
-  in
-
   let eq_expr env exp1 op exp2 = 
       let (t1, _) = exp1 in let (t2, _) = exp2 in
       (match (t1, t2) with
@@ -373,7 +364,6 @@ let check prog =
     | MMul-> mmul_expr   env exp1 op exp2
     | Div -> div_expr    env exp1 op exp2
     | Mod -> mod_expr    env exp1 op exp2
-    | Pow -> pow_expr    env exp1 op exp2
     | Eq  -> eq_expr     env exp1 op exp2
     | Neq -> eq_expr     env exp1 op exp2
     | Less      -> comp_expr env exp1 op exp2

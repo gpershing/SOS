@@ -30,7 +30,6 @@ rule token = parse
 | '*'      { MUL }
 | '/'      { DIV }
 | '%'      { MOD }
-| '^'      { POW }
 | '@'      { CONCAT }
 | ';'      { SEQ }
 | "=="     { EQEQ }

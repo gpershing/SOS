@@ -105,7 +105,6 @@ let translate prog =
    | MMul-> "MMul"
    | Div -> "Div"
    | Mod -> "Mod"
-   | Pow -> "Pow"
    | Eq -> "Eq"
    | Neq -> "Neq"
    | Less -> "Less"
