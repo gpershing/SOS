@@ -393,11 +393,18 @@ let check prog =
     | _ -> raisestr err_str )
   in
 
+  let rec assert_nonvoid = function
+    Void -> raisestr ("Cannot use a void type in this context")
+  | Array(t) -> assert_nonvoid t
+  | _ -> ()
+  in
+
   let rec expr env = function
      
       VarDef (tstr, name, exp) -> 
         let (sexp, _) = expr env exp in
         let t = resolve_typeid tstr env.typemap in
+        assert_nonvoid t ;
         let (exptype, _) = sexp in
         ((t, SVarDef(t, name, cast_to t sexp
                      ("Could not resolve type when defining "^name^
@@ -410,6 +417,7 @@ let check prog =
         let sargs = List.map
           (fun (typ, nm) -> (resolve_typeid typ env.typemap, nm)) args
         in
+        List.iter (fun (tp, _) -> assert_nonvoid tp) sargs ;
         let newfxnmap = StringMap.add
            name { ftype = t; formals = sargs} env.funcmap in
         let ((exptype, sx), _) = expr { env with
@@ -521,6 +529,7 @@ let check prog =
     | ArrayCon l -> (match l with
       hd :: tl ->
         let ((exptype, sexp), _) = expr env hd in 
+        assert_nonvoid exptype ;
         ((Array(exptype), SArrayCon((exptype, sexp) :: List.map
           (fun ex -> let (se, _) = expr env ex in
            cast_to exptype se
@@ -589,7 +598,7 @@ let check prog =
 
   let make_stypedef env = function
       Alias(nm, tp) -> SAlias(nm, resolve_typeid tp env.typemap)
-    | StructDef(nm , l) -> SStructDef(nm, List.map (fun (t, i) -> (resolve_typeid t env.typemap, i)) l)
+    | StructDef(nm , l) -> SStructDef(nm, List.map (fun (t, i) -> let tt = resolve_typeid t env.typemap in assert_nonvoid tt; (tt, i)) l)
   in
 
   (* check a single statement and update the environment *)
