@@ -9,6 +9,7 @@ let rec comma_list_str f l = match l with
 let rec typeid_str t = match t with
   TypeID(s) -> s
 | ArrayTypeID(p) -> "array " ^ typeid_str p
+| FxnTypeID(l, t) -> "func " ^ comma_list_str typeid_str l ^" -> "^typeid_str t
 
 let basic_print prog = 
   let print_stmt = function
@@ -45,7 +46,7 @@ let basic_print prog =
       | Seq -> ";" in
       "(" ^ expr_str a ^ " " ^ operator_str b ^ " " ^ expr_str c ^ ")"
     | FxnApp(a, b) -> 
-        a ^ "(" ^ comma_list_str expr_str b ^ ")"
+        expr_str a ^ "(" ^ comma_list_str expr_str b ^ ")"
     | IfElse(a, b, c) -> "if " ^ expr_str a ^ " then " ^ expr_str b ^ " else " ^ expr_str c
     | ArrayCon(a) -> "[" ^ comma_list_str expr_str a ^ "]"
     | AnonStruct(a) -> "{" ^ comma_list_str expr_str a ^ "}"

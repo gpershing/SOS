@@ -10,6 +10,7 @@ type typeid =
 | Void
 | Array of typeid
 | Struct of sargtype list
+| Func of typeid list * typeid
 | EmptyArray (* The empty array constructor, [] *)
 and sargtype = typeid * id
 
@@ -28,7 +29,7 @@ and sx =
 | SAssignArray of sexpr * sexpr * sexpr          (* id[expr] = expr *)
 | SUop of uop * sexpr                        (* uop expr *)
 | SBinop of sexpr * operator * sexpr          (* expr op expr *)
-| SFxnApp of id * sexpr list
+| SFxnApp of sexpr * sexpr list
 | SIfElse of sexpr * sexpr * sexpr             (* if expr then expr else expr *)
 | SArrayCon of sexpr list                    (* [expr, ...] *)
 (* | SAnonStruct of sexpr list                  (* {expr, ...} *)

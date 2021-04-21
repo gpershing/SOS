@@ -11,6 +11,7 @@ let basic_print sast =
   | Void -> "void"
   | Array(t) -> "array "^typeid_string t
   | Struct(l) -> "{"^sargl_string l^"}"
+  | Func(_) -> "func"
   | EmptyArray -> "[]"
   in
 
@@ -38,7 +39,7 @@ let basic_print sast =
       GreaterEq -> ">=" | And -> "&&" | Or -> "||" | Seq -> ";" |
       Of -> "of" | Concat -> "@" in
     "("^typeid_string t^") ("^sexp_string e1^" "^opstr^" "^sexp_string e2^")"
-  | SFxnApp (nm, expl) -> "("^typeid_string t^") "^nm^"("^
+  | SFxnApp (fe, expl) -> "("^typeid_string t^") "^sexp_string fe^"("^
     (explstr expl)^")\n"
   | SIfElse(e1, e2, e3) -> "("^typeid_string t^") if "^sexp_string e1^"\nthen "^sexp_string e2^"\nelse "^sexp_string e3^"\n"
   | SArrayCon(expl) -> 

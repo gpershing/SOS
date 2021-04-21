@@ -22,8 +22,11 @@ rule token = parse
 | '}'      { RBRACE }
 | '['      { LBRACK }
 | ']'      { RBRACK }
+| '$'      { DOLLAR }
 | ','      { COMMA }
+| ':'      { COLON }
 | '.'      { DOT }
+| "->"     { TO }
 | '+'      { ADD }
 | '-'      { SUB }
 | "**"     { MMUL }
@@ -49,6 +52,7 @@ rule token = parse
 | "struct" { STRUCT }
 | "alias"  { ALIAS }
 | "array"  { ARRAY }
+| "func"   { FUNC }
 | digits as lxm { INTLIT(int_of_string lxm) } 
 | digits '.'  digit* ( ['e' 'E'] ['+' '-']? digits )? as lxm { FLOATLIT(lxm) }
 | "true"   { BOOLLIT(true) }

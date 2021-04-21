@@ -15,14 +15,12 @@ module StringMap = Map.Make(String)
 type environment = {
   typemap : typeid StringMap.t;
   varmap : typeid StringMap.t;
-  funcmap : func_bind StringMap.t;
 }
 
 (* External function signatures *)
 (* This is re-used in Codegen *)
-type func_decl = func_bind * string
-let external_functions : func_decl list =
-[ { ftype = Int; formals = [Int, "x"; Int, "y"] }, "example" 
+let external_functions : (typeid * string) list =
+[ Func([Int; Int], Int), "example2" 
     (*
      MATH:
      ( { ftype = Float; formals = [Float, "x",]}, "sine" ) ;
@@ -40,13 +38,11 @@ let raisestr s = raise (Failure s)
 let check prog =
 
   (* add built-in function such as basic printing *)
-  let built_in_decls = (
-    let add_bind map (name, ty) = StringMap.add name {
-      ftype = Void;
-      formals = [(ty, "x")] (* maybe need locals here? *)} map
+  let built_in_decls =
+    let add_bind map (name, ty) = StringMap.add name (Func([ty], Void)) map 
     in List.fold_left add_bind StringMap.empty [ ("print", Int);
 			                         ("printb", Bool);
-			                         ("printf", Float)] )
+                                                 ("printf", Float) ]
   in
   (* add external functions *)
   let built_in_decls = List.fold_left
@@ -61,7 +57,7 @@ let check prog =
   in
 
   (* Initial environment containing built-in types and functions *)
-  let global_env = { typemap = built_in_types; varmap = StringMap.empty; funcmap =  built_in_decls }
+  let global_env = { typemap = built_in_types; varmap = built_in_decls }
   in
 
   (* resolve the type of a tid to a typeid *)
@@ -70,6 +66,8 @@ let check prog =
       then StringMap.find s map
       else raisestr ("Could not resolve type id "^s)
   | ArrayTypeID(s) -> Array(resolve_typeid s map)
+  | FxnTypeID(l, r) -> Func(List.map (fun tt -> resolve_typeid tt map) l,
+          resolve_typeid r map)
   in
 
   (* should add a function to add three things above dynamically *)
@@ -91,12 +89,6 @@ let check prog =
         | _ -> raisestr ("Could not find field "^f)
       in find_field f sargs
      | _ -> raisestr ("Cannot access fields for a non-struct variable")
-  in
-
-  (* get the signature of a function *)
-  let sig_of_func f map = 
-    if StringMap.mem f map then StringMap.find f map
-    else raisestr ("Unknown function name "^f)
   in
 
   let add_typedef td map =
@@ -164,6 +156,11 @@ let check prog =
     | (hdt, _) :: _ -> type_str hdt
     | _ -> ""
     in struct_typ_str sl)^"}"
+  | Func(al, rt) -> "func "^
+    (let rec func_typ_str = function
+      (hdt) :: (h::t) -> type_str hdt ^", "^func_typ_str (h::t)
+    | (hdt) :: _ -> type_str hdt
+    | _ -> "" in func_typ_str al)^" -> "^type_str rt
   | EmptyArray -> "[]"
   in
 
@@ -414,20 +411,17 @@ let check prog =
 
     | FxnDef (tstr, name, args, exp) ->
         let t = resolve_typeid tstr env.typemap in
-        let sargs = List.map
-          (fun (typ, nm) -> (resolve_typeid typ env.typemap, nm)) args
-        in
-        List.iter (fun (tp, _) -> assert_nonvoid tp) sargs ;
-        let newfxnmap = StringMap.add
-           name { ftype = t; formals = sargs} env.funcmap in
+        let sargs = List.map (fun (tp, nm) -> resolve_typeid tp env.typemap, nm)
+          args in
+        let argtypes = List.map (fun (tp, _) -> assert_nonvoid tp; tp) sargs in
+        let newvarmap = StringMap.add name (Func(argtypes, t)) env.varmap in
         let ((exptype, sx), _) = expr { env with
-           funcmap = newfxnmap; 
-           varmap = add_formals args env.varmap env.typemap; } exp
+           varmap = add_formals args newvarmap env.typemap; } exp
         in
-        ((t, SFxnDef(t, name, sargs, cast_to t (exptype, sx)
+        ((Func(argtypes, t), SFxnDef(t, name, sargs, cast_to t (exptype, sx)
                      ("Incorrect return type for function "^name
                      ^" (Found "^type_str exptype^", expected "^type_str t^")"))),
-         { env with funcmap = newfxnmap } )
+         { env with varmap = newvarmap } )
 
     | Assign (name, exp) ->
          let ((exptype, sexp), _) = expr env exp in
@@ -481,8 +475,8 @@ let check prog =
          let (e2, _) = expr env exp2 in
          binop_expr env e1 op e2
 
-    | FxnApp (name, args) -> 
-         if name="copy" && (List.length args) = 1 then (* Copy constructor *)
+    | FxnApp (exp, args) -> 
+         if exp=Var("copy") && (List.length args) = 1 then (* Copy constructor *)
          (match args with
            [ex] ->
             let (sexp, _) = expr env ex in
@@ -491,29 +485,32 @@ let check prog =
               Array(_) -> ()
             | Struct(_) -> ()
             | _ -> raisestr ("Can only use Copy constructor on reference types"));
-             ((t, SFxnApp(name, [sexp])), env)
+             ((t, SFxnApp((Func([t], t), SVar("copy")), [sexp])), env)
 
          | _ -> raisestr ("Too many arguments for Copy constructor")
          )
 
          else (* All other functions *)
-         let fxn = sig_of_func name env.funcmap in
+         let fxn, env = expr env exp in
+         let sargs, base_rt = match fxn with (Func(l, t), _) -> l, t
+          | _ -> raisestr ("Could not resolve expression to a function") in
+
          let check_args sigl expl env =
            if (List.length sigl) != (List.length expl) then
-           raisestr ("Incorrect number of arguments for function "^name)
+           raisestr ("Incorrect number of arguments for function")
            else
            let (l, b) = List.fold_left2 
-           (fun (l, arr) (typ, nm) e ->
+           (fun (l, arr) typ e ->
             let ((exptype, sexp), _) = expr env e in
             if exptype = Array(typ) then (exptype, sexp) :: l, true
             else (cast_to typ (exptype, sexp) 
-                ("Could not match type of argument "^nm)) :: l, arr ) 
+                ("Could not match type of argument")) :: l, arr ) 
             ([], false) sigl expl
            in (List.rev l, b)
          in
-         let cargs, arrmode = check_args fxn.formals args env in
-         let rtype = if arrmode then Array(fxn.ftype) else fxn.ftype in
-         ((rtype, SFxnApp(name, cargs)), env)
+         let cargs, arrmode = check_args sargs args env in
+         let rtype = if arrmode then Array(base_rt) else base_rt in
+         ((rtype, SFxnApp(fxn, cargs)), env)
 
     | IfElse (eif, ethen, eelse) -> 
         let (sif, _) = expr env eif in

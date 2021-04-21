@@ -8,10 +8,10 @@
 %token ADD SUB MUL MMUL DIV MOD SEQ
 %token NOT EQ LT GT LTEQ GTEQ EQEQ NEQ AND OR
 %token CONCAT OF
-%token DOT COMMA
+%token DOT COMMA COLON DOLLAR
 %token LPAREN RPAREN LBRACE RBRACE LBRACK RBRACK
 %token IF THEN ELSE
-%token STRUCT ALIAS ARRAY
+%token STRUCT ALIAS ARRAY FUNC TO
 %token <Ast.program> IMPORT
 %token <int> INTLIT
 %token <string> FLOATLIT
@@ -47,52 +47,31 @@
 typeid:
     VAR { TypeID($1) }
   | ARRAY typeid { ArrayTypeID($2) }
+  | FUNC types TO typeid { FxnTypeID($2, $4) } 
 
-/* There are three types of expressions:
- * A statement expression (stexpr)
-   - These can only start an expression or be used in a safe context
- * A safe statement expression (safe_stexpr)
-   -  A statement expression that can be used as an expression
- * A normal (non-statement) expression
-   - All other expressions
- * Certain expressions can introduce protected expressions
-   - Mainly through parens
-   - Only place where any expression can be used */
+value:
+    VAR { Var ($1) }
+  | value DOT VAR { StructField($1, $3) }
+  | value LBRACK expr RBRACK { ArrayAccess($1, $3) }
+  | DOLLAR LPAREN expr RPAREN { $3 }
+  | fxn_app { $1 }
 
-/* While convoluted, it allows for a syntax without expression endings
-   Notice that stexprs that start with VAR VAR can be ambiguous in many
-   cases. */
-
-protected_expr: /* Any chance here MUST be reproduced in stexpr */
-    VAR VAR EQ expr { VarDef (TypeID($1), $2, $4) }
-  | VAR VAR LPAREN fxn_args RPAREN EQ expr { FxnDef(TypeID($1),$2,$4,$7) }
-  | ARRAY typeid VAR EQ expr { VarDef (ArrayTypeID($2), $3, $5) }
-  | ARRAY typeid VAR LPAREN fxn_args RPAREN EQ expr 
-    { FxnDef(ArrayTypeID($2), $3, $5, $8) }
-  | expr { $1 }
+fxn_app:
+    value LPAREN args RPAREN { FxnApp($1, $3) }
 
 stexpr:
-    VAR VAR EQ expr { VarDef (TypeID($1), $2, $4) }
-  | VAR VAR LPAREN fxn_args RPAREN EQ expr { FxnDef(TypeID($1),$2,$4,$7) }
-  | ARRAY typeid VAR EQ expr { VarDef (ArrayTypeID($2), $3, $5) }
-  | ARRAY typeid VAR LPAREN fxn_args RPAREN EQ expr 
-    { FxnDef(ArrayTypeID($2), $3, $5, $8) }
-  | safe_stexpr { $1 }
-
-safe_stexpr:
-    VAR DOT VAR EQ expr { AssignStruct(Var($1), $3, $5) }
-  | VAR LBRACK protected_expr RBRACK EQ expr { AssignArray(Var($1),$3,$6) }
-  | VAR EQ expr { Assign($1, $3) }
-  | VAR LPAREN args RPAREN { FxnApp($1, $3) }
+    VAR COLON typeid EQ expr { VarDef($3, $1, $5) }
+  | VAR COLON LPAREN fxn_args RPAREN TO typeid EQ expr { FxnDef($7,$1,$4,$9) }
+  | VAR EQ expr { Assign ($1, $3) }
+  | value DOT VAR EQ expr { AssignStruct($1, $3, $5) }
+  | value LBRACK expr RBRACK EQ expr { AssignArray($1, $3, $6) }
   | IF expr THEN expr ELSE expr { IfElse($2,$4,$6) }
-  
+  | fxn_app { $1 }
+
 expr:
     INTLIT { IntLit($1) }
   | FLOATLIT { FloatLit($1) }
   | BOOLLIT { BoolLit($1) }
-  | VAR { Var($1) }
-  | expr DOT VAR { StructField($1,$3) }
-  | VAR DOT VAR { StructField(Var($1), $3) }
   | NOT expr { Uop(Not,$2) }
   | SUB expr { Uop(Neg,$2) }
   | expr ADD expr { Binop($1,Add,$3) }
@@ -112,16 +91,14 @@ expr:
   | expr SEQ expr { Binop($1,Seq,$3) }
   | expr CONCAT expr {Binop($1,Concat,$3) }
   | expr OF expr { Binop($1,Of,$3) }
-  | expr DOT VAR EQ expr { AssignStruct($1, $3, $5) }
-  | expr LBRACK protected_expr RBRACK EQ expr { AssignArray($1, $3, $6) }
-  | LPAREN protected_expr RPAREN { $2 }
+  | LPAREN expr RPAREN { $2 }
   | VAR LBRACE args RBRACE { NamedStruct($1, $3) }
-  | VAR LBRACK protected_expr RBRACK { ArrayAccess (Var($1), $3) }
-  | expr LBRACK protected_expr RBRACK { ArrayAccess($1, $3) }
   | LBRACE args RBRACE { AnonStruct($2) }
   | LBRACK args RBRACK { ArrayCon($2) }
-  | safe_stexpr { $1 }
-    
+  | VAR { Var ($1) }
+  | value DOT VAR { StructField($1, $3) }
+  | value LBRACK expr RBRACK {ArrayAccess($1, $3) }
+  | stexpr { $1 }
 
 fxn_args:
     /* nothing */ { [] }
@@ -136,8 +113,16 @@ args:
   | args_list {List.rev $1}
 
 args_list:
-    protected_expr { [$1] }
-  | args_list COMMA protected_expr { $3 :: $1 }
+    expr { [$1] }
+  | args_list COMMA expr { $3 :: $1 }
+
+types:
+    /* nothing */ { [] }
+  | rev_types {List.rev $1}
+
+rev_types:
+    typeid { [$1] }
+  | rev_types COMMA typeid { $3 :: $1 }
 
 typedef:
     ALIAS VAR EQ typeid { Alias($2,$4) }

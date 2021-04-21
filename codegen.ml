@@ -10,7 +10,6 @@ module StringMap = Map.Make(String)
 type environment = {
 ebuilder : L.llbuilder;
 evars : L.llvalue StringMap.t; (* The storage associated with a given var *)
-efxns : (L.llvalue * func_bind) StringMap.t; (* Decls for normal functions *)
 esfxns : (L.llvalue * func_bind) StringMap.t; (* Decls for struct op fxns *)
 ecurrent_fxn : L.llvalue; (* The current function *)
 }
@@ -47,7 +46,8 @@ let translate prog =
     | Array(t) -> ptr_t (struct_t [|ptr_t (ltype_of_typ t); i32_t|])
     | Struct(l) -> ptr_t (struct_t
        (Array.of_list (List.map (fun (tid, _) -> ltype_of_typ tid) l)))
-    | _ -> raise (Failure "Non-basic types not yet supported") (*TODO*)  
+    | Func(l, r) -> ptr_t (L.function_type (ltype_of_typ r) (Array.of_list (List.map ltype_of_typ l)))
+    | EmptyArray-> raise (Failure "Unexpected empty array")
 
   in
 
@@ -57,11 +57,13 @@ let translate prog =
       L.declare_function "printf" printf_t the_module in
 
   (* External Functions *)
-  let add_external_fxn map (decl, name)  =
-      let ftype = L.function_type (ltype_of_typ decl.ftype)
-        (Array.of_list (List.map (fun (t, _) -> ltype_of_typ t) decl.formals)) in
+  let add_external_fxn map (decl, name) =
+      let formals, rt = match decl with Func(formals, rt) -> formals, rt
+        | _ -> raise (Failure "Unexpected external function decl") in
+      let ftype = L.function_type (ltype_of_typ rt)
+        (Array.of_list (List.map (fun t -> ltype_of_typ t) formals)) in
       let lldecl = L.declare_function name ftype the_module in
-      StringMap.add name (lldecl, decl)  map
+      StringMap.add name lldecl map
   in
   let ext_fxn_map = List.fold_left add_external_fxn StringMap.empty Semant.external_functions
   in 
@@ -81,12 +83,8 @@ let translate prog =
   in
 
   (* Add a function declaration to environment.efxns *)
-  let add_function env nm bind = 
-      {env with efxns = StringMap.add nm bind env.efxns }
-  in
-
-  (* Gets a function's llvalue and fdecl from environment.evars *)
-  let get_function env nm = StringMap.find nm env.efxns
+  let add_function env nm llv = 
+      {env with evars = StringMap.add nm llv env.evars }
   in
 
   (* Add a formal argument llvalue to environment.evars *)
@@ -688,7 +686,10 @@ let translate prog =
      struc, env
 
      (* Access *)
-   | SVar(nm) -> (L.build_load (get_variable env nm) nm env.ebuilder),env 
+   | SVar(nm) -> (L.build_load (get_variable env nm) nm env.ebuilder),env
+   (* (match t with
+        Func(_) -> get_variable env nm , env
+      | _ -> (L.build_load (get_variable env nm) nm env.ebuilder),env  )*)
    | SArrayAccess(arr_exp, idx) -> 
      let (arr, env) = expr env arr_exp in
      let (idx_lv, env) = expr env idx in
@@ -722,12 +723,15 @@ let translate prog =
        let ftype = L.function_type (ltype_of_typ ty) formal_types in
        let decl = L.define_function nm ftype the_module in
        let new_builder = L.builder_at_end context (L.entry_block decl) in
-       let bind = decl, { ftype = ty; formals = args } in
+
+       (* Store a pointer to this function *)
+       let ref = L.build_alloca (ltype_of_typ t) nm env.ebuilder in
+       ignore(L.build_store decl ref env.ebuilder) ;
 
        let new_env = { env with ebuilder=new_builder } in
        let new_env = List.fold_left2 add_formal new_env args (
               Array.to_list (L.params decl)) in
-       let new_env = add_function new_env nm bind in
+       let new_env = add_function new_env nm ref in
        let new_env = {new_env with ebuilder = new_builder; ecurrent_fxn=decl} in
        let (lv, ret_env) = expr new_env ex in
        
@@ -737,7 +741,7 @@ let translate prog =
        else
        ignore (L.build_ret lv ret_env.ebuilder) );
        (* Add this function to the returned environment *)
-       decl, add_function env nm bind
+       ref, add_function env nm ref 
 
      (* Assignments *)
    | SAssign(nm, ex) ->
@@ -787,14 +791,14 @@ let translate prog =
 
      (* Function application *)
     (* Special functions *)
-   | SFxnApp("printf", [e]) ->
+   | SFxnApp((_, SVar("printf")), [e]) -> (*TODO better *)
       let float_format_str =
        L.build_global_stringptr "%g\n" "fmt" env.ebuilder in
       let arg, env  = expr env e in 
       L.build_call printf_func [| float_format_str ; arg |]
         "printf" env.ebuilder, env
 
-   | SFxnApp("copy", [e]) ->
+   | SFxnApp((_, SVar("copy")), [e]) ->
       let (ctype, _) = e in
       let arg, env = expr env e in
       (
@@ -873,17 +877,21 @@ let translate prog =
       )
 
     (* General functions *)
-   | SFxnApp(nm, args) -> 
-      let (fdef, fdecl) = get_function env nm in
+   | SFxnApp(fexp, args) -> 
+      let fdef, env = expr env fexp in
+      let (fxntype, _) = fexp in
+      let fargs, rt = match fxntype with Func(l, t) -> l, t | _ -> 
+        raise (Failure "Unexpected function type") in
+
       (* Get llvalues of args and accumualte env *)
       let (llargs_rev, env) = List.fold_left
         (fun (l, env) a -> let (ll, e) = expr env a in (ll::l, e))
         ([], env) args in
       let llargs = List.rev llargs_rev in
-      let result = (match fdecl.ftype with
+      let result = (match rt with
                       Void -> ""
-                    | _ -> nm ^ "_result") in
-      if t = fdecl.ftype then
+                    | _ -> "fxn_result") in
+      if t = rt then
 
       (* Normal function application *)
       L.build_call fdef (Array.of_list llargs) result env.ebuilder, env
@@ -891,8 +899,8 @@ let translate prog =
       else
 
       (* Iterated fxn application *)
-      let arr_args = List.map2 (fun (ty, _) (fty, _) -> ty=Array(fty) )
-           args fdecl.formals in
+      let arr_args = List.map2 (fun (ty, _) fty -> ty=Array(fty) )
+           args fargs in
       let rec find_first bools = function 
         (hd :: tl) -> if List.hd bools then hd else find_first (List.tl bools) tl
       | _ -> raise (Failure "Unexpected arguments")
@@ -906,7 +914,7 @@ let translate prog =
          else None) llargs arr_args in
 
       (* Create a new array *)
-      let data = L.build_array_malloc (ltype_of_typ fdecl.ftype) len
+      let data = L.build_array_malloc (ltype_of_typ rt) len
        "arrdata" env.ebuilder in
       (* Set up loop *)
       let i_addr = L.build_alloca i32_t "i" env.ebuilder in
@@ -995,8 +1003,8 @@ let translate prog =
      (* Init the builder at the beginning of main() *)
      let builder = L.builder_at_end context (L.entry_block main) in
      (* Use the builder to add the statements of main() *)
-     let start_env = { ebuilder = builder; evars = StringMap.empty;
-       efxns = ext_fxn_map; esfxns = StringMap.empty; ecurrent_fxn = main } in
+     let start_env = { ebuilder = builder; evars = ext_fxn_map;
+       esfxns = StringMap.empty; ecurrent_fxn = main } in
      let end_env = List.fold_left build_stmt start_env stmts in
      (* Add a return statement *)
      L.build_ret (L.const_int i32_t 0) end_env.ebuilder    

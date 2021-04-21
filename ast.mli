@@ -17,6 +17,7 @@ type id = string (* non-type id *)
 type tid = (* type id *)
   TypeID of string
 | ArrayTypeID of tid
+| FxnTypeID of tid list * tid
 type import = string
 
 (* type name pair *)
@@ -31,7 +32,7 @@ and expr =
 | AssignArray of expr * expr * expr          (* id[expr] = expr *)
 | Uop of uop * expr                        (* uop expr *)
 | Binop of expr * operator * expr          (* expr op expr *)
-| FxnApp of id * expr list
+| FxnApp of expr * expr list
 | IfElse of expr * expr * expr             (* if expr then expr else expr *)
 | ArrayCon of expr list                    (* [expr, ...] *)
 | AnonStruct of expr list                  (* {expr, ...} *)
