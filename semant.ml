@@ -479,7 +479,7 @@ let check prog =
          binop_expr env e1 op e2
 
     | FxnApp (exp, args) -> 
-         if exp=Var("copy") && (List.length args) = 1 then (* Copy constructor *)
+         if exp=Var("copy") then (* Copy constructor *)
          (match args with
            [ex] ->
             let (sexp, _) = expr env ex in
@@ -492,6 +492,19 @@ let check prog =
 
          | _ -> raisestr ("Too many arguments for Copy constructor")
          )
+
+         else if exp=Var("free") then (* Free instr *)
+         (match args with
+           [ex] ->
+             let (sexp, _) = expr env ex in
+             let (t, _) = sexp in
+             (match t with
+               Array(_) -> ()
+             | Struct(_) -> ()
+             | _ -> raisestr ("Can only free memory of struct and array types")) ;
+             ((Void, SFxnApp((Func([t], t), SVar("free")), [sexp])), env)
+          | _ -> raisestr ("Too many arguments for free()")
+          )
 
          else (* All other functions *)
          let fxn, env = expr env exp in

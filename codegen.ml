@@ -893,6 +893,22 @@ let translate prog =
       | _ -> raise (Failure "Copy constructor only works on reference types")
       )
 
+   (* Free instruction *)
+   | SFxnApp((_, SVar("free")), [e]) ->
+      let (ctype, _) = e in
+      let arg, env = expr env e in
+      (
+      match ctype with
+        Array(_)    -> 
+         (* Need to free data as well as the structure *)
+         let data = L.build_gep arg [|l0; l0|] "data" env.ebuilder in
+         let dataref = L.build_load data "dataref" env.ebuilder in
+         ignore(L.build_free dataref env.ebuilder);
+      | _ -> () ) ;
+      (* Free structure *)
+      ignore(L.build_free arg env.ebuilder) ;
+      l0, env
+
     (* General functions *)
    | SFxnApp(fexp, args) ->  
       let fdef, env = expr env fexp in
