@@ -402,6 +402,9 @@ let check prog =
   let rec expr env = function
      
       VarDef (tstr, name, exp) -> 
+        if name="copy" || name="free" then
+        raisestr ("Cannot create a variable with reserved name "^name)
+        else
         let (sexp, _) = expr env exp in
         let t = resolve_typeid tstr env.typemap in
         assert_nonvoid t ;
@@ -413,6 +416,9 @@ let check prog =
           (* TODO may want to deal with overriding variables differently *)
 
     | FxnDef (tstr, name, args, exp) ->
+        if name="copy" || name="free" then
+        raisestr ("Cannot create a function with reserved name "^name)
+        else
         let t = resolve_typeid tstr env.typemap in
         let sargs = List.map (fun (tp, nm) -> resolve_typeid tp env.typemap, nm)
           args in
