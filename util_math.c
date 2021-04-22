@@ -1,5 +1,6 @@
 #include <math.h>
 
+/*
 float acos(float x) {
     return (float) acos(x);
 }
@@ -27,7 +28,16 @@ float tan(float x) {
 float sqrt(float x) {
     return (float) sqrt(x);
 }
+*/
 
 float toradians(float x) {
-    return (float) x * (M_PI / 180.0)
+    return (float) x * (M_PI / 180.0);
 }
+
+#ifdef BUILD_TEST
+int main()
+{
+  toradians(12.5);
+  return 0;
+}
+#endif
