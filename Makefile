@@ -16,4 +16,4 @@ test:
 
 clean : 
 	ocamlbuild -clean
-	rm util_math.o util_math
+	rm util_math.o
