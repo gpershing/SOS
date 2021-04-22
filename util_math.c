@@ -1,7 +1,7 @@
 #include <math.h>
 
-float toradians(float x) {
-    return (float) x * (M_PI / 180.0);
+double toradians(double x) {
+    return x * (M_PI / 180.0);
 }
 
 #ifdef BUILD_TEST
