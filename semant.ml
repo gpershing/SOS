@@ -17,22 +17,6 @@ type environment = {
   varmap : typeid StringMap.t;
 }
 
-(* External function signatures *)
-(* This is re-used in Codegen *)
-let external_functions : (typeid * string) list =
-[ Func([Int; Int], Int), "example2" 
-    (*
-     MATH:
-     ( { ftype = Float; formals = [Float, "x",]}, "sine" ) ;
-     ( { ftype = Float; formals = [Float, "x"]}, "cosine" ) ;
-     ( { ftype = Float; formals = [Float, "x"]}, "tan" );
-     ( { ftype = Float; formals = [Float, "x"]}, "toradians" );
-     GL:
-         ( { ftype = Void; formals = [Array(Struct([(Float, "x"); (Float, "y")]))]}, "drawCurve" );
-         drawpoint, drawshape, deletecanvas
-    *)
-]
-
 let math_functions : (typeid * string) list =
 [ Func([Float], Float), "sqrt" ;
   Func([Float], Float), "sin" ;
@@ -42,6 +26,10 @@ let math_functions : (typeid * string) list =
   Func([Float], Float), "acos" ;
   Func([Float], Float), "atan" ;
   Func([Float], Float), "toradians" ]
+
+(* External function signatures *)
+(* This is re-used in Codegen *)
+let external_functions : (typeid * string) list = math_functions
 
 let raisestr s = raise (Failure s) 
 
@@ -59,11 +47,11 @@ let check prog =
     (fun map (decl, nm) -> StringMap.add nm decl map)
     built_in_decls external_functions
   in
-  (* add math functions *)
+(*  (* add math functions *)
   let built_in_decls = List.fold_left
     (fun map (decl, nm) -> StringMap.add nm decl map)
     built_in_decls math_functions
-  in
+  in *)
 
   (* add built-in types such as int, float *)
   let built_in_types = (
