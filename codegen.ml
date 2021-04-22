@@ -66,6 +66,8 @@ let translate prog =
       StringMap.add name lldecl map
   in
   let ext_fxn_map = List.fold_left add_external_fxn StringMap.empty Semant.external_functions
+  in
+  let math_fxn_map = List.fold_left add_external_fxn StringMap.empty Semant.math_functions
   in 
 
   (* Setup main function *)
@@ -878,7 +880,7 @@ let translate prog =
       )
 
     (* General functions *)
-   | SFxnApp(fexp, args) -> 
+   | SFxnApp(fexp, args) ->  
       let fdef, env = expr env fexp in
       let (fxntype, _) = fexp in
       let fargs, rt = match fxntype with Func(l, t) -> l, t | _ -> 

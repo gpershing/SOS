@@ -33,6 +33,16 @@ let external_functions : (typeid * string) list =
     *)
 ]
 
+let math_functions : (typeid * string) list =
+[ Func([Float], Float), "sqrt" ;
+  Func([Float], Float), "sin" ;
+  Func([Float], Float), "cos" ;
+  Func([Float], Float), "tan" ;
+  Func([Float], Float), "asin" ;
+  Func([Float], Float), "acos" ;
+  Func([Float], Float), "atan" ;
+  Func([Float], Float), "toradians" ]
+
 let raisestr s = raise (Failure s) 
 
 let check prog =
@@ -48,6 +58,11 @@ let check prog =
   let built_in_decls = List.fold_left
     (fun map (decl, nm) -> StringMap.add nm decl map)
     built_in_decls external_functions
+  in
+  (* add math functions *)
+  let built_in_decls = List.fold_left
+    (fun map (decl, nm) -> StringMap.add nm decl map)
+    built_in_decls math_functions
   in
 
   (* add built-in types such as int, float *)
