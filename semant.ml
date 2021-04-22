@@ -39,7 +39,6 @@ let check prog =
   let built_in_decls =
     let add_bind map (name, ty) = StringMap.add name (Func([ty], Void)) map 
     in List.fold_left add_bind StringMap.empty [ ("print", Int);
-			                         ("printb", Bool);
                                                  ("printf", Float) ]
   in
   (* add external functions *)
