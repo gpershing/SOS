@@ -57,18 +57,16 @@ let translate prog =
       L.declare_function "printf" printf_t the_module in
 
   (* External Functions *)
-  let add_external_fxn map (decl, name) =
+  let add_external_fxn builder map (decl, name) =
       let formals, rt = match decl with Func(formals, rt) -> formals, rt
         | _ -> raise (Failure "Unexpected external function decl") in
       let ftype = L.function_type (ltype_of_typ rt)
         (Array.of_list (List.map (fun t -> ltype_of_typ t) formals)) in
       let lldecl = L.declare_function name ftype the_module in
-      StringMap.add name lldecl map
+      let llref = L.build_alloca (ltype_of_typ decl) name builder in
+      ignore (L.build_store lldecl llref builder) ;
+      StringMap.add name llref map
   in
-  let ext_fxn_map = List.fold_left add_external_fxn StringMap.empty Semant.external_functions
-  in
-  let math_fxn_map = List.fold_left add_external_fxn StringMap.empty Semant.math_functions
-  in 
 
   (* Setup main function *)
   let main =
@@ -801,6 +799,22 @@ let translate prog =
       L.build_call printf_func [| float_format_str ; arg |]
         "printf" env.ebuilder, env
 
+(*     (* Math functions *)
+   | SFxnApp((_, SVar("sqrt" as nm)),[e])
+   | SFxnApp((_, SVar("sin" as nm)),[e])
+   | SFxnApp((_, SVar("cos" as nm)),[e])
+   | SFxnApp((_, SVar("tan" as nm)),[e])
+   | SFxnApp((_, SVar("asin" as nm)),[e])
+   | SFxnApp((_, SVar("acos" as nm)),[e])
+   | SFxnApp((_, SVar("atan" as nm)),[e])
+   | SFxnApp((_, SVar("toradians" as nm)),[e]) ->
+      (match StringMap.find_opt nm math_fxn_map with
+      Some lldecl ->
+      let arg, env  = expr env e in 
+      L.build_call lldecl [| arg |] nm env.ebuilder, env
+      | None -> raise (Failure "Cannot found math functions in math_fxn_map")
+      ) *)
+
    | SFxnApp((_, SVar("copy")), [e]) ->
       let (ctype, _) = e in
       let arg, env = expr env e in
@@ -878,6 +892,22 @@ let translate prog =
 
       | _ -> raise (Failure "Copy constructor only works on reference types")
       )
+
+   (* Free instruction *)
+   | SFxnApp((_, SVar("free")), [e]) ->
+      let (ctype, _) = e in
+      let arg, env = expr env e in
+      (
+      match ctype with
+        Array(_)    -> 
+         (* Need to free data as well as the structure *)
+         let data = L.build_gep arg [|l0; l0|] "data" env.ebuilder in
+         let dataref = L.build_load data "dataref" env.ebuilder in
+         ignore(L.build_free dataref env.ebuilder);
+      | _ -> () ) ;
+      (* Free structure *)
+      ignore(L.build_free arg env.ebuilder) ;
+      l0, env
 
     (* General functions *)
    | SFxnApp(fexp, args) ->  
@@ -1005,6 +1035,9 @@ let translate prog =
    let build_main stmts = 
      (* Init the builder at the beginning of main() *)
      let builder = L.builder_at_end context (L.entry_block main) in
+     (* Create pointers to the external functions *)
+     let ext_fxn_map = List.fold_left (add_external_fxn builder)
+       StringMap.empty Semant.external_functions in 
      (* Use the builder to add the statements of main() *)
      let start_env = { ebuilder = builder; evars = ext_fxn_map;
        esfxns = StringMap.empty; ecurrent_fxn = main } in

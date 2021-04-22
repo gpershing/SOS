@@ -17,22 +17,6 @@ type environment = {
   varmap : typeid StringMap.t;
 }
 
-(* External function signatures *)
-(* This is re-used in Codegen *)
-let external_functions : (typeid * string) list =
-[ Func([Int; Int], Int), "example2" 
-    (*
-     MATH:
-     ( { ftype = Float; formals = [Float, "x",]}, "sine" ) ;
-     ( { ftype = Float; formals = [Float, "x"]}, "cosine" ) ;
-     ( { ftype = Float; formals = [Float, "x"]}, "tan" );
-     ( { ftype = Float; formals = [Float, "x"]}, "toradians" );
-     GL:
-         ( { ftype = Void; formals = [Array(Struct([(Float, "x"); (Float, "y")]))]}, "drawCurve" );
-         drawpoint, drawshape, deletecanvas
-    *)
-]
-
 let math_functions : (typeid * string) list =
 [ Func([Float], Float), "sqrt" ;
   Func([Float], Float), "sin" ;
@@ -42,6 +26,10 @@ let math_functions : (typeid * string) list =
   Func([Float], Float), "acos" ;
   Func([Float], Float), "atan" ;
   Func([Float], Float), "toradians" ]
+
+(* External function signatures *)
+(* This is re-used in Codegen *)
+let external_functions : (typeid * string) list = math_functions
 
 let raisestr s = raise (Failure s) 
 
@@ -59,11 +47,11 @@ let check prog =
     (fun map (decl, nm) -> StringMap.add nm decl map)
     built_in_decls external_functions
   in
-  (* add math functions *)
+(*  (* add math functions *)
   let built_in_decls = List.fold_left
     (fun map (decl, nm) -> StringMap.add nm decl map)
     built_in_decls math_functions
-  in
+  in *)
 
   (* add built-in types such as int, float *)
   let built_in_types = (
@@ -491,7 +479,7 @@ let check prog =
          binop_expr env e1 op e2
 
     | FxnApp (exp, args) -> 
-         if exp=Var("copy") && (List.length args) = 1 then (* Copy constructor *)
+         if exp=Var("copy") then (* Copy constructor *)
          (match args with
            [ex] ->
             let (sexp, _) = expr env ex in
@@ -504,6 +492,19 @@ let check prog =
 
          | _ -> raisestr ("Too many arguments for Copy constructor")
          )
+
+         else if exp=Var("free") then (* Free instr *)
+         (match args with
+           [ex] ->
+             let (sexp, _) = expr env ex in
+             let (t, _) = sexp in
+             (match t with
+               Array(_) -> ()
+             | Struct(_) -> ()
+             | _ -> raisestr ("Can only free memory of struct and array types")) ;
+             ((Void, SFxnApp((Func([t], t), SVar("free")), [sexp])), env)
+          | _ -> raisestr ("Too many arguments for free()")
+          )
 
          else (* All other functions *)
          let fxn, env = expr env exp in
