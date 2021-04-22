@@ -125,6 +125,7 @@ let translate prog =
    [(Add, L.build_add); (Sub, L.build_sub);
     (Mul, L.build_mul); (Div, L.build_sdiv);
     (Eq, L.build_icmp L.Icmp.Eq); (Neq, L.build_icmp L.Icmp.Ne);
+    (Mod, L.build_srem);
     (Less, L.build_icmp L.Icmp.Slt); (Greater, L.build_icmp L.Icmp.Sgt);
     (LessEq, L.build_icmp L.Icmp.Sle); (GreaterEq, L.build_icmp L.Icmp.Sge)
      ]
