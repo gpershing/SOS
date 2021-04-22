@@ -801,6 +801,22 @@ let translate prog =
       L.build_call printf_func [| float_format_str ; arg |]
         "printf" env.ebuilder, env
 
+     (* Math functions *)
+   | SFxnApp((_, SVar("sqrt" as nm)),[e])
+   | SFxnApp((_, SVar("sin" as nm)),[e])
+   | SFxnApp((_, SVar("cos" as nm)),[e])
+   | SFxnApp((_, SVar("tan" as nm)),[e])
+   | SFxnApp((_, SVar("asin" as nm)),[e])
+   | SFxnApp((_, SVar("acos" as nm)),[e])
+   | SFxnApp((_, SVar("atan" as nm)),[e])
+   | SFxnApp((_, SVar("toradians" as nm)),[e]) ->
+      (match StringMap.find_opt nm math_fxn_map with
+      Some lldecl ->
+      let arg, env  = expr env e in 
+      L.build_call lldecl [| arg |] nm env.ebuilder, env
+      | None -> raise (Failure "Cannot found math functions in math_fxn_map")
+      )
+
    | SFxnApp((_, SVar("copy")), [e]) ->
       let (ctype, _) = e in
       let arg, env = expr env e in
