@@ -14,6 +14,21 @@ struct point{
 OSMesaContext ctx;
 void *buffer;
 
+static void rendering_helper_init(){
+   glMatrixMode(GL_PROJECTION);
+   glLoadIdentity();
+   glMatrixMode(GL_MODELVIEW);
+   glClear(GL_COLOR_BUFFER_BIT);
+   glPushMatrix();
+   glEnableClientState(GL_VERTEX_ARRAY);
+   glEnableClientState(GL_COLOR_ARRAY);
+   //glColor4f(1.0, 1.0, 1.0, 1.0); //initalize color as white
+}
+
+static void rendering_helper_close(){
+    glFinish();
+}
+
 /*
  * startRendering: an initalization that must be called before drawing
  * any image. Creates Mesa and OpenGL contexts and image buffer.
@@ -30,16 +45,11 @@ static void startRendering(){
     }
 
     // Bind the buffer to the context and make it current
-    if (!OSMesaMakeCurrent( ctx, buffer, GL_UNSIGNED_BYTE, Width, Height )) {
+    if (!OSMesaMakeCurrent(ctx, buffer, GL_UNSIGNED_BYTE, Width, Height)) {
         printf("OSMesaMakeCurrent failed!\n");
     }
-
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glMatrixMode(GL_MODELVIEW);
-    glClear(GL_COLOR_BUFFER_BIT);
-    glPushMatrix();
-    glColor4f(1.0, 1.0, 1.0, 1.0); //initalize color as white
+    
+    rendering_helper_init();
 }
 
 /*
@@ -49,16 +59,25 @@ static void startRendering(){
  * points: an array of point structs
  * size_arr: the size of points array 
  */
-static void drawCurve(struct point points[], int size_arr){
+static void drawCurve(float points[], float colors[], int size_arr, int color_mode){
     glPushMatrix();
-    glBegin(GL_LINE_STRIP);
-    float x1, y1;
-    for (int i = 0; i < size_arr; i++){
-        x1 = points[i].x;
-        y1 = points[i].y;
-        glVertex2f(x1, y1);
+    if (color_mode == 1){
+        glVertexPointer(2, GL_FLOAT, 0, points);
+        glColorPointer(4, GL_FLOAT, 0, colors);
+        glDrawArrays(GL_LINE_STRIP, 0, size_arr);
     }
-    glEnd();
+    else{
+        glBegin(GL_LINE_STRIP);
+        int numofpoints = size_arr/2;
+        float x, y;
+        for (int i = 0; i < numofpoints; i++){
+            glColor4f(colors[i], colors[i+1], colors[i+2], colors[i+3]);
+            x = points[i];
+            y = points[i+1];
+            glVertex2f(x, y);
+        }
+        glEnd();
+    }
     glPopMatrix();
 }
 
@@ -70,21 +89,40 @@ static void drawCurve(struct point points[], int size_arr){
  * size_arr: the size of points
  * filed: if filled is 1, the shape will be filled with color
  */
-static void drawShape(struct point points[], int size_arr, int filled){
+static void drawShape(float  points[], float colors[], int size_arr, int color_mode, int filled){
     glPushMatrix();
-    if (filled==1){
-    glBegin(GL_POLYGON);
+
+    if (color_mode == 1){
+        glVertexPointer(2, GL_FLOAT, 0, points);
+        glColorPointer(3, GL_FLOAT, 0, colors);
+
+        if (filled==1){
+            glDrawArrays(GL_POLYGON, 0, size_arr);
+        }
+        else{
+            glDrawArrays(GL_LINE_LOOP, 0, size_arr);
+        }
     }
     else{
-        glBegin(GL_LINE_LOOP);
+        if (filled==1){
+            glBegin(GL_POLYGON);
+        }
+        else{
+            glBegin(GL_LINE_LOOP);
+        }
+        float x, y;
+        int colorIndex, pointIndex;
+        for (int i = 0; i < size_arr; i++){
+            colorIndex = i*4;
+            glColor4f(colors[colorIndex], colors[colorIndex+1], colors[colorIndex+2], colors[colorIndex+3]);
+            
+            pointIndex = i*2;
+            x = points[i];
+            y = points[i+1];
+            glVertex2f(x, y);
+        }
+        glEnd();
     }
-    float x1, y1; 
-    for (int i = 0; i < size_arr; i++){
-        x1 = points[i].x;
-        y1 = points[i].y;
-        glVertex2f(x1, y1);
-    }   
-    glEnd();
     glPopMatrix();
 }
 
@@ -95,20 +133,32 @@ static void drawShape(struct point points[], int size_arr, int filled){
  * size_arr: the size of points (length of array)
  * point_size: the size of each point
  */
-static void drawPoint(struct point points[], int size_arr, int point_size){
-    glPushMatrix();
-    glPointSize(point_size);
-    glBegin(GL_POINTS);
-    float x1, y1;
-    for (int i = 0; i < size_arr; i++){
-        x1 = points[i].x;
-        y1 = points[i].y;
-        glVertex2f(x1, y1);
+static void drawPoint(float points[], float colors[], int size_arr, int color_mode, int point_size){
+    if (color_mode == 1){
+        glPushMatrix();
+        glVertexPointer(2, GL_FLOAT, 0, points);
+        glColorPointer(3, GL_FLOAT, 0, colors);
+        glPointSize(point_size);
+        glDrawArrays(GL_POLYGON, 0, size_arr);
     }
-    glEnd();
+    else{
+        glBegin(GL_POINTS);
+        float x, y;
+        for (int i = 0; i < size_arr; i++){
+            glColor4f(colors[i], colors[i+1], colors[i+2], colors[i+3]);
+            x = points[i];
+            y = points[i+1];
+            glVertex2f(x, y);
+        }
+        glEnd();
+    }
     glPopMatrix();
 }
 
+static void clearCanvas(){
+    glMatrixMode(GL_MODELVIEW);
+    glClear(GL_COLOR_BUFFER_BIT);
+}
 
 /*
  * write_ppm: saves drawing
@@ -174,28 +224,22 @@ static void endRendering(){
 }
 
 //sample program
-#ifdef BUILD_TEST
+//#ifdef BUILD_TEST
 int main(int argc, char *argv[]){
     startRendering();
     
-    struct point p1 = {.25, .25};
-    struct point p2 = {.75, 1};
-    struct point p3 = {1, 0};
-    struct point points[3] = {p1, p2, p3};
+    float points[] = {.25, .25, .75, 1, 1, 0};
+    float colors[] = {1.0, 0.5, 1.0, 1.0, 1.0, 0.5, 0, 1.0,  0.5, 1.0, 1.0, 1.0};
     int size_arr = 3;
 
-    glColor4f(1.0, 0.5, 1.0, 1.0);
-    drawCurve(points, size_arr);
+    startRendering();
 
-    glColor4f(1.0, 0.5, 0, 1.0);
-    glTranslatef(-.5, -.5, 0);
-    drawShape(points, size_arr, 1);
+    //drawShape(points, colors, size_arr, 1, 1);
    
-    glColor4f(0.5, 1, 1.0, 1.0);
-    glTranslatef(1, 1, 0);
-    drawShape(points, size_arr, 0);
-
+    //glTranslatef(1, 1, 0);
+    //drawShape(points, colors, size_arr, 0, 0);
+    drawCurve(points, colors, size_arr, 0);
     endRendering();
     return 0;
 }
-#endif
+//#endif
