@@ -150,6 +150,7 @@ let check prog =
    | (Bool, Int)    -> ()
    | (Bool, Float)  -> ()
    | (Float, Int)   -> ()
+   | (Void, _)      -> ()
    | _ -> raisestr err_str );
    (typ, SCast(sexp)))
   in
@@ -438,8 +439,8 @@ let check prog =
                   " (Found "^type_str exptype^", expected "^type_str t^")"))),env)
 
     | AssignStruct (struct_exp, field, exp) ->
-         let ((exptype, sexp), _) = expr env exp in
-         let (struct_sexp, _)  = expr env struct_exp in 
+         let ((exptype, sexp), env) = expr env exp in
+         let (struct_sexp, env)  = expr env struct_exp in 
          let (strt, _) = struct_sexp in
          let t = type_of_field strt field in
          ((t, SAssignStruct(struct_sexp, field, cast_to t (exptype, sexp)
@@ -447,8 +448,8 @@ let check prog =
                  " (Found "^type_str exptype^", expected "^type_str t^")"))), env)
 
     | AssignArray (array_exp, idx, exp) ->
-        let ((exptype, sexp), _) = expr env exp in
-        let (array_sexp, _) = expr env array_exp in
+        let ((exptype, sexp), env) = expr env exp in
+        let (array_sexp, env) = expr env array_exp in
         let (arrt, _) = array_sexp in
         let (sidx, _) = expr env idx in
         (match sidx with (Int, _) -> () | _ ->
@@ -459,7 +460,7 @@ let check prog =
     "(Found "^type_str exptype^", expected"^type_str eltype^")"))), env)
 
     | Uop(op, exp) ->
-        let (sexp, _) = expr env exp in (
+        let (sexp, env) = expr env exp in (
         match op with
           Not -> (Bool, SUop(op, cast_to Bool sexp 
             "Could not resolve expression to bool")), env
@@ -473,13 +474,14 @@ let check prog =
     | Binop(exp1, op, exp2) -> 
       if op = Seq then
          (* Need to pass new environments *)
+         (* jk this happens anyways. but seq still gets to feel special *)
          let (e1, env) = expr env exp1 in
          let (e2, env) = expr env exp2 in
          let (t, _) = e2 in
          (t, SBinop(e1, Seq, e2)), env
       else
-         let (e1, _) = expr env exp1 in
-         let (e2, _) = expr env exp2 in
+         let (e1, env) = expr env exp1 in
+         let (e2, env) = expr env exp2 in
          binop_expr env e1 op e2
 
     | FxnApp (exp, args) -> 
@@ -533,7 +535,7 @@ let check prog =
          ((rtype, SFxnApp(fxn, cargs)), env)
 
     | IfElse (eif, ethen, eelse) -> 
-        let (sif, _) = expr env eif in
+        let (sif, env) = expr env eif in
         let scif = cast_to Bool sif
          "Could not resolve if condition to a bool" in
         let (sthen, _) = expr env ethen in
@@ -545,51 +547,52 @@ let check prog =
 
     | ArrayCon l -> (match l with
       hd :: tl ->
-        let ((exptype, sexp), _) = expr env hd in 
+        let ((exptype, sexp), env) = expr env hd in 
         assert_nonvoid exptype ;
-        ((Array(exptype), SArrayCon((exptype, sexp) :: List.map
-          (fun ex -> let (se, _) = expr env ex in
-           cast_to exptype se
-             "Could not resolve types of array literal"
-          )
-          tl)), env) (* TODO: Smarter Array type casting *)
-      | [] -> ((EmptyArray, SArrayCon([])), env) (* TODO: make appropriate array cast *)
+        let rev_sexprs, env = List.fold_left 
+          (fun (l, env) ex -> let (se, env) = expr env ex in
+           (cast_to exptype se
+             "Could not agree types of array literal") :: l, env)
+          ([(exptype, sexp)], env) tl in
+        ((Array(exptype), SArrayCon(List.rev rev_sexprs)), env)
+      | [] -> ((EmptyArray, SArrayCon([])), env) 
       )
 
     | AnonStruct l -> 
-      let rec create_anon_struct n = function
-        e :: tl -> let ((exptype, sexp), _) = expr env e in
-          let (typel, expl) = create_anon_struct (n+1) tl in
-          ((exptype, "x"^string_of_int n) :: typel, (exptype, sexp) :: expl)
-      | _ -> [], []
+      let rec create_anon_struct env n = function
+        e :: tl -> let ((exptype, sexp), env) = expr env e in
+          let (typel, expl), env = create_anon_struct env (n+1) tl in
+          ((exptype, "x"^string_of_int n) :: typel, (exptype, sexp) :: expl), env
+      | _ -> ([], []), env
       in
-      let (typel, expl) = create_anon_struct 1 l in
+      let (typel, expl), env = create_anon_struct env 1 l in
       ((Struct(typel), SStruct("anon", expl)), env)
 
     | NamedStruct (name, l)  ->
       let st = resolve_typeid (TypeID(name)) env.typemap in
       (match st with
         Struct(sargs) -> 
-        let rec create_named_struct argl = function
-          e :: tl -> let (sexp, _) = expr env e in
+        let rec create_named_struct env argl = function
+          e :: tl -> let (sexp, env) = expr env e in
             (match argl with (t, nm) :: argtl ->
+              let stl, env = create_named_struct env argtl tl in
               cast_to t sexp
                 ("Could not resolve type of struct field "^nm)
-               :: create_named_struct argtl tl
+               :: stl, env
             | _ -> raisestr ("Too many arguments for struct "^name))
           | [] -> (match argl with
-            [] -> []
+            [] -> [], env
            | _ -> raisestr ("Not enough arguments for struct "^name))
         in
-        let sexprs = create_named_struct sargs l
+        let sexprs, env = create_named_struct env sargs l
         in ((st, SStruct(name, sexprs)), env)
       | _ -> raisestr ("Cannot resolve the struct name "^name)
      )
 
     | Var i -> ((type_of_id i env.varmap, SVar(i)), env)
     | ArrayAccess (arr, idx) -> 
-      let (sidx, _) = expr env idx in
-      let (sarr, _) = expr env arr in
+      let (sarr, env) = expr env arr in
+      let (sidx, env) = expr env idx in
       let (t, _) = sarr in
       let el_t = (match t with Array(e) -> e
         | _ -> raisestr ("Cannot access elements of non-array variable"))
@@ -597,7 +600,7 @@ let check prog =
       ((el_t, SArrayAccess(sarr, cast_to Int sidx
          "Could not cast array index to an integer")), env)
     | StructField (str, fl) -> 
-       let (sstr, _) = expr env str in
+       let (sstr, env) = expr env str in
        let (t, _) = sstr in
        (match t with
          Struct(_) ->
