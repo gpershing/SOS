@@ -798,22 +798,13 @@ let translate prog =
       let arg, env  = expr env e in 
       L.build_call printf_func [| float_format_str ; arg |]
         "printf" env.ebuilder, env
+   | SFxnApp((_, SVar("print")), [e]) ->
+      let int_format_str = 
+       L.build_global_stringptr "%d\n" "fmt" env.ebuilder in
+      let arg, env = expr env e in
+      L.build_call printf_func [| int_format_str ; arg |]
+        "printf" env.ebuilder, env
 
-(*     (* Math functions *)
-   | SFxnApp((_, SVar("sqrt" as nm)),[e])
-   | SFxnApp((_, SVar("sin" as nm)),[e])
-   | SFxnApp((_, SVar("cos" as nm)),[e])
-   | SFxnApp((_, SVar("tan" as nm)),[e])
-   | SFxnApp((_, SVar("asin" as nm)),[e])
-   | SFxnApp((_, SVar("acos" as nm)),[e])
-   | SFxnApp((_, SVar("atan" as nm)),[e])
-   | SFxnApp((_, SVar("toradians" as nm)),[e]) ->
-      (match StringMap.find_opt nm math_fxn_map with
-      Some lldecl ->
-      let arg, env  = expr env e in 
-      L.build_call lldecl [| arg |] nm env.ebuilder, env
-      | None -> raise (Failure "Cannot found math functions in math_fxn_map")
-      ) *)
 
    | SFxnApp((_, SVar("copy")), [e]) ->
       let (ctype, _) = e in
@@ -854,7 +845,7 @@ let translate prog =
          let len = List.length sfields in
          let name = "__copy"^(string_of_int len) in
 
-         let (decl, bind), env = if StringMap.mem name env.esfxns
+         let (decl, _), env = if StringMap.mem name env.esfxns
          then StringMap.find name env.esfxns, env
          else (* Make a new copy fxns *)
            let formals = [|ltype_of_typ ctype|] in
