@@ -724,30 +724,6 @@ let translate prog =
        let env = add_variable env nm var in
        expr env (t, SAssign(nm, ex)) (* Bootstrap off Assign *)
 
-   | SFxnDef(ty, nm, args, ex) ->
-       let formal_types =
-           Array.of_list (List.map (fun (t, _) -> ltype_of_typ t) args) in
-       let ftype = L.function_type (ltype_of_typ ty) formal_types in
-       let decl = L.define_function nm ftype the_module in
-       let new_builder = L.builder_at_end context (L.entry_block decl) in
-
-       (* Add function to fxns set *)
-       let env = add_function env nm decl in
-
-       let new_env = { env with ebuilder=new_builder } in
-       let new_env = List.fold_left2 add_formal new_env args (
-              Array.to_list (L.params decl)) in
-       let new_env = {new_env with ebuilder = new_builder; ecurrent_fxn=decl} in
-       let (lv, ret_env) = expr new_env ex in
-       
-       (* End with a return statement *)
-       ( if ty=Void then
-       ignore (L.build_ret_void ret_env.ebuilder)
-       else
-       ignore (L.build_ret lv ret_env.ebuilder) );
-
-       decl, env
-
      (* Assignments *)
    | SAssign(nm, ex) ->
        let ex' = expr env ex in
@@ -1023,7 +999,29 @@ let translate prog =
      STypeDef(_) -> env (* Everything handled in semant *)
    | SExpression(ex) -> let (_, env) = expr env ex 
      in env
-   | SImport(im) -> ignore(im); raise (Failure "Import not yet supported") (*TODO*)
+   | SFxnDef(ty, nm, args, ex) ->
+     let formal_types =
+         Array.of_list (List.map (fun (t, _) -> ltype_of_typ t) args) in
+     let ftype = L.function_type (ltype_of_typ ty) formal_types in
+     let decl = L.define_function nm ftype the_module in
+     let new_builder = L.builder_at_end context (L.entry_block decl) in
+
+     (* Add function to fxns set *)
+     let env = add_function env nm decl in
+
+     let new_env = { env with ebuilder=new_builder } in
+     let new_env = List.fold_left2 add_formal new_env args (
+            Array.to_list (L.params decl)) in
+     let new_env = {new_env with ebuilder = new_builder; ecurrent_fxn=decl} in
+     let (lv, ret_env) = expr new_env ex in
+     
+     (* End with a return statement *)
+     ( if ty=Void then
+     ignore (L.build_ret_void ret_env.ebuilder)
+     else
+     ignore (L.build_ret lv ret_env.ebuilder) );
+
+     env
    in
   
    (* Build the main function, the entry point for the whole program *)

@@ -12,15 +12,14 @@ let rec typeid_str t = match t with
 | FxnTypeID(l, t) -> "func " ^ comma_list_str typeid_str l ^" -> "^typeid_str t
 
 let basic_print prog = 
-  let print_stmt = function
+  let rec print_stmt = function
     Typedef(t) -> let print_tdef = function
       Alias(a, b) -> print_endline ("alias " ^ a ^ " " ^ typeid_str(b))
     | StructDef(a, b) -> print_endline ("struct " ^ a ^ " = {" ^ comma_list_str (fun (a, b) -> typeid_str(a) ^ " " ^ b) b ^ "}")
     in print_tdef t
-    | Import(f) -> print_endline("import " ^ f)
+  | FxnDef(a, b, c, d) -> print_endline (typeid_str(a) ^ " " ^ b ^ "(" ^ comma_list_str (fun (a, b) -> typeid_str(a) ^ " " ^ b) c ^ ") = "); print_stmt (Expression(d))
   | Expression(e) -> let rec expr_str = function
       VarDef(a, b, c) -> typeid_str(a) ^ " " ^ b ^ " = " ^ expr_str c
-    | FxnDef(a, b, c, d) -> typeid_str(a) ^ " " ^ b ^ "(" ^ comma_list_str (fun (a, b) -> typeid_str(a) ^ " " ^ b) c ^ ") = " ^ expr_str d
     | Assign(a, b) -> a ^ " = " ^ expr_str b
     | AssignStruct(a, b, c) -> expr_str a ^ "." ^ b ^ " = " ^ expr_str c
     | AssignArray(a, b, c) -> expr_str a^"["^expr_str b ^"] = "^ expr_str c

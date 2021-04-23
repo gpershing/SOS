@@ -414,23 +414,6 @@ let check prog =
          { env with varmap = StringMap.add name t env.varmap } )
           (* TODO may want to deal with overriding variables differently *)
 
-    | FxnDef (tstr, name, args, exp) ->
-        if name="copy" || name="free" then
-        raisestr ("Cannot create a function with reserved name "^name)
-        else
-        let t = resolve_typeid tstr env.typemap in
-        let sargs = List.map (fun (tp, nm) -> resolve_typeid tp env.typemap, nm)
-          args in
-        let argtypes = List.map (fun (tp, _) -> assert_nonvoid tp; tp) sargs in
-        let newvarmap = StringMap.add name (Func(argtypes, t)) env.varmap in
-        let ((exptype, sx), _) = expr { env with
-           varmap = add_formals args newvarmap env.typemap; } exp
-        in
-        ((Func(argtypes, t), SFxnDef(t, name, sargs, cast_to t (exptype, sx)
-                     ("Incorrect return type for function "^name
-                     ^" (Found "^type_str exptype^", expected "^type_str t^")"))),
-         { env with varmap = newvarmap } )
-
     | Assign (name, exp) ->
          let ((exptype, sexp), _) = expr env exp in
          let t = type_of_id name env.varmap in
@@ -623,7 +606,23 @@ let check prog =
   let stmt env = function
       Expression(e) -> let (se, en) = expr env e in (SExpression (se), en)
     | Typedef(td) -> (STypeDef(make_stypedef env td), {env with typemap = add_typedef td env.typemap})
-    | Import(_) -> raisestr ("Import statements not currently supported") (* TODO *)
+    | FxnDef (tstr, name, args, exp) ->
+        if name="copy" || name="free" then
+        raisestr ("Cannot create a function with reserved name "^name)
+        else
+        let t = resolve_typeid tstr env.typemap in
+        let sargs = List.map (fun (tp, nm) -> resolve_typeid tp env.typemap, nm)
+          args in
+        let argtypes = List.map (fun (tp, _) -> assert_nonvoid tp; tp) sargs in
+        let newvarmap = StringMap.add name (Func(argtypes, t)) env.varmap in
+        let ((exptype, sx), _) = expr { env with
+           varmap = add_formals args newvarmap env.typemap; } exp
+        in
+        (SFxnDef(t, name, sargs, cast_to t (exptype, sx)
+                     ("Incorrect return type for function "^name
+                     ^" (Found "^type_str exptype^", expected "^type_str t^")"))),
+         { env with varmap = newvarmap } 
+
   in
 
   let rec stmts env = function 

@@ -26,7 +26,6 @@ type argtype = tid * id
 (* all possible expression statements, found in LRM sec 4 *)
 and expr = 
   VarDef of tid * id * expr                (* type name = val *)
-| FxnDef of tid * id * argtype list * expr (* type id (type name, ...) = val *)
 | Assign of id * expr                      (* id = val *)
 | AssignStruct of expr * id * expr         (* struct.field = val *)
 | AssignArray of expr * expr * expr          (* id[expr] = expr *)
@@ -51,6 +50,6 @@ type typedef =
 type stmt = 
   Typedef of typedef
 | Expression of expr
-| Import of import
+| FxnDef of tid * id * argtype list * expr
 
 type program = stmt list

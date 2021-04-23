@@ -23,7 +23,6 @@ type func_bind = {
 type sexpr = typeid * sx
 and sx = 
   SVarDef of typeid * id * sexpr                (* type name = val *)
-| SFxnDef of typeid * id * sargtype list * sexpr (* type id (type name, ...) = val *)
 | SAssign of id * sexpr                      (* id = val *)
 | SAssignStruct of sexpr * id * sexpr           (* id.field = val *)
 | SAssignArray of sexpr * sexpr * sexpr          (* id[expr] = expr *)
@@ -51,6 +50,6 @@ type stypedef =
 type sstmt = 
   STypeDef of stypedef
 | SExpression of sexpr
-| SImport of import
+| SFxnDef of typeid * id * sargtype list * sexpr (* type id (type name, ...) = val *)
 
 type sprogram = sstmt list

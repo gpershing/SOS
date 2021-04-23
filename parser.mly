@@ -26,8 +26,8 @@
 %right VAR
 %nonassoc IF THEN ELSE
 %left COMMA 
-%right EQ
 %left SEQ
+%right EQ
 %left AND OR
 %left EQEQ NEQ
 %left LT GT LTEQ GTEQ
@@ -61,7 +61,6 @@ fxn_app:
 
 stexpr:
     VAR COLON typeid EQ expr { VarDef($3, $1, $5) }
-  | VAR COLON LPAREN fxn_args RPAREN TO typeid EQ expr { FxnDef($7,$1,$4,$9) }
   | VAR EQ expr { Assign ($1, $3) }
   | value DOT VAR EQ expr { AssignStruct($1, $3, $5) }
   | value LBRACK expr RBRACK EQ expr { AssignArray($1, $3, $6) }
@@ -130,6 +129,7 @@ typedef:
 
 stmt:
     typedef { Typedef($1) }
+  | VAR COLON LPAREN fxn_args RPAREN TO typeid EQ expr {FxnDef($7,$1,$4,$9)}
   | stexpr { Expression($1) }
 
 stmts:

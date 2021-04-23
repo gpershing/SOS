@@ -25,8 +25,6 @@ let basic_print sast =
 
   and sexp_string (t, e) = match e with
     SVarDef(_, var, exp) -> typeid_string t ^" "^var^" = "^sexp_string exp^"\n"
-  | SFxnDef(_, var, sargl, exp) ->
-      typeid_string t ^" "^var^"("^sargl_string sargl^") = "^sexp_string exp^"\n"
   | SAssign(var, exp) -> "("^typeid_string t^") "^var^" = "^sexp_string exp^"\n"
   | SAssignStruct(var, f, exp) -> "("^typeid_string t^") "^sexp_string var^"."^f^" = "^sexp_string exp^"\n"
   | SAssignArray(var, e1, e2) -> "("^typeid_string t^") "^sexp_string var^"["^sexp_string e1^"] = "^sexp_string e2^"\n"
@@ -59,7 +57,8 @@ let basic_print sast =
   let print_sstmt = function
     STypeDef(td) -> print_typedef td
   | SExpression(sexpr) -> print_string(sexp_string sexpr)
-  | SImport(imp) -> print_string("import "^imp^"\n")
+  | SFxnDef(_, var, sargl, exp) ->
+      print_string(var^"("^sargl_string sargl^") = "^sexp_string exp^"\n")
 
   in List.iter print_sstmt sast
 
