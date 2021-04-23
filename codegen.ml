@@ -584,7 +584,7 @@ let translate prog =
      
        (* Create a new array *)
        let rtel_typ = match rt with Array(et) -> et | _ -> Void in
-       let data = L.build_array_malloc (ltype_of_typ el_typ) len
+       let data = L.build_array_malloc (ltype_of_typ rtel_typ) len
          "arrdata" env.ebuilder in
        (* Set up loop *)
        let i_addr = L.build_alloca i32_t "i" env.ebuilder in
@@ -977,7 +977,7 @@ let translate prog =
     (* Type casting *)
    | SCast (ex) -> let t_to = t in let (t_from, _) = ex in 
       let normal_cast command = 
-        let (lv, _) = expr env ex in
+        let (lv, env) = expr env ex in
         (command lv (ltype_of_typ t_to) "cast" env.ebuilder, env)
       in
       let il i = (Int, SIntLit(i)) in
