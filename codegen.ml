@@ -772,7 +772,7 @@ let translate prog =
 
      (* Function application *)
     (* Special functions *)
-   | SFxnApp((_, SVar("printf")), [e]) -> (*TODO better *)
+   | SFxnApp((_, SVar("printf")), [e]) -> 
       let float_format_str =
        L.build_global_stringptr "%g\n" "fmt" env.ebuilder in
       let arg, env  = expr env e in 

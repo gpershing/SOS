@@ -429,9 +429,11 @@ let check prog =
                      ("Could not resolve type when defining "^name^
                       "(Found "^type_str exptype^", expected "^type_str t^")"))),
          { env with varmap = StringMap.add name t env.varmap } )
-          (* TODO may want to deal with overriding variables differently *)
 
     | Assign (name, exp) ->
+         if StringSet.mem name env.fxnnames then
+         raisestr ("Cannot assign a defined (non-variable) function")
+         else
          let ((exptype, sexp), _) = expr env exp in
          let t = type_of_id name env.varmap in
          ((t, SAssign(name, cast_to t (exptype, sexp)
