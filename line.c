@@ -16,49 +16,47 @@ struct point{
     float x;
     float y;
 };
-/*
-static void Line(struct point points[], size_t size_arr){
-    printf("%ld", size_arr);
-    glBegin(GL_LINES);
-    int x1, y1, x2, y2;
+
+static void Line(struct point points[], int size_arr){
+    glBegin(GL_LINE_STRIP); //adjacent points are lines
+    float x1, y1;
     for (int i = 0; i < size_arr; i++){
         x1 = points[i].x;
         y1 = points[i].y;
-        //x2 = points[i+1].x;
-        //x2 = points[i+1].y;
         glVertex2f(x1, y1);
-        //glVertex2f(x2, y2);
     }
     glEnd();
- }
-*/
+}
+
+static void Shape(struct point points[], int size_arr){
+    glBegin(GL_LINE_LOOP); //adjacent points are lines
+    float x1, y1; 
+    for (int i = 0; i < size_arr; i++){
+        x1 = points[i].x;
+        y1 = points[i].y;
+        glVertex2f(x1, y1);
+    }   
+    glEnd();
+}
 
 static void SimpleLine(){
-    glBegin(GL_LINES);
-    glVertex2f(.25, .25);
-    glVertex2f(.75, .75);
+    glBegin(GL_LINE_STRIP);
+    glVertex2f(.25, 0);
+    glVertex2f(1, 1);
+    glVertex2f(.75, 10);
     glEnd();
- }
-static void render_image(){
-//static void render_image(struct point points[], size_t size_arr){
-   GLfloat light_ambient[] = { 0.0, 0.0, 0.0, 1.0 };
-   GLfloat light_diffuse[] = { 1.0, 1.0, 1.0, 1.0 };
-   GLfloat light_specular[] = { 1.0, 1.0, 1.0, 1.0 };
-   GLfloat light_position[] = { 1.0, 1.0, 1.0, 0.0 };
+}
+
+//static void render_image(){
+static void render_image(struct point points[], int size_arr){
    GLfloat red_mat[]   = { 1.0, 0.2, 0.2, 1.0 };
    GLfloat green_mat[] = { 0.2, 1.0, 0.2, 1.0 };
    GLfloat blue_mat[]  = { 0.2, 0.2, 1.0, 1.0 };
 
-
-   glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
-   glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
-   glLightfv(GL_LIGHT0, GL_SPECULAR, light_specular);
-   glLightfv(GL_LIGHT0, GL_POSITION, light_position);
-
    glEnable(GL_LIGHTING);
    glEnable(GL_LIGHT0);
    glEnable(GL_DEPTH_TEST);
-
+   
    glMatrixMode(GL_PROJECTION);
    glLoadIdentity();
    glOrtho(-2.5, 2.5, -2.5, 2.5, -10.0, 10.0);
@@ -67,22 +65,26 @@ static void render_image(){
    glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
    glPushMatrix();
-   glRotatef(20.0, 1.0, 0.0, 0.0);
-/*
+
    glPushMatrix();
-   glTranslatef(-0.75, 0.5, 0.0);
-   glRotatef(90.0, 1.0, 0.0, 0.0);
-   glMaterialfv( GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, red_mat );
+   glMaterialfv( GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, blue_mat );
    Line(points, size_arr);
    glPopMatrix();
-*/
+
    glPushMatrix();
-   glTranslatef(-0.75, 0.5, 0.0);
-   glRotatef(90.0, 1.0, 0.0, 0.0);
+   glTranslatef(-.5, -.5, 0);
+   glMaterialfv( GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, red_mat );
+   Shape(points, size_arr);
+   glPopMatrix();
+
+/*
+   glPushMatrix();
+   //glTranslatef(-0.75, 0.5, 0.0);
+   //glRotatef(90.0, 1.0, 0.0, 0.0);
    glMaterialfv( GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, red_mat );
    SimpleLine();
    glPopMatrix();
-
+*/
    glPopMatrix();
 
    /* This is very important!!!
@@ -228,13 +230,13 @@ int main(int argc, char *argv[]){
    }
 
    struct point p1 = {.25, .25};
-   struct point p2 = {.75, .75};
+   struct point p2 = {.75, 1};
    struct point p3 = {1, 0};
-   struct point points[2] = {p1, p2};
-   int size = sizeof(points)/sizeof(struct point);
-   
-   render_image();
-   //render_image(points, size);
+   struct point points[3] = {p1, p2, p3};
+   int size = 3;
+   //int size = sizeof(points)/sizeof(struct point);
+//   render_image();
+   render_image(points, size);
 
    if (filename != NULL) {
 #ifdef SAVE_TARGA
