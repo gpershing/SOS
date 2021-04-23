@@ -195,6 +195,7 @@ static void endRendering(struct context_buffer cb){
 }
 
 //sample program
+#ifdef BUILD_TEST
 int main(int argc, char *argv[]){
     struct context_buffer cb = startRendering();
     
@@ -218,3 +219,4 @@ int main(int argc, char *argv[]){
     endRendering(cb);
     return 0;
 }
+#endif
