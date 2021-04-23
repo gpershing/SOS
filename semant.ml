@@ -154,6 +154,15 @@ let check prog =
    | _ -> raisestr err_str );
    (typ, SCast(sexp)))
   in
+
+  (* Function with the same signature as cast_to
+   * Used to ignore casting checks *)
+  let no_cast typ sexp err_str = 
+    ignore(err_str);
+    let (expt, _) = sexp in
+    if expt=typ then sexp else
+    raisestr ("No type casting allowed within arrays")
+  in
   
   (* Converts a type to a string *)
   let rec type_str = function
@@ -204,7 +213,7 @@ let check prog =
     Void
   in
 
-  let rec addsub_expr env exp1 op exp2 = 
+  let addsub_expr env exp1 op exp2 cast = 
       let (t1, _) = exp1 in let (t2, _) = exp2 in
       (* Can add structs component-wise *)
       if either_struct t1 t2 then
@@ -215,23 +224,16 @@ let check prog =
         raisestr ("Can only add or subtract structs of matching type")
 
       else
-      let e = SVar("empty") in
       let err = "Cannot add or subtract "^type_str t1^" and "^type_str t2 in
       match (t1, t2) with
-      | (Array(t), _) -> 
-        let (ot, _), _ = addsub_expr env (t, e) op exp2 in
-        (Array(ot), SBinop(exp1, op, exp2)), env
-      | (_, Array(t)) ->
-        let (ot, _), _ = addsub_expr env exp1 op (t, e) in
-        (Array(ot), SBinop(exp1, op, exp2)), env
-      | (Float, _) -> (Float, SBinop(exp1, op, cast_to Float exp2 err)), env
-      | (_, Float) -> (Float, SBinop(cast_to Float exp1 err, op, exp2)), env
-      | (Int, _)   -> (Int,   SBinop(exp1, op, cast_to Int   exp2 err)), env
-      | (_, Int)   -> (Int,   SBinop(cast_to Int exp1 err, op,   exp2)), env
+        (Float, _) -> (Float, SBinop(exp1, op, cast Float exp2 err)), env
+      | (_, Float) -> (Float, SBinop(cast Float exp1 err, op, exp2)), env
+      | (Int, _)   -> (Int,   SBinop(exp1, op, cast Int   exp2 err)), env
+      | (_, Int)   -> (Int,   SBinop(cast Int exp1 err, op,   exp2)), env
       | _ -> raisestr (err)
   in
 
-  let rec mul_expr env exp1 op exp2 = 
+  let mul_expr env exp1 op exp2 cast = 
     let (t1, _) = exp1 in let (t2, _) = exp2 in
     (* Can scale structs and take the dot product *)
     if either_struct t1 t2 then
@@ -241,42 +243,29 @@ let check prog =
 
       else if is_struct t1 then
         (assert_arith t1 ;
-        (t1, SBinop(exp1, op, cast_to (sop_type t1) exp2
+        (t1, SBinop(exp1, op, cast (sop_type t1) exp2
           "Cannot scale a struct by a non-scalar")), env)
       else
         (assert_arith t2 ;
-        (t2, SBinop(exp2, op, cast_to (sop_type t2) exp1
+        (t2, SBinop(exp2, op, cast (sop_type t2) exp1
           "Cannot scale a struct by a non-scalar")), env)
     else
-    let e = SVar("empty") in
     let err = "Cannot multiply "^type_str t1^" and "^type_str t2 in
     match (t1, t2) with
-      (Array(t), _) ->
-      let (ot, _), _ = mul_expr env (t, e) op exp2 in
-      (Array(ot), SBinop(exp1, op, exp2)), env
-    | (_, Array(t)) ->
-      let (ot, _), _ = mul_expr env exp1 op (t, e) in
-      (Array(ot), SBinop(exp1, op, exp2)), env
-    | (Float, _) -> (Float, SBinop(exp1, op, cast_to Float exp2 err)), env
-    | (_, Float) -> (Float, SBinop(cast_to Float exp1 err, op, exp2)), env
-    | (Int, _)   -> (Int,   SBinop(exp1, op, cast_to Int   exp2 err)), env
-    | (_, Int)   -> (Int,   SBinop(cast_to Int exp1 err, op,   exp2)), env
+      (Float, _) -> (Float, SBinop(exp1, op, cast Float exp2 err)), env
+    | (_, Float) -> (Float, SBinop(cast Float exp1 err, op, exp2)), env
+    | (Int, _)   -> (Int,   SBinop(exp1, op, cast Int   exp2 err)), env
+    | (_, Int)   -> (Int,   SBinop(cast Int exp1 err, op,   exp2)), env
     | _ -> raisestr ("Cannot multiply "^type_str t1^" and "^type_str t2)
   in
 
-  let rec mmul_expr env exp1 op exp2 =
+  let mmul_expr env exp1 op exp2 cast =
+    ignore(cast); 
     let (t1, _) = exp1 in let (t2, _) = exp2 in
     (* Can multiply two n * n matrices OR
        Can multiply an n*n matrix with an n*1 vector *)
-    let e = SVar("empty") in
     match (t1, t2) with
-      (Array(t), _) ->
-      let (ot, _), _ = mmul_expr env (t, e) op exp2 in
-      (Array(ot), SBinop(exp1, op, exp2)), env
-    | (_, Array(t)) ->
-      let (ot, _), _ = mmul_expr env exp1 op (t, e) in
-      (Array(ot), SBinop(exp1, op, exp2)), env
-    | (Struct(l1), Struct(l2)) ->
+      (Struct(l1), Struct(l2)) ->
       let n1 = List.length l1 in let n2 = List.length l2 in
       let int_sqrt n =
         let rec int_sqrt_inner n m = 
@@ -300,38 +289,32 @@ let check prog =
     | _ -> raisestr ("Cannot matrix multiply non-structs")
   in
 
-  let rec div_expr env exp1 op exp2 = 
+  let div_expr env exp1 op exp2 cast = 
       let (t1, _) = exp1 in let (t2, _) = exp2 in
       (* Can scale structs *)
       if is_struct t1 then
         (assert_arith t1 ;
-        (t1, SBinop(exp1, op, cast_to (sop_type t1) exp2
+        (t1, SBinop(exp1, op, cast (sop_type t1) exp2
           "Cannot scale a struct by a non-scalar")), env)
       else
-      let e = SVar("empty") in
       let err = "Cannot divide "^type_str t1^" and "^type_str t2 in
       match (t1, t2) with
-      (Array(t), _) ->
-        let (ot, _), _ = div_expr env (t, e) op exp2 in
-        (Array(ot), SBinop(exp1, op, exp2)), env
-      | (_, Array(t)) ->
-        let (ot, _), _ = div_expr env exp1 op (t, e) in
-        (Array(ot), SBinop(exp1, op, exp2)), env
-      | (Float, _) -> (Float, SBinop(exp1, op, cast_to Float exp2 err)), env
-      | (_, Float) -> (Float, SBinop(cast_to Float exp1 err, op, exp2)), env
-      | (Int, _)   -> (Int,   SBinop(exp1, op, cast_to Int   exp2 err)), env
-      | (_, Int)   -> (Int,   SBinop(cast_to Int exp1 err, op,   exp2)), env
+        (Float, _) -> (Float, SBinop(exp1, op, cast Float exp2 err)), env
+      | (_, Float) -> (Float, SBinop(cast Float exp1 err, op, exp2)), env
+      | (Int, _)   -> (Int,   SBinop(exp1, op, cast Int   exp2 err)), env
+      | (_, Int)   -> (Int,   SBinop(cast Int exp1 err, op,   exp2)), env
       | _ -> raisestr ("Cannot divide "^type_str t1^" and "^type_str t2)
   in
 
-  let mod_expr env exp1 op exp2 = 
+  let mod_expr env exp1 op exp2 cast = 
+      ignore (cast); 
       let (t1, _) = exp1 in let (t2, _) = exp2 in
       match (t1, t2) with
         (Int, Int) -> (Int, SBinop(exp1, op, exp2)), env
       | _ -> raisestr ("Can only take the modulo with integers")
   in
 
-  let eq_expr env exp1 op exp2 = 
+  let eq_expr env exp1 op exp2 cast = 
       let (t1, _) = exp1 in let (t2, _) = exp2 in
       (match (t1, t2) with
         (Int, Int) -> ()
@@ -340,18 +323,20 @@ let check prog =
       (Bool, SBinop(exp1, op, exp2)), env
   in
 
-  let comp_expr env exp1 op exp2 = 
+  let comp_expr env exp1 op exp2 cast = 
       let (t1, _) = exp1 in let (t2, _) = exp2 in
-      (match (t1, t2) with
-        (Int, Int) -> ()
-      | (Float, Float) -> ()
-      | _ -> raisestr ("Cannot compare "^type_str t1^" and "^type_str t2) );
-      (Bool, SBinop(exp1, op, exp2)), env
+      let err = "Cannot compare "^type_str t1^" and "^type_str t2 in
+      match (t1, t2) with
+        (Float, _) -> (Bool, SBinop(exp1, op, cast Float exp2 err)), env
+      | (_, Float) -> (Bool, SBinop(cast Float exp1 err, op, exp2)), env
+      | (Int, _)   -> (Bool, SBinop(exp1, op, cast Int exp2 err  )), env
+      | (_, Int)  -> (Bool, SBinop(cast Int exp1 err, op, exp2  )), env
+      | _ -> raisestr ("Cannot compare "^type_str t1^" and "^type_str t2)
   in
 
-  let logic_expr env exp1 op exp2 = 
+  let logic_expr env exp1 op exp2 cast = 
       let err_str = "Could not resolve boolean operands to boolean values" in
-      (Bool, SBinop(cast_to Bool exp1 err_str, op, cast_to Bool exp2 err_str)), env
+      (Bool, SBinop(cast Bool exp1 err_str, op, cast Bool exp2 err_str)), env
   in
 
   let array_expr env exp1 op exp2 = 
@@ -366,24 +351,36 @@ let check prog =
                   op, exp2)), env
   in
 
-  let binop_expr env exp1 op exp2 = match op with
-      Add -> addsub_expr env exp1 op exp2
-    | Sub -> addsub_expr env exp1 op exp2
-    | Mul -> mul_expr    env exp1 op exp2
-    | MMul-> mmul_expr   env exp1 op exp2
-    | Div -> div_expr    env exp1 op exp2
-    | Mod -> mod_expr    env exp1 op exp2
-    | Eq  -> eq_expr     env exp1 op exp2
-    | Neq -> eq_expr     env exp1 op exp2
-    | Less      -> comp_expr env exp1 op exp2
-    | Greater   -> comp_expr env exp1 op exp2
-    | LessEq    -> comp_expr env exp1 op exp2
-    | GreaterEq -> comp_expr env exp1 op exp2
-    | Or ->  logic_expr env exp1 op exp2
-    | And -> logic_expr env exp1 op exp2
-    | Of     -> array_expr env exp1 op exp2
-    | Concat -> array_expr env exp1 op exp2
-    | Seq -> raisestr ("Sequence is a special case, this should never happen")
+  let rec binop_expr env exp1 op exp2 cast = 
+    if op = Of || op = Concat then array_expr env exp1 op exp2
+    else
+    let e = SVar("empty") in
+    let t1, _ = exp1 in
+    match t1 with Array(t) ->
+      let (ot, _), _ = binop_expr env (t, e) op exp2 no_cast in
+      (Array(ot), SBinop(exp1, op, exp2)), env
+    | _ ->
+    let t2, _ = exp2 in
+    match t2 with Array(t) ->
+      let (ot, _), _ = binop_expr env exp1 op (t, e) no_cast in
+      (Array(ot), SBinop(exp1, op, exp2)), env
+    | _ ->
+    match op with
+      Add -> addsub_expr env exp1 op exp2 cast
+    | Sub -> addsub_expr env exp1 op exp2 cast
+    | Mul -> mul_expr    env exp1 op exp2 cast
+    | MMul-> mmul_expr   env exp1 op exp2 cast
+    | Div -> div_expr    env exp1 op exp2 cast
+    | Mod -> mod_expr    env exp1 op exp2 cast
+    | Eq  -> eq_expr     env exp1 op exp2 cast
+    | Neq -> eq_expr     env exp1 op exp2 cast
+    | Less      -> comp_expr env exp1 op exp2 cast
+    | Greater   -> comp_expr env exp1 op exp2 cast
+    | LessEq    -> comp_expr env exp1 op exp2 cast
+    | GreaterEq -> comp_expr env exp1 op exp2 cast
+    | Or ->  logic_expr env exp1 op exp2 cast
+    | And -> logic_expr env exp1 op exp2 cast
+    | _ -> raisestr ("Special case, this should never happen")
   in
 
   (* Takes a pair of sexprs and makes their types agree by adding casts,
@@ -484,7 +481,7 @@ let check prog =
       else
          let (e1, env) = expr env exp1 in
          let (e2, env) = expr env exp2 in
-         binop_expr env e1 op e2
+         binop_expr env e1 op e2 cast_to
 
     | FxnApp (exp, args) -> 
          if exp=Var("copy") then (* Copy constructor *)
