@@ -471,6 +471,63 @@ let translate prog =
        ignore (L.build_ret struc builder) ;
        (decl, bind), { env with esfxns = StringMap.add name (decl, bind) env.esfxns }
    in
+   
+   let struct_eq stype slist op env =
+     let atype = match slist with
+       (hd, _) :: _ -> if hd = Float then Float else Int
+     | _ -> Float in
+     let len = List.length slist in
+
+     let name = "__"^(if op=Eq then "eq" else "neq")^
+       (if atype=Float then "f" else "i")^(string_of_int len) in
+
+     if StringMap.mem name env.esfxns then
+       StringMap.find name env.esfxns, env
+     else (* Make new function *)
+       let ltype = ltype_of_typ stype in
+       let formals = [|ltype; ltype|] in
+       let ftype = L.function_type (ltype_of_typ Bool) formals in
+       let decl = L.define_function name ftype the_module in
+       let builder = L.builder_at_end context (L.entry_block decl) in
+
+       let bind = { ftype = Bool; formals =
+           [stype, "a"; stype, "b"] } in
+
+       let parama = (Array.get (L.params decl) 0) in
+       L.set_value_name "a" parama ;
+       let locala = L.build_alloca ltype "a" builder in
+       ignore (L.build_store parama locala builder);
+       let a = L.build_load locala "a" builder in
+
+       let paramb = (Array.get (L.params decl) 1) in
+       L.set_value_name "b" paramb ;
+       let localb = L.build_alloca ltype "b" builder in
+       ignore (L.build_store paramb localb builder);
+       let b = L.build_load localb "b" builder in
+
+       let ret = L.build_alloca (ltype_of_typ Bool) "ret" builder in
+       let eq = StringMap.find (opstr op) (if atype=Float then float_map
+          else int_map) in
+       let combine = if op=Eq then L.build_and else L.build_or in
+       ignore(L.build_store (L.const_int i1_t (if op=Eq then 1 else 0)) ret builder);
+       let rec streq n = 
+         if n < len then
+           let aref = L.build_gep a [|l0; L.const_int i32_t n|] "aref" builder in
+           let aval = L.build_load aref "aval" builder in
+           let bref = L.build_gep b [|l0; L.const_int i32_t n|] "bref" builder in
+           let bval = L.build_load bref "bval" builder in
+           let rval = L.build_load ret "rval" builder in
+           ignore(L.build_store
+             (combine rval (eq aval bval "eq" builder) "ret" builder) ret builder);
+           streq (n+1)
+         else ()
+       in streq 0 ;
+
+       (* Return *)
+       let rv = L.build_load ret "rval" builder in
+       ignore(L.build_ret rv builder) ;
+       (decl, bind), { env with esfxns = StringMap.add name (decl, bind) env.esfxns }
+   in
 
    let mat_mul rtype slist1 slist2 env =
      let atype = match slist1 with
@@ -563,13 +620,20 @@ let translate prog =
      else if op = Concat then build_concat t2 ll1 ll2 env
      else
      (match (t1, t2) with
-       (Int, Int) -> StringMap.find (opstr op) int_map ll1 ll2 "tmp"
+       (Bool, Bool) ->
+         let llop = match op with
+           Or -> L.build_or
+         | And -> L.build_and
+         | _ -> raise(Failure "Unexpected boolean operator") in
+         llop ll1 ll2 "tmp" env.ebuilder, env
+     | (Int, Int) -> StringMap.find (opstr op) int_map ll1 ll2 "tmp"
          env.ebuilder, env
      | (Float, Float) -> StringMap.find (opstr op) float_map ll1 ll2
          "tmp" env.ebuilder, env
      | (Struct(l1), Struct(l2)) -> let (decl, _), env = 
        if op=Mul then dot_product t1 l1 env 
        else if op=MMul then mat_mul rt l1 l2 env 
+       else if op=Eq || op=Neq then struct_eq t1 l1 op env
        else struct_sum t1 l1 op env in
        L.build_call decl [|ll1; ll2|] "result" env.ebuilder, env
      | (Struct(l1), _) -> let (decl, _), env = struct_scale t1 l1 op env 

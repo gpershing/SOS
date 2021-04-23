@@ -316,11 +316,22 @@ let check prog =
 
   let eq_expr env exp1 op exp2 cast = 
       let (t1, _) = exp1 in let (t2, _) = exp2 in
-      (match (t1, t2) with
-        (Int, Int) -> ()
-      | (Float, Float) -> ()
-      | _ -> raisestr ("Cannot equate "^type_str t1^" and "^type_str t2) );
-      (Bool, SBinop(exp1, op, exp2)), env
+      (* Can equate arith structs *)
+      if either_struct t1 t2 then
+        if match_str_type t1 t2 then
+          (assert_arith t1 ;
+          (Bool, SBinop(exp1, op, exp2)), env)
+        else
+        raisestr ("Can only equate structs of matching type")
+
+      else
+      let err = "Cannot equate "^type_str t1^" and "^type_str t2 in
+      match (t1, t2) with
+        (Float, _) -> (Bool, SBinop(exp1, op, cast Float exp2 err)), env
+      | (_, Float) -> (Bool, SBinop(cast Float exp1 err, op, exp2)), env
+      | (Int, _)   -> (Bool, SBinop(exp1, op, cast Int   exp2 err)), env
+      | (_, Int)   -> (Bool, SBinop(cast Int exp1 err, op,   exp2)), env
+      | _ -> raisestr (err)
   in
 
   let comp_expr env exp1 op exp2 cast = 

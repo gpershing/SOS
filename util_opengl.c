@@ -174,6 +174,7 @@ static void endRendering(){
 }
 
 //sample program
+#ifdef BUILD_TEST
 int main(int argc, char *argv[]){
     startRendering();
     
@@ -197,3 +198,4 @@ int main(int argc, char *argv[]){
     endRendering();
     return 0;
 }
+#endif
