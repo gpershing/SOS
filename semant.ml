@@ -6,6 +6,7 @@ open Sast
 (* import map for global variables (VarDef, FxnDef, Alias, StructDef) *)
 (* we don't have scope defined so a string * tid is enough? *)
 module StringMap = Map.Make(String)
+module StringSet = Set.Make(String)
 
 (* Semantic checking of the AST. Returns an SAST if successful,
    throws an exception if something is wrong.
@@ -14,6 +15,7 @@ module StringMap = Map.Make(String)
 (* Environment type for holding all the bindings currently in scope *)
 type environment = {
   typemap : typeid StringMap.t;
+  fxnnames : StringSet.t;
   varmap : typeid StringMap.t;
 }
 
@@ -46,6 +48,12 @@ let check prog =
     (fun map (decl, nm) -> StringMap.add nm decl map)
     built_in_decls external_functions
   in
+  let starting_fxns = List.fold_left
+    (fun map (_, nm) -> StringSet.add nm map)
+    StringSet.empty external_functions
+  in
+  let starting_fxns = StringSet.add "print" starting_fxns in
+  let starting_fxns = StringSet.add "printf" starting_fxns in
 (*  (* add math functions *)
   let built_in_decls = List.fold_left
     (fun map (decl, nm) -> StringMap.add nm decl map)
@@ -59,7 +67,8 @@ let check prog =
   in
 
   (* Initial environment containing built-in types and functions *)
-  let global_env = { typemap = built_in_types; varmap = built_in_decls }
+  let global_env = { typemap = built_in_types; varmap = built_in_decls 
+  ; fxnnames = starting_fxns }
   in
 
   (* resolve the type of a tid to a typeid *)
@@ -141,8 +150,18 @@ let check prog =
    | (Bool, Int)    -> ()
    | (Bool, Float)  -> ()
    | (Float, Int)   -> ()
+   | (Void, _)      -> ()
    | _ -> raisestr err_str );
    (typ, SCast(sexp)))
+  in
+
+  (* Function with the same signature as cast_to
+   * Used to ignore casting checks *)
+  let no_cast typ sexp err_str = 
+    ignore(err_str);
+    let (expt, _) = sexp in
+    if expt=typ then sexp else
+    raisestr ("No type casting allowed within arrays")
   in
   
   (* Converts a type to a string *)
@@ -194,7 +213,7 @@ let check prog =
     Void
   in
 
-  let rec addsub_expr env exp1 op exp2 = 
+  let addsub_expr env exp1 op exp2 cast = 
       let (t1, _) = exp1 in let (t2, _) = exp2 in
       (* Can add structs component-wise *)
       if either_struct t1 t2 then
@@ -205,23 +224,16 @@ let check prog =
         raisestr ("Can only add or subtract structs of matching type")
 
       else
-      let e = SVar("empty") in
       let err = "Cannot add or subtract "^type_str t1^" and "^type_str t2 in
       match (t1, t2) with
-      | (Array(t), _) -> 
-        let (ot, _), _ = addsub_expr env (t, e) op exp2 in
-        (Array(ot), SBinop(exp1, op, exp2)), env
-      | (_, Array(t)) ->
-        let (ot, _), _ = addsub_expr env exp1 op (t, e) in
-        (Array(ot), SBinop(exp1, op, exp2)), env
-      | (Float, _) -> (Float, SBinop(exp1, op, cast_to Float exp2 err)), env
-      | (_, Float) -> (Float, SBinop(cast_to Float exp1 err, op, exp2)), env
-      | (Int, _)   -> (Int,   SBinop(exp1, op, cast_to Int   exp2 err)), env
-      | (_, Int)   -> (Int,   SBinop(cast_to Int exp1 err, op,   exp2)), env
+        (Float, _) -> (Float, SBinop(exp1, op, cast Float exp2 err)), env
+      | (_, Float) -> (Float, SBinop(cast Float exp1 err, op, exp2)), env
+      | (Int, _)   -> (Int,   SBinop(exp1, op, cast Int   exp2 err)), env
+      | (_, Int)   -> (Int,   SBinop(cast Int exp1 err, op,   exp2)), env
       | _ -> raisestr (err)
   in
 
-  let rec mul_expr env exp1 op exp2 = 
+  let mul_expr env exp1 op exp2 cast = 
     let (t1, _) = exp1 in let (t2, _) = exp2 in
     (* Can scale structs and take the dot product *)
     if either_struct t1 t2 then
@@ -231,42 +243,29 @@ let check prog =
 
       else if is_struct t1 then
         (assert_arith t1 ;
-        (t1, SBinop(exp1, op, cast_to (sop_type t1) exp2
+        (t1, SBinop(exp1, op, cast (sop_type t1) exp2
           "Cannot scale a struct by a non-scalar")), env)
       else
         (assert_arith t2 ;
-        (t2, SBinop(exp2, op, cast_to (sop_type t2) exp1
+        (t2, SBinop(exp2, op, cast (sop_type t2) exp1
           "Cannot scale a struct by a non-scalar")), env)
     else
-    let e = SVar("empty") in
     let err = "Cannot multiply "^type_str t1^" and "^type_str t2 in
     match (t1, t2) with
-      (Array(t), _) ->
-      let (ot, _), _ = mul_expr env (t, e) op exp2 in
-      (Array(ot), SBinop(exp1, op, exp2)), env
-    | (_, Array(t)) ->
-      let (ot, _), _ = mul_expr env exp1 op (t, e) in
-      (Array(ot), SBinop(exp1, op, exp2)), env
-    | (Float, _) -> (Float, SBinop(exp1, op, cast_to Float exp2 err)), env
-    | (_, Float) -> (Float, SBinop(cast_to Float exp1 err, op, exp2)), env
-    | (Int, _)   -> (Int,   SBinop(exp1, op, cast_to Int   exp2 err)), env
-    | (_, Int)   -> (Int,   SBinop(cast_to Int exp1 err, op,   exp2)), env
+      (Float, _) -> (Float, SBinop(exp1, op, cast Float exp2 err)), env
+    | (_, Float) -> (Float, SBinop(cast Float exp1 err, op, exp2)), env
+    | (Int, _)   -> (Int,   SBinop(exp1, op, cast Int   exp2 err)), env
+    | (_, Int)   -> (Int,   SBinop(cast Int exp1 err, op,   exp2)), env
     | _ -> raisestr ("Cannot multiply "^type_str t1^" and "^type_str t2)
   in
 
-  let rec mmul_expr env exp1 op exp2 =
+  let mmul_expr env exp1 op exp2 cast =
+    ignore(cast); 
     let (t1, _) = exp1 in let (t2, _) = exp2 in
     (* Can multiply two n * n matrices OR
        Can multiply an n*n matrix with an n*1 vector *)
-    let e = SVar("empty") in
     match (t1, t2) with
-      (Array(t), _) ->
-      let (ot, _), _ = mmul_expr env (t, e) op exp2 in
-      (Array(ot), SBinop(exp1, op, exp2)), env
-    | (_, Array(t)) ->
-      let (ot, _), _ = mmul_expr env exp1 op (t, e) in
-      (Array(ot), SBinop(exp1, op, exp2)), env
-    | (Struct(l1), Struct(l2)) ->
+      (Struct(l1), Struct(l2)) ->
       let n1 = List.length l1 in let n2 = List.length l2 in
       let int_sqrt n =
         let rec int_sqrt_inner n m = 
@@ -290,38 +289,32 @@ let check prog =
     | _ -> raisestr ("Cannot matrix multiply non-structs")
   in
 
-  let rec div_expr env exp1 op exp2 = 
+  let div_expr env exp1 op exp2 cast = 
       let (t1, _) = exp1 in let (t2, _) = exp2 in
       (* Can scale structs *)
       if is_struct t1 then
         (assert_arith t1 ;
-        (t1, SBinop(exp1, op, cast_to (sop_type t1) exp2
+        (t1, SBinop(exp1, op, cast (sop_type t1) exp2
           "Cannot scale a struct by a non-scalar")), env)
       else
-      let e = SVar("empty") in
       let err = "Cannot divide "^type_str t1^" and "^type_str t2 in
       match (t1, t2) with
-      (Array(t), _) ->
-        let (ot, _), _ = div_expr env (t, e) op exp2 in
-        (Array(ot), SBinop(exp1, op, exp2)), env
-      | (_, Array(t)) ->
-        let (ot, _), _ = div_expr env exp1 op (t, e) in
-        (Array(ot), SBinop(exp1, op, exp2)), env
-      | (Float, _) -> (Float, SBinop(exp1, op, cast_to Float exp2 err)), env
-      | (_, Float) -> (Float, SBinop(cast_to Float exp1 err, op, exp2)), env
-      | (Int, _)   -> (Int,   SBinop(exp1, op, cast_to Int   exp2 err)), env
-      | (_, Int)   -> (Int,   SBinop(cast_to Int exp1 err, op,   exp2)), env
+        (Float, _) -> (Float, SBinop(exp1, op, cast Float exp2 err)), env
+      | (_, Float) -> (Float, SBinop(cast Float exp1 err, op, exp2)), env
+      | (Int, _)   -> (Int,   SBinop(exp1, op, cast Int   exp2 err)), env
+      | (_, Int)   -> (Int,   SBinop(cast Int exp1 err, op,   exp2)), env
       | _ -> raisestr ("Cannot divide "^type_str t1^" and "^type_str t2)
   in
 
-  let mod_expr env exp1 op exp2 = 
+  let mod_expr env exp1 op exp2 cast = 
+      ignore (cast); 
       let (t1, _) = exp1 in let (t2, _) = exp2 in
       match (t1, t2) with
         (Int, Int) -> (Int, SBinop(exp1, op, exp2)), env
       | _ -> raisestr ("Can only take the modulo with integers")
   in
 
-  let eq_expr env exp1 op exp2 = 
+  let eq_expr env exp1 op exp2 cast = 
       let (t1, _) = exp1 in let (t2, _) = exp2 in
       (match (t1, t2) with
         (Int, Int) -> ()
@@ -330,18 +323,20 @@ let check prog =
       (Bool, SBinop(exp1, op, exp2)), env
   in
 
-  let comp_expr env exp1 op exp2 = 
+  let comp_expr env exp1 op exp2 cast = 
       let (t1, _) = exp1 in let (t2, _) = exp2 in
-      (match (t1, t2) with
-        (Int, Int) -> ()
-      | (Float, Float) -> ()
-      | _ -> raisestr ("Cannot compare "^type_str t1^" and "^type_str t2) );
-      (Bool, SBinop(exp1, op, exp2)), env
+      let err = "Cannot compare "^type_str t1^" and "^type_str t2 in
+      match (t1, t2) with
+        (Float, _) -> (Bool, SBinop(exp1, op, cast Float exp2 err)), env
+      | (_, Float) -> (Bool, SBinop(cast Float exp1 err, op, exp2)), env
+      | (Int, _)   -> (Bool, SBinop(exp1, op, cast Int exp2 err  )), env
+      | (_, Int)  -> (Bool, SBinop(cast Int exp1 err, op, exp2  )), env
+      | _ -> raisestr ("Cannot compare "^type_str t1^" and "^type_str t2)
   in
 
-  let logic_expr env exp1 op exp2 = 
+  let logic_expr env exp1 op exp2 cast = 
       let err_str = "Could not resolve boolean operands to boolean values" in
-      (Bool, SBinop(cast_to Bool exp1 err_str, op, cast_to Bool exp2 err_str)), env
+      (Bool, SBinop(cast Bool exp1 err_str, op, cast Bool exp2 err_str)), env
   in
 
   let array_expr env exp1 op exp2 = 
@@ -356,24 +351,36 @@ let check prog =
                   op, exp2)), env
   in
 
-  let binop_expr env exp1 op exp2 = match op with
-      Add -> addsub_expr env exp1 op exp2
-    | Sub -> addsub_expr env exp1 op exp2
-    | Mul -> mul_expr    env exp1 op exp2
-    | MMul-> mmul_expr   env exp1 op exp2
-    | Div -> div_expr    env exp1 op exp2
-    | Mod -> mod_expr    env exp1 op exp2
-    | Eq  -> eq_expr     env exp1 op exp2
-    | Neq -> eq_expr     env exp1 op exp2
-    | Less      -> comp_expr env exp1 op exp2
-    | Greater   -> comp_expr env exp1 op exp2
-    | LessEq    -> comp_expr env exp1 op exp2
-    | GreaterEq -> comp_expr env exp1 op exp2
-    | Or ->  logic_expr env exp1 op exp2
-    | And -> logic_expr env exp1 op exp2
-    | Of     -> array_expr env exp1 op exp2
-    | Concat -> array_expr env exp1 op exp2
-    | Seq -> raisestr ("Sequence is a special case, this should never happen")
+  let rec binop_expr env exp1 op exp2 cast = 
+    if op = Of || op = Concat then array_expr env exp1 op exp2
+    else
+    let e = SVar("empty") in
+    let t1, _ = exp1 in
+    match t1 with Array(t) ->
+      let (ot, _), _ = binop_expr env (t, e) op exp2 no_cast in
+      (Array(ot), SBinop(exp1, op, exp2)), env
+    | _ ->
+    let t2, _ = exp2 in
+    match t2 with Array(t) ->
+      let (ot, _), _ = binop_expr env exp1 op (t, e) no_cast in
+      (Array(ot), SBinop(exp1, op, exp2)), env
+    | _ ->
+    match op with
+      Add -> addsub_expr env exp1 op exp2 cast
+    | Sub -> addsub_expr env exp1 op exp2 cast
+    | Mul -> mul_expr    env exp1 op exp2 cast
+    | MMul-> mmul_expr   env exp1 op exp2 cast
+    | Div -> div_expr    env exp1 op exp2 cast
+    | Mod -> mod_expr    env exp1 op exp2 cast
+    | Eq  -> eq_expr     env exp1 op exp2 cast
+    | Neq -> eq_expr     env exp1 op exp2 cast
+    | Less      -> comp_expr env exp1 op exp2 cast
+    | Greater   -> comp_expr env exp1 op exp2 cast
+    | LessEq    -> comp_expr env exp1 op exp2 cast
+    | GreaterEq -> comp_expr env exp1 op exp2 cast
+    | Or ->  logic_expr env exp1 op exp2 cast
+    | And -> logic_expr env exp1 op exp2 cast
+    | _ -> raisestr ("Special case, this should never happen")
   in
 
   (* Takes a pair of sexprs and makes their types agree by adding casts,
@@ -398,12 +405,19 @@ let check prog =
   | _ -> ()
   in
 
+  let assert_non_reserved env name =
+    if name="copy" || name="free" then
+    raisestr ("Cannot create an identifier with reserved name "^name)
+    else
+    if StringSet.mem name env.fxnnames then
+    raisestr ("Cannot create an identifier with defined function name "^name)
+    else ()
+  in
+
   let rec expr env = function
      
       VarDef (tstr, name, exp) -> 
-        if name="copy" || name="free" then
-        raisestr ("Cannot create a variable with reserved name "^name)
-        else
+        assert_non_reserved env name;
         let (sexp, _) = expr env exp in
         let t = resolve_typeid tstr env.typemap in
         assert_nonvoid t ;
@@ -412,9 +426,11 @@ let check prog =
                      ("Could not resolve type when defining "^name^
                       "(Found "^type_str exptype^", expected "^type_str t^")"))),
          { env with varmap = StringMap.add name t env.varmap } )
-          (* TODO may want to deal with overriding variables differently *)
 
     | Assign (name, exp) ->
+         if StringSet.mem name env.fxnnames then
+         raisestr ("Cannot assign a defined (non-variable) function")
+         else
          let ((exptype, sexp), _) = expr env exp in
          let t = type_of_id name env.varmap in
          ((t, SAssign(name, cast_to t (exptype, sexp)
@@ -422,8 +438,8 @@ let check prog =
                   " (Found "^type_str exptype^", expected "^type_str t^")"))),env)
 
     | AssignStruct (struct_exp, field, exp) ->
-         let ((exptype, sexp), _) = expr env exp in
-         let (struct_sexp, _)  = expr env struct_exp in 
+         let ((exptype, sexp), env) = expr env exp in
+         let (struct_sexp, env)  = expr env struct_exp in 
          let (strt, _) = struct_sexp in
          let t = type_of_field strt field in
          ((t, SAssignStruct(struct_sexp, field, cast_to t (exptype, sexp)
@@ -431,8 +447,8 @@ let check prog =
                  " (Found "^type_str exptype^", expected "^type_str t^")"))), env)
 
     | AssignArray (array_exp, idx, exp) ->
-        let ((exptype, sexp), _) = expr env exp in
-        let (array_sexp, _) = expr env array_exp in
+        let ((exptype, sexp), env) = expr env exp in
+        let (array_sexp, env) = expr env array_exp in
         let (arrt, _) = array_sexp in
         let (sidx, _) = expr env idx in
         (match sidx with (Int, _) -> () | _ ->
@@ -443,7 +459,7 @@ let check prog =
     "(Found "^type_str exptype^", expected"^type_str eltype^")"))), env)
 
     | Uop(op, exp) ->
-        let (sexp, _) = expr env exp in (
+        let (sexp, env) = expr env exp in (
         match op with
           Not -> (Bool, SUop(op, cast_to Bool sexp 
             "Could not resolve expression to bool")), env
@@ -457,14 +473,15 @@ let check prog =
     | Binop(exp1, op, exp2) -> 
       if op = Seq then
          (* Need to pass new environments *)
+         (* jk this happens anyways. but seq still gets to feel special *)
          let (e1, env) = expr env exp1 in
          let (e2, env) = expr env exp2 in
          let (t, _) = e2 in
          (t, SBinop(e1, Seq, e2)), env
       else
-         let (e1, _) = expr env exp1 in
-         let (e2, _) = expr env exp2 in
-         binop_expr env e1 op e2
+         let (e1, env) = expr env exp1 in
+         let (e2, env) = expr env exp2 in
+         binop_expr env e1 op e2 cast_to
 
     | FxnApp (exp, args) -> 
          if exp=Var("copy") then (* Copy constructor *)
@@ -517,7 +534,7 @@ let check prog =
          ((rtype, SFxnApp(fxn, cargs)), env)
 
     | IfElse (eif, ethen, eelse) -> 
-        let (sif, _) = expr env eif in
+        let (sif, env) = expr env eif in
         let scif = cast_to Bool sif
          "Could not resolve if condition to a bool" in
         let (sthen, _) = expr env ethen in
@@ -529,51 +546,52 @@ let check prog =
 
     | ArrayCon l -> (match l with
       hd :: tl ->
-        let ((exptype, sexp), _) = expr env hd in 
+        let ((exptype, sexp), env) = expr env hd in 
         assert_nonvoid exptype ;
-        ((Array(exptype), SArrayCon((exptype, sexp) :: List.map
-          (fun ex -> let (se, _) = expr env ex in
-           cast_to exptype se
-             "Could not resolve types of array literal"
-          )
-          tl)), env) (* TODO: Smarter Array type casting *)
-      | [] -> ((EmptyArray, SArrayCon([])), env) (* TODO: make appropriate array cast *)
+        let rev_sexprs, env = List.fold_left 
+          (fun (l, env) ex -> let (se, env) = expr env ex in
+           (cast_to exptype se
+             "Could not agree types of array literal") :: l, env)
+          ([(exptype, sexp)], env) tl in
+        ((Array(exptype), SArrayCon(List.rev rev_sexprs)), env)
+      | [] -> ((EmptyArray, SArrayCon([])), env) 
       )
 
     | AnonStruct l -> 
-      let rec create_anon_struct n = function
-        e :: tl -> let ((exptype, sexp), _) = expr env e in
-          let (typel, expl) = create_anon_struct (n+1) tl in
-          ((exptype, "x"^string_of_int n) :: typel, (exptype, sexp) :: expl)
-      | _ -> [], []
+      let rec create_anon_struct env n = function
+        e :: tl -> let ((exptype, sexp), env) = expr env e in
+          let (typel, expl), env = create_anon_struct env (n+1) tl in
+          ((exptype, "x"^string_of_int n) :: typel, (exptype, sexp) :: expl), env
+      | _ -> ([], []), env
       in
-      let (typel, expl) = create_anon_struct 1 l in
+      let (typel, expl), env = create_anon_struct env 1 l in
       ((Struct(typel), SStruct("anon", expl)), env)
 
     | NamedStruct (name, l)  ->
       let st = resolve_typeid (TypeID(name)) env.typemap in
       (match st with
         Struct(sargs) -> 
-        let rec create_named_struct argl = function
-          e :: tl -> let (sexp, _) = expr env e in
+        let rec create_named_struct env argl = function
+          e :: tl -> let (sexp, env) = expr env e in
             (match argl with (t, nm) :: argtl ->
+              let stl, env = create_named_struct env argtl tl in
               cast_to t sexp
                 ("Could not resolve type of struct field "^nm)
-               :: create_named_struct argtl tl
+               :: stl, env
             | _ -> raisestr ("Too many arguments for struct "^name))
           | [] -> (match argl with
-            [] -> []
+            [] -> [], env
            | _ -> raisestr ("Not enough arguments for struct "^name))
         in
-        let sexprs = create_named_struct sargs l
+        let sexprs, env = create_named_struct env sargs l
         in ((st, SStruct(name, sexprs)), env)
       | _ -> raisestr ("Cannot resolve the struct name "^name)
      )
 
     | Var i -> ((type_of_id i env.varmap, SVar(i)), env)
     | ArrayAccess (arr, idx) -> 
-      let (sidx, _) = expr env idx in
-      let (sarr, _) = expr env arr in
+      let (sarr, env) = expr env arr in
+      let (sidx, env) = expr env idx in
       let (t, _) = sarr in
       let el_t = (match t with Array(e) -> e
         | _ -> raisestr ("Cannot access elements of non-array variable"))
@@ -581,7 +599,7 @@ let check prog =
       ((el_t, SArrayAccess(sarr, cast_to Int sidx
          "Could not cast array index to an integer")), env)
     | StructField (str, fl) -> 
-       let (sstr, _) = expr env str in
+       let (sstr, env) = expr env str in
        let (t, _) = sstr in
        (match t with
          Struct(_) ->
@@ -607,21 +625,21 @@ let check prog =
       Expression(e) -> let (se, en) = expr env e in (SExpression (se), en)
     | Typedef(td) -> (STypeDef(make_stypedef env td), {env with typemap = add_typedef td env.typemap})
     | FxnDef (tstr, name, args, exp) ->
-        if name="copy" || name="free" then
-        raisestr ("Cannot create a function with reserved name "^name)
-        else
+        assert_non_reserved env name ;
         let t = resolve_typeid tstr env.typemap in
         let sargs = List.map (fun (tp, nm) -> resolve_typeid tp env.typemap, nm)
           args in
         let argtypes = List.map (fun (tp, _) -> assert_nonvoid tp; tp) sargs in
         let newvarmap = StringMap.add name (Func(argtypes, t)) env.varmap in
+        let env = { env with varmap = newvarmap; fxnnames = StringSet.add
+            name env.fxnnames } in
         let ((exptype, sx), _) = expr { env with
-           varmap = add_formals args newvarmap env.typemap; } exp
+           varmap = add_formals args env.varmap env.typemap; } exp
         in
         (SFxnDef(t, name, sargs, cast_to t (exptype, sx)
                      ("Incorrect return type for function "^name
                      ^" (Found "^type_str exptype^", expected "^type_str t^")"))),
-         { env with varmap = newvarmap } 
+         env
 
   in
 
