@@ -6,6 +6,7 @@ open Sast
 (* import map for global variables (VarDef, FxnDef, Alias, StructDef) *)
 (* we don't have scope defined so a string * tid is enough? *)
 module StringMap = Map.Make(String)
+module StringSet = Set.Make(String)
 
 (* Semantic checking of the AST. Returns an SAST if successful,
    throws an exception if something is wrong.
@@ -14,6 +15,7 @@ module StringMap = Map.Make(String)
 (* Environment type for holding all the bindings currently in scope *)
 type environment = {
   typemap : typeid StringMap.t;
+  fxnnames : StringSet.t;
   varmap : typeid StringMap.t;
 }
 
@@ -46,6 +48,12 @@ let check prog =
     (fun map (decl, nm) -> StringMap.add nm decl map)
     built_in_decls external_functions
   in
+  let starting_fxns = List.fold_left
+    (fun map (_, nm) -> StringSet.add nm map)
+    StringSet.empty external_functions
+  in
+  let starting_fxns = StringSet.add "print" starting_fxns in
+  let starting_fxns = StringSet.add "printf" starting_fxns in
 (*  (* add math functions *)
   let built_in_decls = List.fold_left
     (fun map (decl, nm) -> StringMap.add nm decl map)
@@ -59,7 +67,8 @@ let check prog =
   in
 
   (* Initial environment containing built-in types and functions *)
-  let global_env = { typemap = built_in_types; varmap = built_in_decls }
+  let global_env = { typemap = built_in_types; varmap = built_in_decls 
+  ; fxnnames = starting_fxns }
   in
 
   (* resolve the type of a tid to a typeid *)
@@ -398,12 +407,19 @@ let check prog =
   | _ -> ()
   in
 
+  let assert_non_reserved env name =
+    if name="copy" || name="free" then
+    raisestr ("Cannot create an identifier with reserved name "^name)
+    else
+    if StringSet.mem name env.fxnnames then
+    raisestr ("Cannot create an identifier with defined function name "^name)
+    else ()
+  in
+
   let rec expr env = function
      
       VarDef (tstr, name, exp) -> 
-        if name="copy" || name="free" then
-        raisestr ("Cannot create a variable with reserved name "^name)
-        else
+        assert_non_reserved env name;
         let (sexp, _) = expr env exp in
         let t = resolve_typeid tstr env.typemap in
         assert_nonvoid t ;
@@ -607,21 +623,21 @@ let check prog =
       Expression(e) -> let (se, en) = expr env e in (SExpression (se), en)
     | Typedef(td) -> (STypeDef(make_stypedef env td), {env with typemap = add_typedef td env.typemap})
     | FxnDef (tstr, name, args, exp) ->
-        if name="copy" || name="free" then
-        raisestr ("Cannot create a function with reserved name "^name)
-        else
+        assert_non_reserved env name ;
         let t = resolve_typeid tstr env.typemap in
         let sargs = List.map (fun (tp, nm) -> resolve_typeid tp env.typemap, nm)
           args in
         let argtypes = List.map (fun (tp, _) -> assert_nonvoid tp; tp) sargs in
         let newvarmap = StringMap.add name (Func(argtypes, t)) env.varmap in
+        let env = { env with varmap = newvarmap; fxnnames = StringSet.add
+            name env.fxnnames } in
         let ((exptype, sx), _) = expr { env with
-           varmap = add_formals args newvarmap env.typemap; } exp
+           varmap = add_formals args env.varmap env.typemap; } exp
         in
         (SFxnDef(t, name, sargs, cast_to t (exptype, sx)
                      ("Incorrect return type for function "^name
                      ^" (Found "^type_str exptype^", expected "^type_str t^")"))),
-         { env with varmap = newvarmap } 
+         env
 
   in
 

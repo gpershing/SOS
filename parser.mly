@@ -104,8 +104,8 @@ fxn_args:
   | fxn_args_list {List.rev $1}
 
 fxn_args_list:
-    typeid VAR { [($1,$2)] }
-  | fxn_args_list COMMA typeid VAR { ($3,$4) :: $1 }
+    VAR COLON typeid { [($3,$1)] }
+  | fxn_args_list COMMA VAR COLON typeid { ($5,$3) :: $1 }
 
 args:
     /* nothing */ { [] }
