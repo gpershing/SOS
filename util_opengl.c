@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "GL/osmesa.h"
 
 static int Width = 400;
@@ -10,54 +11,35 @@ struct point{
     float y;
 };
 
-struct context_buffer{
-    OSMesaContext ctx;
-    void * buffer;
-};
-
-static void rendering_helper_init(){
-   glMatrixMode(GL_PROJECTION);
-   glLoadIdentity();
-   glMatrixMode(GL_MODELVIEW);
-   glClear(GL_COLOR_BUFFER_BIT);
-   glPushMatrix();
-   glColor4f(1.0, 1.0, 1.0, 1.0); //initalize color as white
-}
-
-static void rendering_helper_close(){
-    glFinish();
-}
+OSMesaContext ctx;
+void *buffer;
 
 /*
  * startRendering: an initalization that must be called before drawing
  * any image. Creates Mesa and OpenGL contexts and image buffer.
  */
-static struct context_buffer startRendering(){
-    OSMesaContext ctx;
-    void *buffer;
+static void startRendering(){
+    ctx = OSMesaCreateContextExt(OSMESA_RGBA, 16, 0, 0, NULL);
+    if (!ctx){
+        printf("OSMesaCreateContext failed!\n");
+    }
 
-   /* Create an RGBA-mode context */
-   ctx = OSMesaCreateContextExt( OSMESA_RGBA, 16, 0, 0, NULL );
-   if (!ctx) {
-      printf("OSMesaCreateContext failed!\n");
-   }
+    buffer = malloc( Width * Height * 4 * sizeof(GLubyte) );
+    if (!buffer) {
+        printf("Alloc image buffer failed!\n");
+    }
 
-   /* Allocate the image buffer */
-   buffer = malloc( Width * Height * 4 * sizeof(GLubyte) );
-   if (!buffer) {
-      printf("Alloc image buffer failed!\n");
-   }
+    // Bind the buffer to the context and make it current
+    if (!OSMesaMakeCurrent( ctx, buffer, GL_UNSIGNED_BYTE, Width, Height )) {
+        printf("OSMesaMakeCurrent failed!\n");
+    }
 
-   /* Bind the buffer to the context and make it current */
-   if (!OSMesaMakeCurrent( ctx, buffer, GL_UNSIGNED_BYTE, Width, Height )) {
-      printf("OSMesaMakeCurrent failed!\n");
-   }
-
-   struct context_buffer cb = {ctx, buffer};
-
-   rendering_helper_init();
-
-   return cb;
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glMatrixMode(GL_MODELVIEW);
+    glClear(GL_COLOR_BUFFER_BIT);
+    glPushMatrix();
+    glColor4f(1.0, 1.0, 1.0, 1.0); //initalize color as white
 }
 
 /*
@@ -78,7 +60,6 @@ static void drawCurve(struct point points[], int size_arr){
     }
     glEnd();
     glPopMatrix();
-
 }
 
 /*
@@ -116,7 +97,6 @@ static void drawShape(struct point points[], int size_arr, int filled){
  */
 static void drawPoint(struct point points[], int size_arr, int point_size){
     glPushMatrix();
-    rendering_helper_init();
     glPointSize(point_size);
     glBegin(GL_POINTS);
     float x1, y1;
@@ -130,7 +110,6 @@ static void drawPoint(struct point points[], int size_arr, int point_size){
 }
 
 
-
 /*
  * write_ppm: saves drawing
  *
@@ -139,7 +118,8 @@ static void drawPoint(struct point points[], int size_arr, int point_size){
  * width: canvas width
  * height: canvas height
  */
-static void write_ppm(const char *filename, const GLubyte *buffer, int width, int height){
+static void write_ppm(const GLubyte *buffer, int width, int height){
+   char *filename = "myDrawing";
    const int binary = 0;
    FILE *f = fopen( filename, "w" );
    if (f) {
@@ -186,17 +166,16 @@ static void write_ppm(const char *filename, const GLubyte *buffer, int width, in
  * endRendering: closes OpenGL and Mesa contexts and saves drawing
  * by calling write_ppm
  */
-static void endRendering(struct context_buffer cb){
-    char *filename = "myDrawing";
+static void endRendering(){
     rendering_helper_close();
-    write_ppm(filename, cb.buffer, Width, Height);
-    free(cb.buffer);
-    OSMesaDestroyContext(cb.ctx);
+    write_ppm(buffer, Width, Height);
+    free(buffer);
+    OSMesaDestroyContext(ctx);
 }
 
 //sample program
 int main(int argc, char *argv[]){
-    struct context_buffer cb = startRendering();
+    startRendering();
     
     struct point p1 = {.25, .25};
     struct point p2 = {.75, 1};
@@ -215,6 +194,6 @@ int main(int argc, char *argv[]){
     glTranslatef(1, 1, 0);
     drawShape(points, size_arr, 0);
 
-    endRendering(cb);
+    endRendering();
     return 0;
 }
