@@ -6,10 +6,12 @@ open Ast
 open Sast 
 
 module StringMap = Map.Make(String)
+module StringSet = Set.Make(String)
 
 type environment = {
 ebuilder : L.llbuilder;
 evars : L.llvalue StringMap.t; (* The storage associated with a given var *)
+efxns : StringSet.t; (* Which names are original fxn definitions *)
 esfxns : (L.llvalue * func_bind) StringMap.t; (* Decls for struct op fxns *)
 ecurrent_fxn : L.llvalue; (* The current function *)
 }
@@ -57,15 +59,14 @@ let translate prog =
       L.declare_function "printf" printf_t the_module in
 
   (* External Functions *)
-  let add_external_fxn builder map (decl, name) =
+  let add_external_fxn env (decl, name) =
       let formals, rt = match decl with Func(formals, rt) -> formals, rt
         | _ -> raise (Failure "Unexpected external function decl") in
       let ftype = L.function_type (ltype_of_typ rt)
         (Array.of_list (List.map (fun t -> ltype_of_typ t) formals)) in
       let lldecl = L.declare_function name ftype the_module in
-      let llref = L.build_alloca (ltype_of_typ decl) name builder in
-      ignore (L.build_store lldecl llref builder) ;
-      StringMap.add name llref map
+      { env with evars = StringMap.add name lldecl env.evars ;
+          efxns = StringSet.add name env.efxns }
   in
 
   (* Setup main function *)
@@ -84,7 +85,8 @@ let translate prog =
 
   (* Add a function declaration to environment.efxns *)
   let add_function env nm llv = 
-      {env with evars = StringMap.add nm llv env.evars }
+      {env with evars = StringMap.add nm llv env.evars;
+       efxns = StringSet.add nm env.efxns }
   in
 
   (* Add a formal argument llvalue to environment.evars *)
@@ -687,7 +689,11 @@ let translate prog =
      struc, env
 
      (* Access *)
-   | SVar(nm) -> (L.build_load (get_variable env nm) nm env.ebuilder),env
+   | SVar(nm) -> 
+     if StringSet.mem nm env.efxns then (* Global fxn name, don't load *)
+     get_variable env nm, env
+     else (* All other variables *) 
+     (L.build_load (get_variable env nm) nm env.ebuilder),env
    (* (match t with
         Func(_) -> get_variable env nm , env
       | _ -> (L.build_load (get_variable env nm) nm env.ebuilder),env  )*)
@@ -725,14 +731,12 @@ let translate prog =
        let decl = L.define_function nm ftype the_module in
        let new_builder = L.builder_at_end context (L.entry_block decl) in
 
-       (* Store a pointer to this function *)
-       let ref = L.build_alloca (ltype_of_typ t) nm env.ebuilder in
-       ignore(L.build_store decl ref env.ebuilder) ;
+       (* Add function to fxns set *)
+       let env = add_function env nm decl in
 
        let new_env = { env with ebuilder=new_builder } in
        let new_env = List.fold_left2 add_formal new_env args (
               Array.to_list (L.params decl)) in
-       let new_env = add_function new_env nm ref in
        let new_env = {new_env with ebuilder = new_builder; ecurrent_fxn=decl} in
        let (lv, ret_env) = expr new_env ex in
        
@@ -741,8 +745,8 @@ let translate prog =
        ignore (L.build_ret_void ret_env.ebuilder)
        else
        ignore (L.build_ret lv ret_env.ebuilder) );
-       (* Add this function to the returned environment *)
-       ref, add_function env nm ref 
+
+       decl, env
 
      (* Assignments *)
    | SAssign(nm, ex) ->
@@ -1026,12 +1030,13 @@ let translate prog =
    let build_main stmts = 
      (* Init the builder at the beginning of main() *)
      let builder = L.builder_at_end context (L.entry_block main) in
-     (* Create pointers to the external functions *)
-     let ext_fxn_map = List.fold_left (add_external_fxn builder)
-       StringMap.empty Semant.external_functions in 
-     (* Use the builder to add the statements of main() *)
-     let start_env = { ebuilder = builder; evars = ext_fxn_map;
-       esfxns = StringMap.empty; ecurrent_fxn = main } in
+     (* Init the starting environment from exeternal functions *)
+     let start_env = { ebuilder = builder; evars = StringMap.empty;
+       efxns = StringSet.empty; esfxns = StringMap.empty; 
+       ecurrent_fxn = main } in
+     let start_env = List.fold_left add_external_fxn start_env
+       Semant.external_functions in
+     (* Build the program *)
      let end_env = List.fold_left build_stmt start_env stmts in
      (* Add a return statement *)
      L.build_ret (L.const_int i32_t 0) end_env.ebuilder    
