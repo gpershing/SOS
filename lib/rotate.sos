@@ -1,5 +1,31 @@
 import point.sos
+import shape.sos
 #direction : 1 for clockwise, 0 for counter-clockwise
 
-rotate : (degree: float, direction: int, aboutPoint: point) -> 
+rotateHelper : (points: path, angle: float, direction: int, aboutPoint: point, i: int) ->
+    if i >= path.size -1
+    then 0
+    else
+        float pivotx = aboutPoint.x;
+        float pivoty = aboutPoint.y;
+        
+        //shifted
+        float px = path[i].x - pivotx;
+        float px = path[i].y - pivoty;
 
+        if direction == 0
+        then //counterclockwise
+            path[i].x = (px*cos(angle) - py*sin(angle)) + pivotx;
+            path[i].y = (px*sin(angle) + py*cos(angle)) + pivoty;
+        else
+            if direction == 1
+            then //clockwise
+                path[i].x = (px*cos(angle) + py*sin(angle)) + pivotx;
+                path[i].y = (-px*sin(angle) + py*cos(angle)) + pivoty;
+            else //do no rotation
+                path[i].x = path[i].x + pivotx;
+                path[i].y = path[i].y + pivoty;
+        rotateHelper(path, angle, direction, aboutPoint, i+1)
+
+rotate : (points: path, angle: float, direction: int, aboutPoint: point) ->
+    rotateHelper(path, angle, direction, aboutPoint, 0);
