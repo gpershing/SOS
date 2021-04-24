@@ -56,3 +56,13 @@ drawShape : (point_structs : path, color_structs : array color,  colorMode : int
 
 
 endCanvas : (fileNumber : int) -> void = gl_endRendering(fileNumber)
+
+/*
+//this is the test
+point: p1 = {-.5, 0}
+point: p2 = {.5, 0}
+point: p3 = {0, 1}
+
+array path: 
+
+*/
