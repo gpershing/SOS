@@ -1,2 +1,2 @@
-struct point = {float x, float y}
+struct point = {x: float, y: float}
 
