@@ -3,12 +3,15 @@ import point.sos
 alias path = array point
 alias shape = array point
 
-appendhelp_copyin : (in: point, from: point) -> void = 
-    0 // in.x = from.x; in.y = from.y 
+appendhelp_copyin : (in: path, from: path, i: int) -> void = 
+    if i<in.length then
+    in[i]=from[i+1];
+    appendhelp_copyin (in, from, i+1)
+    else 0
 
 appendhelp_tail : (p: path) -> path = 
     tail: path = p.length-1 of [{0.0, 0.0}];
-    appendhelp_copyin(tail, p); tail
+    appendhelp_copyin(tail, p, 0); tail
 
 // Appends two paths, merging them at their endpoints, if needed
 append : (p1 : path, p2: path) -> path = 
@@ -20,4 +23,27 @@ append : (p1 : path, p2: path) -> path =
     ret: path = p1 @ p2c;
     (if merge then free(p2c) else 0); ret
 
-reverse: (p : path) -> path = p // TODO 
+reversedhelp: (in: path, from: path, i: int) -> void = 
+    if i < in.length then
+    in[i].x = from[in.length-1-i].x;
+    in[i].y = from[in.length-1-i].y;
+    reversedhelp(in, from, i+1)
+    else 0
+
+// Creates a new array that is p reversed
+reversed: (p : path) -> path =
+    newpath : path = p.length of [{0.0, 0.0}];
+    reversedhelp(newpath, p, 0);
+    newpath
+
+reversehelp : (p: path, i: int) -> void =
+    if i < p.length/2 then
+    q: point = p[i];
+    p[i] = p[p.length-1-i];
+    p[p.length-1-i] = q;
+    reversehelp (p, i+1)
+    else 0
+
+// Reverses p in-place
+reverse: (p: path) -> void = reversehelp(p, 0)
+    
