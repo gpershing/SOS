@@ -51,7 +51,7 @@ void startRendering(){
     if (!OSMesaMakeCurrent(ctx, buffer, GL_UNSIGNED_BYTE, Width, Height)) {
         printf("OSMesaMakeCurrent failed!\n");
     }
-    printf("startRendering...");
+    printf("startRendering...\n");
     rendering_helper_init();
 }
 
@@ -226,7 +226,7 @@ void endRendering(int fileNumber){
     write_ppm(fileNumber, buffer, Width, Height);
     free(buffer);
     OSMesaDestroyContext(ctx);
-    printf("endRendering...");
+    printf("endRendering...\n");
 }
 /*
 //sample program
