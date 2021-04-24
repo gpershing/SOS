@@ -1,0 +1,472 @@
+\documentclass[main.text]{subfiles}
+
+\section{Language Reference}
+
+\subsection{Introduction}
+
+The SOS (\SOSA) Language is an imperative language designed to render 2D images, especially mathematically interesting images. This manual describes the SOS syntax and the meaning of SOS statements. It is intended to be a complete description of the language features at time of writing. 
+
+\subsection{Lexical Conventions}
+
+A program in SOS (\SOSB) is first interpreted by parsing it as a string of \textit{tokens}. The following subsections describe exactly what tokens are allowed in SOS.
+
+\subsubsection{Identifiers}
+
+Most tokens in SOS are identifiers, which refer to types, variables, and functions. An identifier is a string containing only letters, numbers, and underscores, beginning with a letter. The following identifiers are predefined and cannot be overwritten:
+
+    \begin{center}
+    \begin{tabular}{ccccc}
+        \texttt{int}  &\texttt{float}  &   \texttt{bool} & \texttt{void} & \texttt{copy} \\
+    \end{tabular}
+    \end{center}
+    
+    In addition, the following strings are keywords that can never be used for identifiers:
+    
+    \begin{center} \begin{tabular}{cccccccccc}
+    \texttt{if} & \texttt{then} & \texttt{else} & \texttt{of} & \texttt{true} & \texttt{false} & \texttt{alias} & \texttt{struct} & \texttt{array} & \texttt{func} \\
+    \end{tabular} \end{center}
+    
+    Keywords, like identifiers, are treated as one token.
+    
+\subsubsection{Constants}
+
+Any string consisting of only numbers and at most one decimal point is a numeric constant. Constants are interpreted as a single token. In addition, either \texttt{e} or \texttt{E} may be used to indicate an integer exponent for a number represented in scientific notation. 
+
+\subsubsection{Comments}
+
+\texttt{/*}, \texttt{*/}, and \texttt{//} are special tokens that are used to indicate comments. They are not passed as tokens by the scanner, but rather denote a segment of text to be ignored.
+
+\subsubsection{Symbols}
+
+All other characters are interpreted as symbols, like operators and delimiters. Symbols are interpreted maximally, e.g. \texttt{<=} is always interpreted as one symbol, not a separate \texttt{<} and \texttt{=}. The following is the complete list of symbolic tokens:
+
+\begin{center}
+    \begin{tabular}{ccccccc}
+        \texttt{+}&\texttt{-}&\texttt{*}&\texttt{/}&\texttt{\%}&\texttt{**}&\texttt{@} \\
+        \texttt{=}&\texttt{==}&\texttt{!=}&\texttt{<}&\texttt{>}&\texttt{<=}&\texttt{>=} \\
+        \texttt{!}&\texttt{||}&\texttt{\&\&}&\texttt{,}&\texttt{:}&\texttt{;}&\texttt{->} \\
+        \texttt{(}&\texttt{)}&\texttt{[}&\texttt{]}&\{&\}&\texttt{\$} \\
+    \end{tabular}
+\end{center}
+
+\subsubsection{Whitespace}
+
+Whitespace is used to separate tokens. In many cases, it is not necessary, but certain tokens (for instance, two identifiers) must be separated by whitespace or else they will be interpreted as one. It is generally advised to separate all tokens with a space for readability. In addition, all whitespace–spaces, tabs, and newlines–are interchangeable.
+
+\subsection{Types}
+
+In SOS (\SOSC), every variable is strictly typed. There are some options for casting between types. This subsection outlines what types exist and what casts are possible.
+
+\subsubsection{Basic Types}
+
+SOS has three basic types: \texttt{bool}, \texttt{int}, and \texttt{float}. \texttt{bool} is a single bit representing either \texttt{true} or \texttt{false}. \texttt{int} represents a 32-bit integer. \texttt{float} represents a 64-bit floating point number. All other types are built using these three types.
+
+All the basic types are stored as values and passed by value. 
+
+The \texttt{void} type can be seen as the fourth basic type. It can only be used to indicate the return type of a function.
+
+\subsubsection{Derived Types}
+
+A new type can be created in three ways: as an array, as a structure, or as a function. An \textit{array} is a block of memory with many variables of a specific type, along with an integer giving the length of the array. A \textit{structure} consists of some number of \textit{fields}, each with their own identifier and type. This allows associated information to be stored and processed together. A \textit{function} is a stored expression with one or more \textit{arguments} that can be used within the expression.
+
+All the derived types are stored as pointers and passed as pointers. A simple assignment will replace the initial pointer, instead of writing to the location of the pointer. There are ways to modify arrays and structures after they are defined, but a function is immutable.
+
+\subsubsection{Type Identifiers}
+
+The names \texttt{bool}, \texttt{int}, \texttt{float}, \texttt{void} are all the identifiers for their respective types.
+
+A \texttt{struct} type is referred to by the name given in its struct definition, and \texttt{struct} itself is not used as an identifier.
+
+The string \texttt{array} \textit{type-name} is the identifier for an \texttt{array} of a certain type. This can be nested, for example \texttt{array} \texttt{array} \texttt{int} is an array of integer arrays.
+
+A function type is represented by \texttt{func }\textit{arg-type-1}\texttt{, ... -> }\textit{return-type}, which is the type of a function with argument(s) of the specified type(s) and the specified return type. This notation is not commonly used, but is required to use a function as the argument in another function, for instance.
+
+\subsubsection{Type Conversions}
+
+Many inbuilt types will automatically be converted to a different type when required. This will always happen as late in any calculation as possible. In each of the following subsections, all the possible conversions from a given type will be listed, as well as their meanings. User-defined structs and arrays are never converted. In most cases, such as variable assignment or function application, one statement will expect a certain type, and the required cast will be clear. The only exception is comparisons, where in general \texttt{float} is preferred over \texttt{int} which is preferred over \texttt{bool}, and \texttt{point} is preferred over \texttt{vector}.
+
+\textbf{bool}
+
+A \texttt{bool} can be cast to an \texttt{int} or \texttt{float}, by the map \texttt{false} $\to 0$ and \texttt{true} $\to 1$.
+
+\textbf{int}
+
+An \texttt{int} can be cast to a \texttt{bool}, where 0 maps to \texttt{false} and all other values map to \texttt{true}.
+
+An \texttt{int} can also be cast to a \texttt{float} by the injection $x \to x$.
+
+\textbf{float}
+
+A \texttt{float} can be cast to a \texttt{int} by truncation. This is not to be confused with the floor operation. For instance, $0.5$ and $-0.5$ both truncate to $0$. It can also be cast to a \texttt{bool} in the same way as an \texttt{int}, although it should be noted that this may have unexpected behavior due to floating point precision.
+
+\textbf{struct}
+
+Any structs with the same fields in the same order may be cast interchangeably. However, this cast will not occur when accessing the struct's fields, so make sure that the fields are consistent with the specific struct name assigned to any given variable.
+
+\textbf{array, function}
+
+Casting never occurs for arrays or functions.
+
+\textbf{void}
+
+All types can be cast to \texttt{void}, meaning that their types are simply discarded. \texttt{void} cannot be cast to any type besides itself.
+
+\subsection{Syntax and Expressions}
+
+An SOS (\SOSD) program is formed by a series of \textit{statements}. This subsection outlines all possible SOS statements and their meanings.
+
+\subsubsection {Statements}
+
+There are three forms of statements in SOS: \textit{type definitions}, \textit{function definitions}, and \textit{starting expressions}. Starting expressions and function definitions can contain other expressions, while type definitions are always concrete. Only a starting expression may form a statement; all other expressions can only be used within a starting expression or function definition. 
+
+Throughout this subsection, the production rules for the SOS grammar will be listed in the following format: \newline
+
+\noindent \textit{symbol}: \newline
+\indent \textit{production ...}
+
+Italic characters represent another symbol, typewriter strings and symbols represent specific tokens. Here is the production rule for a statement: \newline
+
+\noindent \textit{statement}: \newline
+\indent \textit{type-definition} \newline
+\indent \textit{function-definition} \newline
+\indent \textit{starting-expression} \newline
+
+In addition, the following production rule is important: \newline
+
+\noindent \textit{expression}: \newline
+\indent \textit{starting-expression} \newline
+
+Meaning any starting expression may be used in any place that calls for an expression.
+
+\subsubsection{Type Definition}
+
+The only type of statement that is not an expression is a type definition. As such, these statements do not include any expressions and cannot be included in any other expressions.
+
+There are two ways to make a new type identifier: \newline
+
+\noindent \textit{type-definition}: \newline
+\indent \texttt{alias} \textit{new-type-name} \texttt{=} \textit{old-type-name} \newline
+\indent \texttt{struct} \textit{struct-name} \texttt{= }$\{$ \textit{field-name-1} \texttt{:} \textit{field-type-1} \texttt{, ...}$\}$ \newline
+
+The first format defines a new type name that is an alias for an existing type name. Internally, this means that every instance of the new type name will simply be treated as the old type name. It is possible for \textit{old-type-name} to be a combination of types, like an \texttt{array} or a function type.
+
+The second format defines a new \texttt{struct} type with the given fields.
+
+\begin{lstlisting}
+alias year = int
+struct person = {int identifier,int age} \end{lstlisting}
+
+\subsubsection {Function Definition}
+
+A new function can be created using the function definition statement:
+
+\noindent \textit{function-definition}:
+\indent \textit{function-name} : (\textit{arg-name-1} \texttt{:} \textit{arg-type-1}, \dots) \texttt{->} \textit{return-type} = \textit{expression} \newline
+
+The function's type is determined by the argument types and return type. Notice that the \texttt{func} keyword is not used to define a function. These keyword is instead use to indicate variables that store pointers to pre-defined functions. 
+
+\subsubsection{Declarations and Assignments}
+
+In SOS, there is no such thing as a declaration without an assignment. That is to say, when a variable is introduced it must also have a value attached. Any declaration defines a \textit{name} by which a variable can be referred to, the \textit{type} of the variable, and the \textit{value} of the variable. Value here is used quite loosely: variables can be functions or other complicated objects that may not have a "value" per se. 
+
+Declarations are of the form: \newline
+
+\noindent \textit{starting-expression}: \newline
+\indent \textit{variable-name} \texttt{:} \textit{type-name} = \textit{expression} \newline
+
+This defines a variable of the given type and assigns its value to the given expression. The variable can be of a functional type, but this can only be used to create a new reference to an existing function, not a new function altogether. The expression must be of a type that can be cast to the specified type.
+
+If a variable or function has already been declared, it can be re-assigned as follows: \newline
+
+\noindent \textit{starting-expression}: \newline
+\indent \textit{variable-name} = \textit{expression} \newline
+
+Which acts the same as the first type of declaration. A function cannot be re-assigned this way, although a pointer to a function may be.
+
+\begin{lstlisting}
+var1 : int = 3
+double : (n : int) -> int = 2 * n
+double_double : func int -> int = double
+var1 = double(var1) \end{lstlisting}
+
+\subsubsection{Operators}
+\label{sec_operators}
+The main tools for building meaningful expressions from other expressions are operators. The type of an operator expression depends on the types of the expression(s) it acts upon, which will be specified later. All operator expressions are of one of two forms: \newline
+
+\noindent \textit{expression}: \newline
+\indent \textit{unary-operator} \textit{expression} \newline
+\indent \textit{expression} \textit{binary-operator} \textit{expression} \newline
+
+\textbf{Logical Operators}
+
+The logical operators are \texttt{!}, \texttt{||}, and \texttt{\&\&}. \texttt{!} is a unary operator which takes a \texttt{bool} and returns its negation. \texttt{||} and \texttt{\&\&} are binary operators on two \texttt{bool}s representing logical OR and AND, respectively. They are both left associative.
+
+\textbf{Comparison Operators}
+
+The comparison operators are \texttt{==}, \texttt{!=}, \texttt{<}, \texttt{>}, \texttt{<=}, and \texttt{>=}. All are binary operators that take two expressions of the same type that return a \texttt{bool}. \texttt{==} returns \texttt{true} if the expressions have the same value, \texttt{false} otherwise; \texttt{!=} does the opposite. On \texttt{int}s and \texttt{float}s, the other four operators represent less than, greater than, less then or equal, and greater than or equal.
+
+\textbf{Mathematical Operators}
+
+The mathematical operators are \texttt{+}, \texttt{-}, \texttt{*}, \texttt{/}, and \texttt{\%}. They can act on integer or floats. If one argument is a float, the other is promoted to a float, if necessary. The exception is the modulo operator \% which can only act on integers. All these operators are left-associative.
+
+In addition, \texttt{-} can be a unary operator, which returns the negation of its arguments.
+
+\textbf{Arithmetic Structures}
+
+Mathematical operators can also be used on \textit{arithmetic structures}, which refers to any struct whose fields are all floats or all integers. For two arithmetic structures of the same size, \texttt{+} and \texttt{-} perform component-wise addition or subtraction, and \texttt{*} computes the dot product, that is, the sum of the component-wise products. An arithmetic struct can be scaled by an number using \texttt{*} or \texttt{/}. \newline
+
+In addition, the matrix multiplication operator, \texttt{**}, is reserved for arithmetic structs. In an expression \texttt{A ** B}, \texttt{A} must have a square number of fields, it is treated as a square matrix, listed by the first column from the top down, then the second, and so on. \texttt{B} can either be struct of the same size, which is treated as another matrix, or of the square root of the same size, in which case it is treated as a column vector. Unlike the other mathematical operators, \texttt{**} is right-associative.
+
+\textbf{Array Operators}
+
+Arrays have two unique operators, the \texttt{of} operator and the concatenation operator, \texttt{@}. For two arrays \texttt{A} and \texttt{B}, \texttt{A @ B} indicates a new array with A's elements followed by B's. If \texttt{n} is an integer and \texttt{A} an array, \texttt{n of A} indicates A concatenated with itself n times. Both are left-associative.
+
+\textbf{Sequencing}
+
+\texttt{;} is a special binary operator that allows for sequencing. Both expressions are evaluated, and the value of the second expression is kept as the value of this expression. This is left associative.
+
+\begin{lstlisting}
+int x = 2345; 0 \end{lstlisting}
+
+\subsubsection{Function Application}
+
+Function application is used to execute the expressions associated with a given function. It is written as:
+
+\noindent \textit{starting-expression}: \newline
+\indent \textit{value} (\textit{expression-1}, \textit{expression-2}, \dots)
+
+Where \textit{value} is a special symbol of one of the following forms: \newline
+\noindent \textit{value}: \newline
+\indent \textit{variable-name} \newline
+\indent \textit{value} \texttt{.} \textit{field-name} \newline
+\indent \textit{value} \texttt{[} \textit{expression} \texttt{]} \newline
+\indent \textit{value} (\textit{expression-1}, \textit{expression-2}, \dots) \newline
+\indent \texttt{\$(} \textit{expression} \texttt{)} \newline
+
+A value symbol is used to contain an expression that can be accessed, either through function application, struct access, or array access. The \texttt{\$} access symbol allows for access into other expressions, such struct arithmetic. In this case, \textit{value} should resolve to a function with the given number of arguments, in which case this statement evaluates the function and returns its value, which will be of the function's return type.
+\begin{lstlisting}
+double : (a : int) -> int = a * 2
+four : int = double(2) \end{lstlisting}
+
+\subsubsection{Conditionals}
+
+The conditional expression is formated as follows: \newline
+
+\noindent \textit{starting-expression}: \newline
+\indent \texttt{if} \textit{expression-1} \texttt{then} \textit{expression-2} \texttt{else} \textit{expression-3} \newline
+
+Where \textit{expression-1} must resolve to type \texttt{bool}, and \textit{expression-2} and \textit{expression-3} must resolve to the same type. The whole expression will have this second type, and it will have the value of \textit{expression-2} if \textit{expresion-1} is \texttt{true}, and the value of \textit{expression-3} otherwise.
+
+\begin{lstlisting}
+x : int = 100
+var3 : int = if x>0 then 1 else 0 \end{lstlisting}
+
+\subsubsection{Construction}
+
+An array can be created using the array construction expression: \newline
+
+\noindent \textit{expression}: \newline
+\indent \texttt{[} \textit{expression-1} \texttt{, } \textit{expression-2} \texttt{, ...]} \newline
+
+Where each expression must resolve to the type of the first expression. The whole expression will then be a list of that type. If no expressions are given, an empty array will be given, which can be cast to any array type.
+
+A struct can be created using either struct construction expression: \newline
+
+\noindent \textit{expression}: \newline
+\indent \texttt{struct-name}$\{$\textit{expression-1}\texttt{, ...}$\}$ \newline
+\indent $\{$\textit{expression-1}\texttt{, ...}$\}$ \newline
+
+These are identical, except for the fact that the fields of an anonymous struct cannot be accessed until it has been cast to a named struct.
+
+\begin{lstlisting}
+arr : array int = [1, 3+5, 7, 9]
+struct person = {id : int, age : int}
+tom : person = {12345, 45} \end{lstlisting}
+
+\subsubsection{Variable Reference}
+
+Variable reference is always a terminal expression. It is notated simply as: \newline
+
+\noindent \textit{expression}: \newline
+\indent \textit{variable-name} \newline
+
+And has the same type as the specified variable. In addition, the fields of a struct can be referenced with dot notation: \newline
+
+\noindent \textit{expression}: \newline
+\indent \textit{value}\texttt{.}\textit{field-name} \newline
+
+An element of an array can be accessed by index, where index 0 represents the first element. The syntax is as follows: \newline
+
+\noindent \textit{expression}: \newline
+\indent \textit{value}\texttt{[}\textit{expression}\texttt{]} \newline
+
+Both struct access and array access can also be used in place of \textit{variable-name} in an assignment expression.
+
+\noindent \textit{starting-expression}: \newline
+\indent \textit{value}\texttt{.}\textit{field-name} \texttt{ = } \textit{expression} \newline
+\indent \textit{value}\texttt{[}\textit{expression}\texttt{] =} \textit{expression} \newline
+
+\subsubsection{Literals}
+
+Numeric literals are terminal expressions. They are expressed in base 10. Without a decimal point or scientific notation exponent, they will be interpreted as \texttt{int}s, otherwise they will be interpreted as \texttt{float}s. Commas cannot be used in any way, either for separating thousands or for the decimal point. 
+
+\noindent \textit{expression}: \newline
+\indent \textit{integer-literal} \newline
+\indent \textit{float-literal} \newline
+\indent \textit{bool-literal} 
+
+\subsubsection{Parentheses}
+
+Parentheses can be used to clarify or alter the order of operations. A parenthetical expression is as follows: \newline
+
+\noindent \textit{expression}: \newline
+\indent \texttt{(} \textit{expression} \texttt{)} \newline
+
+The whole expression has the same type as the inner expression. \newline Notice the difference with the value expression that uses the access symbol: \texttt{(x).y} is not a valid struct access, while \texttt{\$(x).y} is (assuming \texttt{x} is a struct with field \texttt{y}).
+
+\subsubsection{Array iteration}
+
+SOS contains several powerful notations for performing operations on all elements of an array. For any operator (besides sequencing), if one of its arguments is an array, the operator will be performed on each element of the array, returning a new array with the results. This can be done recursively, with arrays within arrays or arrays on both sides of the operator. The left operand is expanded first, so it will give the length of the resulting array.
+
+\begin{lstlisting}
+A : array array int = [1, 2] + [3, 4]
+// = [1 + [3, 4], 2 + [3, 4]
+// = [[4, 5], [5, 6]] \end{lstlisting}
+
+Arrays can also be iterated on a function. If a function has an argument of type \textit{t} and the argument given is an array of \textit{t}, the function is applied to each element of the array, and an array of the results is returned. If several iterated arrays are given, they are all iterated on simultaneously, up to the length of the first iterated array. Unlike with operators, this not recursive. If the function returns void, the iterated function also returns void (not an array of void, which is not possible).
+
+\begin{lstlisting}
+add : (a: int, b: int, c: int) -> int = a + b + c
+B : array int = add([1, 2], 3, [4, 5, 1000])
+// = [8, 10] \end{lstlisting}
+
+\subsubsection{Scope}
+
+The \textit{scope} of an expression refers to the variables that can be accessed within that expression. Functions that are defined using the function definition are \textit{global}, meaning they can be referred to at any point after they are defined, even within their own definition. Variables are always \textit{local}. This means that a function may only access the variables given by its formaal arguments. Any variable defined within a function may be accessed for the remainder of that function. This means that variables defined outside of any function are not accessible within a function. The only expression that introduces a local scope is the if/else statement: variables defined within the then or else expressions will not be accessible after the statement or in the other case.
+
+Variables may always be re-named, even if they are already defined within a certain scope. Doing so prevents the original variable from being accessed, so this should be avoided. In separate scopes, variables can share names with no confusion.
+
+In the following example, notice how \texttt{pow} can refer to itself within its defintion. There is no conflict between the argument \texttt{n} and the variable \texttt{n}.
+
+    \begin{lstlisting}
+pow : (n : int, x : int) -> int = 
+    if x == 0 then 1 else n * pow(n, x-1)
+n : int = pow (3,2) \end{lstlisting}
+
+\subsubsection{Importing Libraries}
+
+SOS has only one preprocessor directive: lines with the form
+\begin{lstlisting}
+import filename.extension \end{lstlisting}
+at the beginning of a file is replaced by the file \textit{filename.extension}. The characters in the name of \textit{filename} must not include newline or \texttt{/*}. Before scanning the files in OS, SOS will first try to find if there is any standard library with the \textit{filename}. Even though the file imported is usually a \textit{*.sos} file, extension is still required.
+
+As we are going to replace the line, declaring a new variable that is already in imported file is prohibited, but you could override it when needed.
+Also, the import graph cannot contain a cycle, for example, import A in file B and import B in file A is prohibited.
+
+
+\subsubsection{Comments}
+
+Any text written between the symbols \texttt{/*} and \texttt{*/} will be ignored. Comments can be nested this way. Additionally, any text between the symbol \texttt{//} and the next newline will be ignored. 
+
+\begin{lstlisting}
+// a single line comment
+/* a multi line /* nested */ comment */ \end{lstlisting}
+
+\subsection{SOS Standard Library}
+
+The library functions are written with the SOS (\SOSE) language in separate files which can be used with \texttt{import}. Certain library functions employ the external OpenGL library for its graphics utilities, and support extensive graphical operations. This subsection is not an exhaustive list of the library, but can be taken as a holistic sample of all library functions. All of the following files can be imported at once with the statement \texttt{import stdlib}.      \newline
+
+\subsubsection{Math}
+
+The file \texttt{math.sos} contains useful mathematical functions. \newline
+
+\noindent \texttt{sqrt : float -> float} \newline
+\indent Computes the square root of a number. \newline
+
+\noindent \texttt{sin, cos, tan : float -> float} \newline
+\indent Compute the trigonometric functions sine, cosine, and tangent for an angle in radians. \newline
+
+\noindent \texttt{asin, acos, atan : float -> float} \newline
+\indent Compute the inverse trigonometric functions, returning an angle in radians. \newline
+
+\noindent \texttt{toradians : float -> float} \newline
+\indent Converts an angle from degrees to radians.
+
+\subsubsection{Point}
+
+The file \texttt{point.sos} contains functions for dealing with points and vectors. \newline
+
+\noindent \texttt{distance : vector -> float} \newline
+\indent Determines the distance of a vector (or distance of a point to the origin). \newline
+
+\noindent \texttt{project : vector * vector -> vector}  \newline
+\indent Projects one vector onto another. \newline
+
+\subsubsection{Shape}
+
+The file \texttt{shape.sos} contains functions for dealing with collections of points, such as lines, curves, and shapes. \newline
+
+\noindent \texttt{alias path = point array} \newline
+\noindent \texttt{alias shape = point array} \newline
+
+\noindent \texttt{append : path * path -> path} \newline
+\indent Appends one path onto another. \newline
+
+\noindent \texttt{reverse : path -> path} \newline
+\indent Reverses a given path. \newline
+
+\subsubsection {Color}
+
+The file \texttt{color.sos} contains functions for dealing with color.
+
+\noindent \texttt{struct color = }\{\texttt{float r, float g, float b, float a}\} \newline
+
+\noindent \texttt{hsv : float * float * float -> color} \newline
+\indent Creates a color with the given hue, saturation, and value.
+
+\subsubsection{Affine}
+
+The file \texttt{affine.sos} contains functions for manipulating affine transformations.
+
+\noindent \texttt{scale : float -> affine} \newline
+\indent Returns an affine represent a uniform scale by the given factor. \newline
+
+\noindent \texttt{trans : float * float -> affine, vector -> affine} \newline
+\indent Returns an affine representing a translation by the given vector. \newline
+
+\noindent \texttt{rotate : float -> affine} \newline
+\indent Returns an affine representing a counterclockwise rotation, with the angle given in radians. \newline
+
+\subsubsection{Renderer}
+
+The file \texttt{renderer.sos} contains the main functions for interfacing with OpenGL.
+
+\noindent \texttt{render : path -> (vector -> color) -> void} \newline
+\indent Renders a path using the given color map. \newline
+
+\subsection{Sample Program}
+
+
+\begin{lstlisting}
+// renders the dragon curve fractal
+import stdlib
+
+// set up affine transformations 
+affine A = scale(sqrt(2.0)) * rotate(45)
+affine B = trans(0.5, 0.5)*scale(sqrt(2.0))*rotate(135)*trans(-1, 0)
+
+// recursively defines the dragon curve
+curve dragon (int n) =
+if n == 0
+then [{0, 0}, {1, 0}]
+else d = dragon (n-1) ;
+/* affine application pointwise to a curve */
+append(A * d, B * reverse(d))
+
+// interpolates a color along the line a-b
+color rainbow (point a, point b, vector position) =
+ // hsv color picker
+hsv (position * (b-a) / (b-a) * (b-a), 1, 1) 
+
+render (translate (60, 200) * scale(360) * dragon (10), rainbow((0, 240), (480, 240)))
+\end{lstlisting}

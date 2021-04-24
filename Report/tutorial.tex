@@ -1,0 +1,314 @@
+\documentclass[main.tex]{subfiles}
+
+\begin{document}
+	\section{Language Tutorial}
+	
+	\subsection{Variables}
+	
+	Variables in SOS associate an \textit{identifier} with a \textit{value} of a certain \textit{type}. This value can then be accessed and modified using the name given. A variable's value is first defined by some expression, for instance a constant value or another variable. Here is an example of variable declarations:
+	
+	\begin{lstlisting}
+	a : int = -1
+	b : float = 3.1415
+	c : float = b \end{lstlisting}
+	
+	The first symbol is the identifier, which can be any string starting with a letter and containing only letters, underscores, and numbers. The second is the type, here the built-in types of \texttt{int}, an integer value, and \texttt{float}, a real number. After the equals sign is the variable's initial value: this must be present in every variable definition. \newline
+	
+	The value of a variable can be checked using a \textit{print} statement, which will output the value to the console's standard output. SOS has two print statements: \texttt{print} for integers, and \texttt{printf} for floating point values.
+	
+	\begin{lstlisting}
+	print(a) // prints "-1"
+	printf(b) // prints "3.1415" \end{lstlisting}
+	
+	Notice the use of \texttt{//} to denote a \textit{comment}. Commented code is not parsed by the compiler, and is only used to enhance readability. A comment starting with \texttt{//} with end at the next newline. A comment can also be introduced by \texttt{/*}, in which case the comment will end at the next \texttt{*/}. \newline
+	
+	With only this information, a complete program can be made in SOS. However, it cannot do anything interesting.
+	
+	\subsection{Basic Operators}
+	To begin creating more intricate programs, we need to use \textit{operators}. The most fundamental operator is the \textit{assignment} operator, which can re-assign a declared variable.
+	
+	\begin{lstlisting}
+	a : int = 1
+	a = 3
+	print(a) // prints "3" \end{lstlisting}
+	
+	Values can be combined with the \textit{arithmetic operators} \texttt{+}, \texttt{-}, \texttt{*}, \texttt{/}, and \texttt{\%}. The first four are addition, subtraction, multiplication, and division, as in written arithmetic. The last operator is the \textit{modulo} or \textit{remainder} operator, which gives the remainder after dividing a value by some quotient. The subtraction operator may used both to subtract to numbers and to negate a single number.
+	
+	\begin{lstlisting}
+	print(1+2)      // prints "3"
+	printf(1.5*3.4) // prints "5.1"
+	print(7 % 2)    // prints "1" \end{lstlisting}
+	
+	In addition to integers and floats, SOS also has a \texttt{bool} type, representing either "true" or "false". These values can be combined using the \textit{boolean operators} \texttt{\&\&} (and), \texttt{||} (or), and \texttt{!} (not). There is no print function for bools, but they can be printed as integers, where \texttt{true=1} and \texttt{false=0}.
+	
+	\begin{lstlisting}
+	print(true || false) // prints "1", or true
+	print(true && false) // prints "0", or false
+	print(!true)         // prints "0", or false \end{lstlisting}
+	
+	Boolean values are mainly used to compare other values using the \textit{comparison operators} \texttt{==}, \texttt{!=}, \texttt{<}, \texttt{>}, \texttt{<=}, \texttt{>=}. These mean, in order, is equal to, is not equal to, less than, greater than, less than or equal to, and greater than or equal to.
+	
+	\begin{lstlisting}
+	print(1 < 2)  // prints "1"
+	print(2 == 3) // prints "0" \end{lstlisting}
+	
+	\subsection{Expressions}
+	In SOS, most statements are \textit{expressions}, meaning that they have a \textit{value}. For instance, a constant value like \texttt{1} is an expression with value 1, and an operator forms an expression with value depending on its operands. Expressions can be nested: for instance, the operands of an operator can both be expressions. \newline
+	
+	Both variable declarations and assignments are expressions, where the expression value is the value being assigned. This means assignments can be chained:
+	
+	\begin{lstlisting}
+	a : int = 1
+	b : int = a = 2 // a and b are both 2 \end{lstlisting}
+	
+	Notice that the rightmost \texttt{=} is being processed first, because \texttt{=} is \textit{right-associative}. Other operations, such as the arithmetic operations, are \textit{left-associative}. Associativity may be overridden using parentheses, as an expression within parentheses is always evaluated before it is used in other expressions.
+	
+	\begin{lstlisting}
+	print(5 - 3 - 1)   // prints 1
+	print((5 - 3) - 1) // prints 1
+	print(5 - (3 - 1)) // prints 3 \end{lstlisting}
+	
+	In addition to associativity, operators have different \textit{precedence}. Operators of higher precedence are evaluated below operators of lower precedence. For instance, multiplication has higher precedence than addition:
+	
+	\begin{lstlisting}
+	print(5 * 3 + 1) // prints 16
+	print(5 * (3 + 1)) // prints 20 \end{lstlisting}
+	
+	The following is the complete list of symbol associativity and precedence. Some of these symbols will be discussed in future sections.
+	
+	\begin{center}
+		\begin{tabular}{|c|cc|}
+			\hline
+			Symbol & Associativity & \\
+			\hline
+			\texttt{( )} & None & (highest precedence) \\
+			\hline
+			\texttt{.} & Left & \\
+			\hline
+			\texttt{!} & Right & \\
+			\hline
+			\texttt{[ ] \{ \} ( )} & None & (parens in function application)\\
+			\hline
+			\texttt{* / \%} & Left &  \\
+			\hline
+			\texttt{**} & Right & \\
+			\hline
+			\texttt{+ -} & Left & \\
+			\hline
+			\texttt{@} & Left &  \\
+			\hline
+			\texttt{of} & Left & \\
+			\hline
+			\texttt{< > <= >=} & Left &  \\
+			\hline
+			\texttt{== !=} & Left &  \\
+			\hline
+			\texttt{\&\& ||} & Left &  \\
+			\hline
+			\texttt{=} & Right &  \\
+			\hline
+			\texttt{;} & Left &  \\
+			\hline
+			\texttt{,} & Left &  \\
+			\hline
+			\texttt{if then else} & None & (lowest precedence) \\
+			\hline
+		\end{tabular}
+	\end{center}
+
+	The if/else expression allows for a different expression to be evaluated based on a boolean value. It has three component expressions: the boolean condition, the expression if true, and the expression if false. The conditional expressions must have the same type, so that the whole expression has a consistent type.
+	
+	\begin{lstlisting}
+	print(if true then 1 else 0) // prints "1" \end{lstlisting}
+	
+	\subsection{Functions}
+	Any complicated program will have computations that must be performed several times. Instead of writing this code over and over, SOS allows the declaration of \textit{functions}, which can be \textit{called} on different inputs to perform computations many times. We have already seen two functions: the predefined \texttt{print} and \texttt{printf}. A new function can be declared with a function statement:
+	
+	\begin{lstlisting}
+	double : (n : int) -> int = 2 * n
+	print(double(3)) // prints 6 \end{lstlisting}
+	
+	Like a variable definition, a function has an identifier, given by the first string. It also has zero or more \textit{arguments}, listed, separated by commas, between parentheses. Finally, it has a \textit{return type} given after the arrow \texttt{->}. Then, after the equals is the function \textit{body}, which is an expression. This expression may contain the function's arguments as variables, and must evaluate to a value of the given return type. Just as with \texttt{print}, the function is called using parentheses. If there are several arguments, they are separated with commas. \newline
+	
+	Often, a function needs to perform more operations than can be cleanly fit into one expression. In this case, the \textit{sequencing} operator \texttt{;} can be used to combine several expressions into one. These expressions are evaluated in order, left to right.
+	
+	\begin{lstlisting}
+	id : (i : int) -> int = 
+	    (j : int = i + 1); j - 1
+	print(id(2)) // prints "2" \end{lstlisting}
+	
+	Notice that the expression may be freely written on an additional line, or even more than one line, for readability. Also note that the variable definition must be within parentheses, otherwise the \texttt{;} would be interpreted as part of the definition. \newline
+	
+	Functions can also be stored as variables and passed as arguments. When a function is defined as a variable, it can only refer to an existing function, but can be re-assigned to a different function. Functions that are defined with a function statement cannot be re-assigned. The type of a function is denoted by the \texttt{func} keyword, a comma-separated list of its argument types, an arrow \texttt{->}, and is return type.
+	
+	\begin{lstlisting}
+	lt : (i : int, j : int) -> bool = i < j
+	comp: (i: int, j: int, c: func int, int -> bool) -> bool = 
+	  c(i, j)
+	less_than : func int, int -> bool = lt
+	print(comp(1, 2, less_than)) // prints "1" \end{lstlisting}
+	
+	\subsection{Arrays}
+	SOS has two ways to create types from other types: \textit{arrays} and \textit{structures}. An array is an ordered list of values, all of the same type, that can be accessed and modified. An array type is denoted as \texttt{array} \textit{t}, where \textit{t} is some other type. Arrays can be accessed using \texttt{[]} brackets and an integer index, where the first element is index 0. An array's length can be accessed using \texttt{.length}, which gives the integer length. Attempting to access a negative index or an index beyond the array's length will result in undefined behavior.
+	
+	\begin{lstlisting}
+	A : array int = [1, 2, 3]
+	first : int = A[0]
+	A[1] = 4
+	print(first)    // prints "1" 
+	print(A[1])     // prints "4"
+	print(A.length) // prints "3" \end{lstlisting}
+	
+	Unlike SOS's primitive types, an array is a \textit{reference} type, meaning that what is stored by the variable is actually just a reference to the memory location of the data. Therefore, assigning an array does not copy the data, instead this must be done with the special function \texttt{copy}.
+	
+	\begin{lstlisting}
+	A : array int = [1, 2, 3]
+	B : array int = A
+	C : array int = copy(A)
+	A[0] = 5
+	print(B[0]) //prints "5"
+	print(C[0]) //prints "1" \end{lstlisting}
+	
+	By default, an array's memory exists for as long as the program runs, even if it cannot be accessed any more. In larger programs where memory management is an issue, array memory can be freed using the \texttt{free} function. After being free, attempting to access an array will result in an error. \newline
+	
+	Array types can be nested as much as desired. With nested array types, \texttt{copy} and \texttt{free} only act on the uppermost level.
+	
+	\begin{lstlisting}
+	A : array array int = [[1], [2, 2]]
+	B : array array int = copy(A)
+	A[0] = [5]
+	A[1][0] = 5
+	print(B[0][0]) // prints "1"
+	print(B[1][0]) // prints "5" \end{lstlisting}
+	
+	Arrays have two unique operators: \texttt{@} concatenation and \texttt{of}. \texttt{@} creates a new array by appending the elements of one array onto the end of another. \texttt{of} concatenates an array with itself some integer number of times.
+	
+	\begin{lstlisting}
+	A : array int = 2 of [1, 2]
+	B : array int = [3] @ A
+	// B is now [3, 1, 2, 1, 2] \end{lstlisting}
+	
+	Because array type names can get quite long, it can be useful to have shorter names. An \textit{alias} statement creates a string that can stand in place of another type name (not just array types).
+	
+	\begin{lstlisting}
+	alias ints = array int
+	A : ints = [1, 2] 
+	// identical to A : array int = [1, 2]\end{lstlisting}
+	
+	\subsection{Structures}
+	A \textit{structure} is a collection of several variables, called \textit{fields}, of different types. A new structure type is defined with a structure definition statement, after which point it can be used freely. The fields are accessed by name using the \texttt{.} operator. As with arrays, structures are reference types, and be used in \texttt{copy} and \texttt{free}. 
+	
+	\begin{lstlisting}
+	struct point = {x : float, y : float}
+	p : point = {1.0, 3.0}      // implicit type
+	q : point = point{2.0, 3.0} // explicit type
+	printf(p.x) // prints "1.0" \end{lstlisting}
+	
+	If two structures share the same types in the same order, they can be used interchangeably. However, the field names are determined from the type of the individual variable.
+	
+	\begin{lstlisting}
+	struct point = {x : float, y : float}
+	struct twofloats = {first : float, second : float}
+	p : point = {1.0, 2.0}
+	q : twofloats = p
+	printf(q.first) // prints 1.0
+	// q.x would give a compiler error \end{lstlisting}
+	
+	\subsection{Arithmetic Structures}
+	
+	If a structure has fields that are all integers or all floats, it is a special struct called an \textit{arithmetic structure}. These structures can be used like vectors and matrices. The \texttt{+} and \texttt{-} operators can add or subtract two structs component-wise, \texttt{*} and \texttt{/} can scale a struct by a scalar, and \texttt{*} can also take the dot product of two structs. In all cases, only one type may be involved: integer structs cannot be mixed with floating point structs, and structs of different lengths cannot be operated on together.
+	
+	\begin{lstlisting}
+	struct vector = {x : float, y : float}
+	v : vector = {1.0, 2.0}
+	u : vector = {3.0, 4.0}
+	w : vector = v + (3.0 * u)
+	printf(w.x)   // prints "10"
+	printf(v * u) // prints "11" \end{lstlisting}
+	
+	In addition, the matrix multiplication operator \texttt{**} only works on arithmetic structures. The expression \texttt{A ** B} can have two meanings. If \texttt{A} and \texttt{B} are both of length $n^2$, the result is the matrix product of \texttt{A} and \texttt{B}, where fields are assumed to be listed by the first column, then the second, and so on. If \texttt{B} is of length $n$ while \texttt{A} is of length $n^2$, then \texttt{B} is instead treated as a column vector, and the result is a column vector.
+	
+	\begin{lstlisting}
+	struct mat2 = {a11 : float, a21 : float, a12 : float, a22 : float}
+	struct vec2 = {x : float, y : float}
+	ccw : mat2 = {0.0, 1.0, -1.0, 0.0}
+	cw : mat2 = {0.0, -1.0, 1.0, 0.0}
+	p : vec2 = {3.2, 1.1}
+	q : vec2 = cw ** ccw ** p
+	// q is now {3.2, 1.1} \end{lstlisting}
+	
+	\subsection{Array Iteration}
+	Often, it is useful to apply a function or an operation to a group of elements in an array. SOS features a powerful, concise notation for iterating on arrays. For any operator besides \texttt{@} and \texttt{of}, if one of the arguments is an array, the operation is performed on each element in turn, and an array is returned. This can even be done many times in the same operation, in which case the first operand is always fully expanded before the second.
+	
+	\begin{lstlisting}
+	A : array int = 1 + [2, 3] // = [3, 4]
+	B : array array int = [1, 2] + [3, 4]
+	// = [1 + [3, 4], 2 + [3, 4]]
+	// = [[4, 5], [5, 6]] 
+	C : array array int = [[1, 2], [3, 4]] + 5
+	// = [[1, 2] + 5, [3, 4] + 5]
+	// = [[6, 7], [8, 9]]\end{lstlisting}
+	
+	In addition, if a function is applied to an argument that is an array of the expected argument type, the function is applied to each element of the array, and the array of results is returned. Unlike with operators, this cannot go more than one level deep. However, it can simultaneously iterate over two arrays. In this case, the resulting array is of the same length as the first iterated array, so care must be taken to ensure that the array lengths are appropriate.
+	
+	\begin{lstlisting}
+	sum_three : (a: int, b: int, c: int) -> int = a+b+c
+	A : array int = sum_three([1, 2], 3, [4, 5, 678])
+	// A = [8, 10] \end{lstlisting}
+	
+	\subsection{Scope and Recursion}
+	In SOS, not all variables may be accessed in all contexts. We refer to the variables that can be accessed as the \textit{scope} of a certain context. Outside of a function, any variable previously defined that is also not in a function is in scope. Inside of a function, only the function's arguments and any locally defined variables are accessible.
+	
+	\begin{lstlisting} 
+	a : int = 0
+	f : () -> int = a // this is invalid
+	g : () -> int = (b : int = 3); b
+	b = 3 // this is invalid \end{lstlisting}
+	
+	If a variable is re-defined, the new definition obscures any previous definitions in the same scope.
+	
+	\begin{lstlisting}
+	a : int = 0
+	a : float = 1.0
+	// the integer a is now inaccessible \end{lstlisting}
+	
+	The only exception to these scoping rules are function names. Functions that are defined (not function variables) are accessible \textit{anywhere} in a program after they are defined, including in their own definitions. This means that a function may recursively call itself.
+	
+	\begin{lstlisting}
+	ints : (n : int, i : int) -> array int =
+	    if i < n then [i] @ ints(n, i+1)
+	    else []
+	A : array int = ints(10, 0)
+	// Gives the array [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] \end{lstlisting}
+	
+	(Note: while concise, this algorithm is not ideal because each \texttt{@} allocates a new array. There are better ways to implement this same function without this problem).
+	
+	\subsection{Advanced Details}
+	While the following sections describe the majority of SOS, there are some significant details that are omitted for the sake of being concise. This section intends to cover all these details that are not necessary for most code but can provide some extra functionality.
+	
+	\subsubsection{Function References}
+	The first detail is just an edge case not mentioned before: the functions \texttt{print}, \texttt{printf}, \texttt{copy}, and \texttt{free} are all more limited that other functions. They can never be stored as a reference, passed to a function, or used in array iteration. This is because they are handled internally differently from other functions. If these functionalities are required, a "wrapper" function may be defined, and then used as normal.
+	
+	\subsubsection{Value Access}
+	In most cases, array access, struct access, and function application are done directly from the variable names. However, there are cases where one may want these features without storing a value with a name. In addition to access from names, all three of these statements may chained from any other:
+	
+	\begin{lstlisting}
+	f : () -> array point = [{1.0, 3.0}]
+	printf(f()[0].x) // This is valid! \end{lstlisting} 
+	
+	However, in any other context, these operations may not be done directly. In these cases, to make the syntax unambiguous, the value access modifier \texttt{\$( )} must be used. For instance:
+	
+	\begin{lstlisting}
+	printf($(p : point = {1.0, 3.0}).x) // prints "1"
+	xx : float = $(p+p).x               // xx = 2 \end{lstlisting}
+	
+	This should usually be used as a last resort, as it leads to messy code and may hide memory allocation.
+	
+	\subsubsection{Starting Expressions}
+	Not all expressions can form a complete statement on their own. Only variable definition, assignments, function application, and if/else statements are allowed as statements. No other statement would do anything, so this should not affect any actual programs. However, it means that a statement like \texttt{a+1} on its own would give a syntax error.
+	
+	\subsubsection{Reserved Identifiers}
+	The following is the list of strings that can never be used as identifers. In addition, any defined function names become reserved identifiers.
+	
+	\texttt{print}  \texttt{printf}  \texttt{copy}  \texttt{free}  \texttt{of}  \texttt{if} \texttt{then}  \texttt{else}  \texttt{array}  \texttt{func}  \texttt{true}  \texttt{false}  \texttt{import}
+\end{document}

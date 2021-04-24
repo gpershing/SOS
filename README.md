@@ -9,6 +9,8 @@
 ```
     ./docker_connect.sh
 ```
+the above command would automatically pull image if the given image doesn't exist
+
 
 pull/build image `sheronw1174/sos-env` with
 

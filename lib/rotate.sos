@@ -1,0 +1,2 @@
+struct param = {float degree, float direction}
+#direction : 1 for clockwise, 0 for counter-clockwise

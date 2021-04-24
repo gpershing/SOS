@@ -10,7 +10,7 @@ static int Width = 400;
 static int Height = 400;
 
 struct array{
-    float arr[maxpoints];
+    float *arr;
     int length;
 };
 
@@ -36,7 +36,7 @@ static void rendering_helper_close(){
  * startRendering: an initalization that must be called before drawing
  * any image. Creates Mesa and OpenGL contexts and image buffer.
  */
-static void startRendering(){
+void startRendering(){
     ctx = OSMesaCreateContextExt(OSMESA_RGBA, 16, 0, 0, NULL);
     if (!ctx){
         printf("OSMesaCreateContext failed!\n");
@@ -51,7 +51,7 @@ static void startRendering(){
     if (!OSMesaMakeCurrent(ctx, buffer, GL_UNSIGNED_BYTE, Width, Height)) {
         printf("OSMesaMakeCurrent failed!\n");
     }
-    
+    printf("startRendering...");
     rendering_helper_init();
 }
 
@@ -65,7 +65,7 @@ static void startRendering(){
  * color_mode: 0 -> between points i and i+1, the color of the segment is the color of point i+1
  *             1 -> each point has its own color. The segment between each point is a gradient between point colors
  */
-static void drawCurve(struct array spoints, struct array scolors, int color_mode){
+void drawCurve(struct array *spoints, struct array *scolors, int color_mode){
     glPushMatrix();
     
     if (color_mode == 0){
@@ -76,10 +76,10 @@ static void drawCurve(struct array spoints, struct array scolors, int color_mode
     }
 
     float points[maxpoints];
-    memcpy(points, spoints.arr, sizeof(spoints.arr));
+    memcpy(points, spoints->arr, sizeof(float)*spoints->length);
     float colors[maxpoints];
-    memcpy(colors, scolors.arr, sizeof(scolors.arr));
-    int size_arr = spoints.length;
+    memcpy(colors, scolors->arr, sizeof(float)*scolors->length);
+    int size_arr = spoints->length;
     size_arr = size_arr/2;
 
     glVertexPointer(2, GL_FLOAT, 0, points);
@@ -101,7 +101,7 @@ static void drawCurve(struct array spoints, struct array scolors, int color_mode
  * filed: 0 -> shape is not filled with color
  *        1 -> shape will be filled with color
  */
-static void drawShape(struct array spoints, struct array scolors, int color_mode, int filled){
+void drawShape(struct array *spoints, struct array *scolors, int color_mode, int filled){
     glPushMatrix();
 
     if (color_mode == 0){
@@ -112,10 +112,10 @@ static void drawShape(struct array spoints, struct array scolors, int color_mode
     }
 
     float points[maxpoints];
-    memcpy(points, spoints.arr, sizeof(spoints.arr));
+    memcpy(points, spoints->arr, sizeof(float)*spoints->length);
     float colors[maxpoints];
-    memcpy(colors, scolors.arr, sizeof(scolors.arr));
-    int size_arr = spoints.length;;
+    memcpy(colors, scolors->arr, sizeof(float)*spoints->length);
+    int size_arr = spoints->length;;
     size_arr = size_arr/2;
 
     glVertexPointer(2, GL_FLOAT, 0, points);
@@ -139,14 +139,14 @@ static void drawShape(struct array spoints, struct array scolors, int color_mode
  * size_arr: the number of points
  * point_size: the size of each point
  */
-static void drawPoint(struct array spoints, struct array scolors, int point_size){
+void drawPoint(struct array *spoints, struct array *scolors, int point_size){
     glPushMatrix();
     
     float points[maxpoints];
-    memcpy(points, spoints.arr, sizeof(spoints.arr));
+    memcpy(points, spoints->arr, sizeof(float)*spoints->length);
     float colors[maxpoints];
-    memcpy(colors, scolors.arr, sizeof(scolors.arr));
-    int size_arr = spoints.length;
+    memcpy(colors, scolors->arr, sizeof(float)*spoints->length);
+    int size_arr = spoints->length;
     size_arr = size_arr/2;
 
     glVertexPointer(2, GL_FLOAT, 0, points);
@@ -172,7 +172,7 @@ static void clearCanvas(){
 static void write_ppm(int fileNumber, const GLubyte *buffer, int width, int height){
     char filename[50];
     char filenumasstr[50];
-    sprintf(filenumasstr, "%d", fileNumber);
+    sprintf(filenumasstr, "%d.ppm", fileNumber);
     strcpy(filename, "pic");
     strcat(filename, filenumasstr);
     const int binary = 0;
@@ -182,7 +182,7 @@ static void write_ppm(int fileNumber, const GLubyte *buffer, int width, int heig
        const GLubyte *ptr = buffer;
        if (binary) {
           fprintf(f,"P6\n");
-          fprintf(f,"# ppm-file created by osdemo.c\n");
+          fprintf(f,"# ppm-file created by util_opengl.c\n");
           fprintf(f,"%i %i\n", width,height);
           fprintf(f,"255\n");
           fclose(f);
@@ -200,7 +200,7 @@ static void write_ppm(int fileNumber, const GLubyte *buffer, int width, int heig
           /*ASCII*/
           int counter = 0;
           fprintf(f,"P3\n");
-          fprintf(f,"# ascii ppm file created by osdemo.c\n");
+          fprintf(f,"# ascii ppm file created by util_opengl.c\n");
           fprintf(f,"%i %i\n", width, height);
           fprintf(f,"255\n");
           for (y=height-1; y>=0; y--) {
@@ -221,11 +221,12 @@ static void write_ppm(int fileNumber, const GLubyte *buffer, int width, int heig
  * endRendering: closes OpenGL and Mesa contexts and saves drawing
  * by calling write_ppm
  */
-static void endRendering(int fileNumber){
+void endRendering(int fileNumber){
     rendering_helper_close();
     write_ppm(fileNumber, buffer, Width, Height);
     free(buffer);
     OSMesaDestroyContext(ctx);
+    printf("endRendering...");
 }
 /*
 //sample program
