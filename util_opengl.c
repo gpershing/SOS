@@ -6,9 +6,9 @@
 static int Width = 400;
 static int Height = 400;
 
-struct point{
-    float x;
-    float y;
+struct array{
+    float arr[];
+    int length;
 };
 
 OSMesaContext ctx;
@@ -62,7 +62,7 @@ static void startRendering(){
  * color_mode: 0 -> between points i and i+1, the color of the segment is the color of point i+1
  *             1 -> each point has its own color. The segment between each point is a gradient between point colors
  */
-static void drawCurve(float points[], float colors[], int size_arr, int color_mode){
+static void drawCurve(struct array spoints, struct array scolors, int color_mode){
     glPushMatrix();
     
     if (color_mode == 0){
@@ -71,6 +71,11 @@ static void drawCurve(float points[], float colors[], int size_arr, int color_mo
     else{
         glShadeModel(GL_SMOOTH);
     }
+
+    float points[] = spoints.arr;
+    float scolors[] = scolors.arr;
+    int size_arr = spoints.size/2;
+
     glVertexPointer(2, GL_FLOAT, 0, points);
     glColorPointer(4, GL_FLOAT, 0, colors);
     glDrawArrays(GL_LINE_STRIP, 0, size_arr);
@@ -90,7 +95,7 @@ static void drawCurve(float points[], float colors[], int size_arr, int color_mo
  * filed: 0 -> shape is not filled with color
  *        1 -> shape will be filled with color
  */
-static void drawShape(float  points[], float colors[], int size_arr, int color_mode, int filled){
+static void drawShape(struct array spoints, struct array scolors, int color_mode, int filled){
     glPushMatrix();
 
     if (color_mode == 0){
@@ -99,6 +104,10 @@ static void drawShape(float  points[], float colors[], int size_arr, int color_m
     else{
         glShadeModel(GL_SMOOTH);
     }
+
+    float points[] = spoints.arr;
+    float scolors[] = scolors.arr;
+    int size_arr = spoints.size/2;
 
     glVertexPointer(2, GL_FLOAT, 0, points);
     glColorPointer(3, GL_FLOAT, 0, colors);
@@ -121,8 +130,13 @@ static void drawShape(float  points[], float colors[], int size_arr, int color_m
  * size_arr: the number of points
  * point_size: the size of each point
  */
-static void drawPoint(float points[], float colors[], int size_arr, int point_size){
+static void drawPoint(struct array spoints, struct array scolors, int size_arr, int point_size){
     glPushMatrix();
+    
+    float points[] = spoints.arr;
+    float scolors[] = scolors.arr;
+    int size_arr = spoints.size/2;
+
     glVertexPointer(2, GL_FLOAT, 0, points);
     glColorPointer(3, GL_FLOAT, 0, colors);
     glPointSize(point_size);
@@ -144,17 +158,13 @@ static void clearCanvas(){
  * height: canvas height
  */
 static void write_ppm(int fileNumber, const GLubyte *buffer, int width, int height){
-    //int length = snprintf(NULL, 0, "%d", fileNumber);
-    //char* numname = malloc(length + 1);
-    //snprintf(numname, length + 1, "%d", fileNumber);
-    //itoa(fileNumber, result, 10);
-    char b[50];
-    char b2[50];
-    sprintf(b2, "%d", fileNumber);
-    strcpy(b, "pic");
-    strcat(b, b2);
+    char filename[50];
+    char filenumasstr[50];
+    sprintf(filenumasstr, "%d", fileNumber);
+    strcpy(filename, "pic");
+    strcat(filename, filenumasstr);
     const int binary = 0;
-    FILE *f = fopen( b, "w" );
+    FILE *f = fopen( filename, "w" );
     if (f) {
        int i, x, y;
        const GLubyte *ptr = buffer;
@@ -164,7 +174,7 @@ static void write_ppm(int fileNumber, const GLubyte *buffer, int width, int heig
           fprintf(f,"%i %i\n", width,height);
           fprintf(f,"255\n");
           fclose(f);
-          f = fopen( b, "ab" );  /* reopen in binary append mode */
+          f = fopen( filename, "ab" );  /* reopen in binary append mode */
           for (y=height-1; y>=0; y--) {
              for (x=0; x<width; x++) {
                 i = (y*width + x) * 4;
