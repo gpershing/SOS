@@ -1,0 +1,24 @@
+import renderer.sos
+import affine.sos
+
+dragon_in: (n: int, A: affine, B: affine) -> path =
+    if n == 0
+    then [point{0.0, 0.0}, point{0.5, 0.0}]
+    else 
+    d: path = dragon_in(n-1, A, B);
+    next: path = append(affine_mul(A, d, 1), affine_mul(B, reversed(d), 1));
+    free(d) ; next
+
+dragon: (n: int) -> path = 
+    s: float = sqrt(2.0)/2.0 ;
+    A: affine = scale_aff(s,s) ** rotation_aff(toradians(45.)) ;
+    B: affine = translate(0.5, 0.5) ** scale_aff(s,s) **
+        rotation_aff(toradians(135.)) ** translate(-1.0, 0.0) ;
+    dragon_in (n, A, B)
+
+c: (p: point) -> color = {1.0,0.0,0.0,1.0}
+
+startCanvas()
+d: path = dragon(0)
+drawPath(d, c(d), 0)
+endCanvas(0)
