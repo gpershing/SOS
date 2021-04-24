@@ -1,2 +1,3 @@
 struct point = {x: float, y: float}
+struct point3 = {x: float, y: float, z: float}
 
