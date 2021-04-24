@@ -1,2 +1,5 @@
-struct param = {float degree, float direction}
+import point.sos
 #direction : 1 for clockwise, 0 for counter-clockwise
+
+rotate : (degree: float, direction: int, aboutPoint: point) -> 
+
