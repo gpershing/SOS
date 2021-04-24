@@ -46,7 +46,7 @@ let basic_print prog =
       "(" ^ expr_str a ^ " " ^ operator_str b ^ " " ^ expr_str c ^ ")"
     | FxnApp(a, b) -> 
         expr_str a ^ "(" ^ comma_list_str expr_str b ^ ")"
-    | IfElse(a, b, c) -> "if " ^ expr_str a ^ " then " ^ expr_str b ^ " else " ^ expr_str c
+    | IfElse(a, b, c) -> "if (" ^ expr_str a ^ ")\n then (" ^ expr_str b ^ ")\n else (" ^ expr_str c ^")\n"
     | ArrayCon(a) -> "[" ^ comma_list_str expr_str a ^ "]"
     | AnonStruct(a) -> "{" ^ comma_list_str expr_str a ^ "}"
     | NamedStruct(a, b) -> a ^ "{" ^ comma_list_str expr_str b ^ "}"
