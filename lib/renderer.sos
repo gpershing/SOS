@@ -8,5 +8,69 @@ startCanvas: () -> Void = startRendering()
 //color: a struct of rgba floats
 //colors: an array of colors
 
-drawPath: (points : path, colors : array color, colorMode: int) ->
-    
+
+if keeping util_opengl.c to functions that accept structs of arrays.
+/*
+algorithm: for each point in path, access x and y coords. concat x then y to an array. repeat for color. call c drawCurve
+*/
+
+
+struct helper = {array float : points_ret, array float : colors_ret}
+drawPathHelper : (point_structs : path, color_structs : array color, numOfPoints : int, index = 0,  points : array float, colors : array float) - >
+    if index == numOfPoints - 1
+    then
+        ret : helper = {points, colors};
+        ret
+    else
+        float : px = point_structs[i].x;
+        float : xy = point_structs[i].y;
+        points[2*i] = px;
+        points[2*i+1] = py;
+
+        float : cr = color_structs[i].r;
+        float : cg = color_structs[i].g;
+        float : cb = color_structs[i].b;
+        float : ca = color_structs[i].a;
+        colors[2*i] = cr;
+        colors[2*i+1] = cg;
+        colors[2*i+2] = cb;
+        colors[2*i+3] = ca;
+
+        drawPathHelper(point_structs, color_structs, numOfPoints, index + 1, points, colors)
+
+
+drawPath : (point_structs : path, color_structs : array color,  colorMode : int) ->
+    Void = 
+        int : numOfPoints = point_structs.length;
+        array float : points = numOfPoints*2 of [0.0];
+        array float : colors = numOfPoints*4 of [0.0];
+
+        helper_ret : helper = drawPathHelper(point_structs, color_structs, numOfPoints, 0,  points, colors);
+        points = helper_ret.points;
+        colors = helper_return.colors;
+        
+        drawCurve(points, colors, colorMode)
+
+
+
+
+
+
+
+
+
+// if changed util_opengl.c to functions that accept an array of structs (eg struct points, struct colors)
+/*
+startCanvas : () -> startRendering()
+
+drawPoints : (points : path, colors : array color, numOfPoints : int, pointSize : int) ->
+    drawPoint(path, colors, numOfPoints,  pointSize)
+
+drawPath : (points : path, colors : array color, numOfPoints : int, colorMode : int) ->
+    drawCurve(path, colors, numOfPoints, colorMode)
+
+drawShape : (points: path, colors : array color, numOfPoints : int, colorMode : int, filled : int) ->
+    drawShapec(path, colors, numOfPoints, colorMode)
+
+endCanvas : (fileNumber : int) -> endRendering(fileNumber)
+*/
