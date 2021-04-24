@@ -25,3 +25,8 @@ _build
 *.native
 *.exe
 *.o
+
+Report/*.aux
+Report/*.log
+Report/*.pdf
+Report/*.gz
