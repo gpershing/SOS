@@ -1,2 +1,39 @@
-/*TODO WHEN I UNDERSTAND SEMANT*/
+import point.sos
 
+struct mat2 = {a11: float, a21: float, a12: float, a22: float}
+struct mat3 = {a11: float, a21: float, a31: float,
+               a12: float, a22: float, a32: float,
+               a13: float, a23: float, a33: float}
+alias affine = mat3
+
+affine_mul : (A: affine, v: point, w: float) -> point =
+    to: point3 = {v.x, v.y, w};
+    res: point3 = A ** to;
+    free(to);
+    if w == 0 || res.z == 1 then
+    ret: point = {res.x, res.y};
+    free(res) ; ret
+    else
+    ret: point = {res.x/res.z, res.y/res.z};
+    free(res) ; ret
+
+rotation : (r: float) -> mat2 = 
+    c: float = cos(r) ; s: float = sin(r);
+    {c,s,-s,c}
+
+scale : (sx: float, sy: float) -> mat2 = 
+    {sx,0.0,0.0,sy}
+
+translate : (dx: float, dy: float) -> affine =
+    {1.0,0.0,0.0, 0.0,1.0,0.0, dx,dy,1.0}
+
+// For internal use only
+// Functions not normally free their arguments like this
+make_affine__ : (m: mat2) -> affine = 
+    ret: affine = {m.a11, m.a21, 0.0,
+                   m.a12, m.a22, 0.0,
+                   0.0, 0.0, 1.0};
+    free(m) ; ret
+
+rotation_aff : (r: float) -> affine = make_affine__(rotation(r))
+scale_aff : (sx: float, sy: float) -> affine = make_affine__(scale(sx,sy))
