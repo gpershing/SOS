@@ -1,3 +1,6 @@
 import point.sos
 import vector.sos
 import affine.sos
+import color.sos
+import renderer.sos
+import shape.sos
