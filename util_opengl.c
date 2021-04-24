@@ -3,7 +3,12 @@
 #include <string.h>
 #include "GL/osmesa.h"
 
+<<<<<<< HEAD
 #define maxpoints 1000
+=======
+// reference: https://github.com/freedesktop/mesa-demos
+
+>>>>>>> 0b980f83f3ab67059d1b0649bd2a620023f5ac60
 static int Width = 400;
 static int Height = 400;
 

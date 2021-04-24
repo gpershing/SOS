@@ -19,7 +19,9 @@ type environment = {
   varmap : typeid StringMap.t;
 }
 
-let math_functions : (typeid * string) list =
+(* External function signatures *)
+(* This is re-used in Codegen *)
+let external_functions : (typeid * string) list =
 [ Func([Float], Float), "sqrt" ;
   Func([Float], Float), "sin" ;
   Func([Float], Float), "cos" ;
@@ -27,11 +29,15 @@ let math_functions : (typeid * string) list =
   Func([Float], Float), "asin" ;
   Func([Float], Float), "acos" ;
   Func([Float], Float), "atan" ;
-  Func([Float], Float), "toradians" ]
+  Func([Float], Float), "toradians" ;
+  Func([], Void), "startRendering" ;
+  Func([Int], Void), "endRendering" ;
+  Func([Float, Float, Float], Void), "glTranslatef" ;
+  Func([Array, Array, Int, Int], Void), "drawCurve" ;
+  Func([Array, Array, Int, Int, Int], Void), "drawShape" ;
+  Func([Array, Array, Int, Int], Void), "drawPoint" ;
+]
 
-(* External function signatures *)
-(* This is re-used in Codegen *)
-let external_functions : (typeid * string) list = math_functions
 
 let raisestr s = raise (Failure s) 
 

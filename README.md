@@ -75,11 +75,5 @@ should see
 1. compile code with GL and GLU libraries linked
 
 ```
-
     gcc -o [filename] [filename].c -I/usr/local/include/ -L/user/local/lib/ -lOSMesa -lGLU -lm
-
-```
-
-```
-
 ```
