@@ -883,6 +883,23 @@ let translate prog =
    | SFxnApp(fexp, args) ->  
       let fdef, env = expr env fexp in
       let (fxntype, _) = fexp in
+      let _, rt = match fxntype with Func(l, t) -> l, t | _ -> 
+        raise (Failure "Unexpected function type") in
+
+      (* Get llvalues of args and accumualte env *)
+      let (llargs_rev, env) = List.fold_left
+        (fun (l, env) a -> let (ll, e) = expr env a in (ll::l, e))
+        ([], env) args in
+      let llargs = List.rev llargs_rev in
+      let result = (match rt with
+                      Void -> ""
+                    | _ -> "fxn_result") in
+      (* Normal function application *)
+      L.build_call fdef (Array.of_list llargs) result env.ebuilder, env
+
+    | SIterFxnApp(fexp, args) ->
+      let fdef, env = expr env fexp in
+      let (fxntype, _) = fexp in
       let fargs, rt = match fxntype with Func(l, t) -> l, t | _ -> 
         raise (Failure "Unexpected function type") in
 
@@ -894,12 +911,6 @@ let translate prog =
       let result = (match rt with
                       Void -> ""
                     | _ -> "fxn_result") in
-      if t = rt then
-
-      (* Normal function application *)
-      L.build_call fdef (Array.of_list llargs) result env.ebuilder, env
-
-      else
 
       (* Iterated fxn application *)
       let arr_args = List.map2 (fun (ty, _) fty -> ty=Array(fty) )
@@ -916,8 +927,9 @@ let translate prog =
          else None) llargs arr_args in
 
       (* Create a new array *)
-      let data = L.build_array_malloc (ltype_of_typ rt) len
-       "arrdata" env.ebuilder in
+      let data = if t=Void then None else 
+        Some(L.build_array_malloc (ltype_of_typ rt) len
+       "arrdata" env.ebuilder) in
       (* Set up loop *)
       let i_addr = build_zero env.ebuilder "i" in
       let loop_bb = L.append_block context "loop" env.ecurrent_fxn in
@@ -932,15 +944,18 @@ let translate prog =
              Some(data) -> build_array_load data i "el" builder
            | None -> llarg ) llargs datalist in
           let ret = L.build_call fdef (Array.of_list llargs_i) result builder in
-          build_array_store data i ret builder ; builder ) ;    
+          (match data with 
+           Some(d) -> build_array_store d i ret builder |_->()) ; builder ) ;    
 
      (* Continue *)
      let builder = L.builder_at_end context cont_bb in
      let env = { env with ebuilder = builder } in
      (* Create array struct *)
-     let arr_struct = build_array_struct (ltype_of_typ t) data len
+     (match data with Some(d) ->
+     let arr_struct = build_array_struct (ltype_of_typ t) d len
        "arr" env in
      arr_struct, env
+     | _ -> l0, env )
 
     (* Control flow *)
    | SIfElse (eif, ethen, eelse) ->

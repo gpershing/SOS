@@ -407,7 +407,9 @@ let check prog =
     if t1=t2 then (e1, e2) else
     (match (t1, t2) with
      (* Priority is Float -> Int -> Bool *)
-      (Float, _) -> (e1, cast_to t1 e2 err_str)
+      (Void, _)  -> (e1, cast_to t1 e2 err_str)
+    | (_, Void)  -> (cast_to t2 e1 err_str, e2)
+    | (Float, _) -> (e1, cast_to t1 e2 err_str)
     | (_, Float) -> (cast_to t2 e1 err_str, e2)
     | (Int, _)   -> (e1, cast_to t1 e2 err_str)
     | (_, Int)   -> (cast_to t2 e1 err_str, e2)
@@ -547,8 +549,9 @@ let check prog =
            in (List.rev l, b)
          in
          let cargs, arrmode = check_args sargs args env in
-         let rtype = if arrmode then Array(base_rt) else base_rt in
-         ((rtype, SFxnApp(fxn, cargs)), env)
+         if arrmode then
+         (( (if base_rt=Void then Void else Array(base_rt)), SIterFxnApp(fxn, cargs)), env)
+         else ((base_rt, SFxnApp(fxn, cargs)), env)
 
     | IfElse (eif, ethen, eelse) -> 
         let (sif, env) = expr env eif in
@@ -557,7 +560,9 @@ let check prog =
         let (sthen, _) = expr env ethen in
         let (selse, _)  = expr env eelse in
         let (scthen, scelse) = agree_type sthen selse
-          "Could not reconcile types of then and else clauses" in
+          ("Could not reconcile types of then and else clauses ("^
+         (let (t,_) = sthen in type_str t)^", "^
+         (let (t,_) = selse in type_str t)^")") in
         let (t, _) = scthen in
         ((t, SIfElse(scif, scthen, scelse)), env)
 
