@@ -27,14 +27,14 @@ drawHelper : (point_structs: path, color_structs: array color, numOfPoints: int,
 
         drawHelper(point_structs, color_structs, numOfPoints, i + 1, points, colors)
 
-drawPoints : (point_structs : path, color_structs : array color, pointSize : int) -> void = 
+drawPoints : (point_structs : path, color_structs : array color) -> void = 
         numOfPoints : int = point_structs.length;
         points : array float = numOfPoints*2 of [0.0];
         colors : array float = numOfPoints*4 of [0.0];
         
         drawHelper(point_structs, color_structs, numOfPoints, 0,  points, colors);
 
-        gl_drawPoint(points, colors, pointSize)
+        gl_drawPoint(points, colors, 2)
 
 drawPath : (point_structs : path, color_structs : array color,  colorMode : int) -> void = 
         numOfPoints : int= point_structs.length;
