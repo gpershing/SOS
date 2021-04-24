@@ -3,6 +3,8 @@
 #include <string.h>
 #include "GL/osmesa.h"
 
+// reference: https://github.com/freedesktop/mesa-demos
+
 static int Width = 400;
 static int Height = 400;
 
