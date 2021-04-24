@@ -1,84 +1,63 @@
 import shape.sos
 import color.sos
 
-startCanvas: () -> Void = startRendering()
-
+startCanvas: () -> void = gl_startRendering()
 
 //algorithm: for each point in path, access x and y coords. concat x then y to an array. repeat for color. call c drawCurve
 
+cvoid : () -> void = 0
 
-
-struct helper = {array float : points_ret, array float : colors_ret}
-drawHelper : (point_structs : path, color_structs : array color, numOfPoints : int, index = 0,  points : array float, colors : array float) - >
-    if index == numOfPoints - 1
-    then
-        ret : helper = {points, colors};
-        ret
+drawHelper : (point_structs: path, color_structs: array color, numOfPoints: int, i: int,  points: array float, colors: array float) -> void =
+    if i >= numOfPoints
+    then cvoid()
     else
-        float : px = point_structs[i].x;
-        float : xy = point_structs[i].y;
+        px : float = point_structs[i].x;
+        py : float= point_structs[i].y;
         points[2*i] = px;
         points[2*i+1] = py;
 
-        float : cr = color_structs[i].r;
-        float : cg = color_structs[i].g;
-        float : cb = color_structs[i].b;
-        float : ca = color_structs[i].a;
+        cr : float = color_structs[i].r;
+        cg : float = color_structs[i].g;
+        cb : float= color_structs[i].b;
+        ca : float= color_structs[i].a;
         colors[4*i] = cr;
         colors[4*i+1] = cg;
         colors[4*i+2] = cb;
         colors[4*i+3] = ca;
 
-        drawPathHelper(point_structs, color_structs, numOfPoints, index + 1, points, colors)
+        drawHelper(point_structs, color_structs, numOfPoints, i + 1, points, colors)
 
-
-
-drawPoints : (points : path, colors : array color, numOfPoints : int, pointSize : int) ->
-    Void = 
-        int : numOfPoints = point_structs.length;
-        array float : points = numOfPoints*2 of [0.0];
-        array float : colors = numOfPoints*4 of [0.0];
-
-        helper_ret : helper = drawHelper(point_structs, color_structs, numOfPoints, 0,  points, colors);
-        points = helper_ret.points;
-        colors = helper_return.colors;
-
-        drawPoint(points, colors, pointSize)
-
-
-
-drawPath : (point_structs : path, color_structs : array color,  colorMode : int) ->
-    Void = 
-        int : numOfPoints = point_structs.length;
-        array float : points = numOfPoints*2 of [0.0];
-        array float : colors = numOfPoints*4 of [0.0];
-
-        helper_ret : helper = drawHelper(point_structs, color_structs, numOfPoints, 0,  points, colors);
-        points = helper_ret.points;
-        colors = helper_return.colors;
+drawPoints : (point_structs : path, color_structs : array color, pointSize : int) -> void = 
+        numOfPoints : int = point_structs.length;
+        points : array float = numOfPoints*2 of [0.0];
+        colors : array float = numOfPoints*4 of [0.0];
         
-        drawCurve(points, colors, colorMode)
+        drawHelper(point_structs, color_structs, numOfPoints, 0,  points, colors);
+
+        gl_drawPoint(points, colors, pointSize)
+
+drawPath : (point_structs : path, color_structs : array color,  colorMode : int) -> void = 
+        numOfPoints : int= point_structs.length;
+        points : array float= numOfPoints*2 of [0.0];
+        colors : array float= numOfPoints*4 of [0.0];
+
+        drawHelper(point_structs, color_structs, numOfPoints, 0,  points, colors);
+        
+        gl_drawCurve(points, colors, colorMode)
 
 
+drawShape : (point_structs : path, color_structs : array color,  colorMode : int, filled : int) ->
+    void = 
+        numOfPoints : int = point_structs.length;
+        points : array float = numOfPoints*2 of [0.0];
+        colors : array float = numOfPoints*4 of [0.0];
 
-drawShape : (point_structs : path, color_structs : array color,  colorMode : int, filled : int) - >
-    Void = 
-        int : numOfPoints = point_structs.length;
-        array float : points = numOfPoints*2 of [0.0];
-        array float : colors = numOfPoints*4 of [0.0];
+        drawHelper(point_structs, color_structs, numOfPoints, 0,  points, colors);
 
-        helper_ret : helper = drawHelper(point_structs, color_structs, numOfPoints, 0,  points, colors);
-        points = helper_ret.points;
-        colors = helper_return.colors;
-
-        drawShape(points, colors, colorMode, filled)
+        gl_drawShape(points, colors, colorMode, filled)
 
 
-endCanvas : (fileNumber : int) -> endRendering(fileNumber)
-
-
-
-
+endCanvas : (fileNumber : int) -> void = gl_endRendering(fileNumber)
 
 
 // if changed util_opengl.c to functions that accept an array of structs (eg struct points, struct colors)

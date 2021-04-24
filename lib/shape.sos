@@ -3,6 +3,6 @@ import point.sos
 alias path = array point
 alias shape = array point
 
-append : (p1 : path, p2: path) -> path = #TODO
+append : (p1 : path, p2: path) -> path = p1 // TODO
 
-reverse: (p : path) -> path = #TODO
+reverse: (p : path) -> path = p // TODO
