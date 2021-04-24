@@ -16,7 +16,7 @@ algorithm: for each point in path, access x and y coords. concat x then y to an 
 
 
 struct helper = {array float : points_ret, array float : colors_ret}
-drawPathHelper : (point_structs : path, color_structs : array color, numOfPoints : int, index = 0,  points : array float, colors : array float) - >
+drawHelper : (point_structs : path, color_structs : array color, numOfPoints : int, index = 0,  points : array float, colors : array float) - >
     if index == numOfPoints - 1
     then
         ret : helper = {points, colors};
@@ -31,10 +31,10 @@ drawPathHelper : (point_structs : path, color_structs : array color, numOfPoints
         float : cg = color_structs[i].g;
         float : cb = color_structs[i].b;
         float : ca = color_structs[i].a;
-        colors[2*i] = cr;
-        colors[2*i+1] = cg;
-        colors[2*i+2] = cb;
-        colors[2*i+3] = ca;
+        colors[4*i] = cr;
+        colors[4*i+1] = cg;
+        colors[4*i+2] = cb;
+        colors[4*i+3] = ca;
 
         drawPathHelper(point_structs, color_structs, numOfPoints, index + 1, points, colors)
 
@@ -45,7 +45,7 @@ drawPath : (point_structs : path, color_structs : array color,  colorMode : int)
         array float : points = numOfPoints*2 of [0.0];
         array float : colors = numOfPoints*4 of [0.0];
 
-        helper_ret : helper = drawPathHelper(point_structs, color_structs, numOfPoints, 0,  points, colors);
+        helper_ret : helper = drawHelper(point_structs, color_structs, numOfPoints, 0,  points, colors);
         points = helper_ret.points;
         colors = helper_return.colors;
         
