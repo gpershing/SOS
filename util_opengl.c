@@ -172,7 +172,7 @@ static void clearCanvas(){
 static void write_ppm(int fileNumber, const GLubyte *buffer, int width, int height){
     char filename[50];
     char filenumasstr[50];
-    sprintf(filenumasstr, "%d", fileNumber);
+    sprintf(filenumasstr, "%d.ppm", fileNumber);
     strcpy(filename, "pic");
     strcat(filename, filenumasstr);
     const int binary = 0;
