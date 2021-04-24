@@ -1,0 +1,10 @@
+import shape.sos
+
+alias shape = array point
+
+#get the top left most point and expand downward rightward
+
+shape size(float multiple) =
+    #for loop to get the point with the smallest x and y
+    
+
