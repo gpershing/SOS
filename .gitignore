@@ -18,6 +18,7 @@ tests/fail-*.diff
 tests/helloworld.ll
 tests/test-*.ll
 tests/testall.log
+tests/.DS_Store
 
 _build
 *.ll
