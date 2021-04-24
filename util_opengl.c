@@ -3,11 +3,12 @@
 #include <string.h>
 #include "GL/osmesa.h"
 
+#define maxpoints 1000
 static int Width = 400;
 static int Height = 400;
 
 struct array{
-    float arr[];
+    float arr[maxpoints];
     int length;
 };
 
@@ -72,9 +73,12 @@ static void drawCurve(struct array spoints, struct array scolors, int color_mode
         glShadeModel(GL_SMOOTH);
     }
 
-    float points[] = spoints.arr;
-    float scolors[] = scolors.arr;
-    int size_arr = spoints.size/2;
+    float points[maxpoints];
+    memcpy(points, spoints.arr, sizeof(spoints.arr));
+    float colors[maxpoints];
+    memcpy(colors, scolors.arr, sizeof(scolors.arr));
+    int size_arr = spoints.length;
+    size_arr = size_arr/2;
 
     glVertexPointer(2, GL_FLOAT, 0, points);
     glColorPointer(4, GL_FLOAT, 0, colors);
@@ -105,9 +109,12 @@ static void drawShape(struct array spoints, struct array scolors, int color_mode
         glShadeModel(GL_SMOOTH);
     }
 
-    float points[] = spoints.arr;
-    float scolors[] = scolors.arr;
-    int size_arr = spoints.size/2;
+    float points[maxpoints];
+    memcpy(points, spoints.arr, sizeof(spoints.arr));
+    float colors[maxpoints];
+    memcpy(colors, scolors.arr, sizeof(scolors.arr));
+    int size_arr = spoints.length;;
+    size_arr = size_arr/2;
 
     glVertexPointer(2, GL_FLOAT, 0, points);
     glColorPointer(3, GL_FLOAT, 0, colors);
@@ -130,12 +137,15 @@ static void drawShape(struct array spoints, struct array scolors, int color_mode
  * size_arr: the number of points
  * point_size: the size of each point
  */
-static void drawPoint(struct array spoints, struct array scolors, int size_arr, int point_size){
+static void drawPoint(struct array spoints, struct array scolors, int point_size){
     glPushMatrix();
     
-    float points[] = spoints.arr;
-    float scolors[] = scolors.arr;
-    int size_arr = spoints.size/2;
+    float points[maxpoints];
+    memcpy(points, spoints.arr, sizeof(spoints.arr));
+    float colors[maxpoints];
+    memcpy(colors, scolors.arr, sizeof(scolors.arr));
+    int size_arr = spoints.length;
+    size_arr = size_arr/2;
 
     glVertexPointer(2, GL_FLOAT, 0, points);
     glColorPointer(3, GL_FLOAT, 0, colors);
@@ -221,29 +231,35 @@ static void endRendering(int fileNumber){
 int main(int argc, char *argv[]){
     startRendering();
     
-    float points[] = {-.5, 0, .5, 0, 0, .5};
-    float colors[] = {1.0, 0.5, 1.0, 1.0, 1.0, 0.5, 0, 1.0,  0.5, 1.0, 1.0, 1.0};
-    int size_arr = 3;
+    float p[]= {-.5, 0, .5, 0, 0, .5};
+    struct array points;
+    memcpy(points.arr, p, sizeof(p));
+    points.length = 6;
+
+    float c[] = {1.0, 0.5, 1.0, 1.0, 1.0, 0.5, 0, 1.0,  0.5, 1.0, 1.0, 1.0};
+    struct array colors;
+    memcpy(colors.arr, c, sizeof(c));
+    colors.length = 12;
 
     int fileNumber = 1;
 
     startRendering();
 
-    drawCurve(points, colors, size_arr, 1);
+    drawCurve(points, colors, 1);
     
     glTranslatef(-.2,-.2,0);
-    drawCurve(points, colors, size_arr, 0);
+    drawCurve(points, colors, 0);
 
     glTranslatef(-.2, -.2, 0);
-    drawShape(points, colors, size_arr, 1, 1);
+    drawShape(points, colors, 1, 1);
 
     glTranslatef(.6, 0 , 0);
-    drawShape(points, colors, size_arr, 0, 0);
+    drawShape(points, colors, 0, 0);
 
     glTranslatef(-.3, -.2, 0);
-    drawPoint(points, colors, size_arr, 5);
+    drawPoint(points, colors, 10);
 
-    endRendering(0);
+    endRendering(1);
 
     return 0;
 }
