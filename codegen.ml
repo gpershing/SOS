@@ -213,7 +213,7 @@ let translate prog =
      (* Compute new length *)
      let n = L.build_mul ll1 len "oflen" env.ebuilder in
      (* Pre-GEP the array *)
-     let old_data = build_array_len env.ebuilder ll2 "olddata" in
+     let old_data = build_array_data env.ebuilder ll2 "olddata" in
      
      (* Create a new array *)
      let el_typ = match t2 with Array(et) -> et | _ -> Void in
@@ -986,6 +986,7 @@ let translate prog =
       | (Float, Int)  -> normal_cast L.build_sitofp
       | (Bool, Int)   -> expr env (Bool, SBinop(ex, Neq, il 0))
       | (Bool, Float) -> expr env (Bool, SBinop(ex, Neq, fl "0"))
+      | (Void, _)     -> expr env ex
       | _             -> raise (Failure "Unknown type cast")
       )
    
