@@ -33,9 +33,9 @@ let external_functions : (typeid * string) list =
   Func([], Void), "startRendering" ;
   Func([Int], Void), "endRendering" ;
   (*Func([Float, Float, Float], Void), "glTranslatef" ; ill try to implement affine transformations in sos*)
-  Func([Array, Array, Int], Void), "drawCurve" ;
-  Func([Array, Array, Int, Int], Void), "drawShape" ;
-  Func([Array, Array, Int], Void), "drawPoint" ;
+  Func([Array(Float); Array(Float); Int], Void), "drawCurve" ;
+  Func([Array(Float); Array(Float); Int; Int], Void), "drawShape" ;
+  Func([Array(Float); Array(Float); Int], Void), "drawPoint" ;
 ]
 
 

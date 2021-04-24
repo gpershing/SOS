@@ -1,0 +1,12 @@
+import shape.sos
+import color.sos
+
+startCanvas: () -> Void = startRendering()
+
+//points: a struct of float x, float y
+//path: an array of points
+//color: a struct of rgba floats
+//colors: an array of colors
+
+drawPath: (points : path, colors : array color, colorMode: int) ->
+    
