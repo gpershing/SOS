@@ -160,6 +160,21 @@ let translate prog =
        loop_bb end_bb builder);
    in
 
+   (* General shorthand *)
+   let build_zero builder nm = 
+     let addr = L.build_alloca i32_t nm builder in
+     ignore(L.build_store l0 addr builder);
+     addr
+   in
+   
+   let build_param builder decl typ n nm =
+       let param = (Array.get (L.params decl) n) in
+       L.set_value_name nm param ;
+       let local = L.build_alloca typ nm builder in
+       ignore (L.build_store param local builder);
+       L.build_load local nm builder
+    in
+
    (* Array operataions *)
    let build_array_load data idx nm builder =
      let elref = L.build_gep data [|idx|] (nm^"ref") builder in
@@ -180,31 +195,33 @@ let translate prog =
      arr_struct
    in
 
-   let build_array_len env lv = (* Re-used in build_of and expr *)
+   let build_array_data builder lv nm =
+     let data_ref = L.build_gep lv [|l0; l0|] (nm^"ref") builder in
+     L.build_load data_ref nm builder
+   in
+
+   let build_array_len builder lv nm =
      let lenref = L.build_gep lv [|l0; l1|]
-      ("lengep") env.ebuilder in
-     L.build_load lenref ("len") env.ebuilder, env
+      (nm^"ref") builder in
+     L.build_load lenref nm  builder
    in
 
    let build_of t2 ll1 ll2 env = 
      (* Get ll2's length *)
-     let (len, env) = build_array_len env ll2 in
+     let len = build_array_len env.ebuilder ll2 "len" in
     
      (* Compute new length *)
      let n = L.build_mul ll1 len "oflen" env.ebuilder in
      (* Pre-GEP the array *)
-     let old_data_ref = L.build_gep ll2 [|l0; l0|] ("oldrf") env.ebuilder in
-     let old_data = L.build_load old_data_ref ("olddata") env.ebuilder in
+     let old_data = build_array_len env.ebuilder ll2 "olddata" in
      
      (* Create a new array *)
      let el_typ = match t2 with Array(et) -> et | _ -> Void in
      let data = L.build_array_malloc (ltype_of_typ el_typ) n
        "arrdata" env.ebuilder in
      (* Set up loop *)
-     let i_addr = L.build_alloca i32_t "i" env.ebuilder in
-     ignore (L.build_store l0 i_addr env.ebuilder);
-     let j_addr = L.build_alloca i32_t "j" env.ebuilder in
-     ignore (L.build_store l0 j_addr env.ebuilder); 
+     let i_addr = build_zero env.ebuilder "i" in
+     let j_addr = build_zero env.ebuilder "j" in
      let loop_bb = L.append_block context "loop" env.ecurrent_fxn in
      let inner_bb = L.append_block context "inner" env.ecurrent_fxn in
      let continue_bb = L.append_block context "continue" env.ecurrent_fxn in
@@ -238,25 +255,21 @@ let translate prog =
 
    let build_concat t2 ll1 ll2 env =
      (* Get lengths *)
-     let (len1, _) = build_array_len env ll1 in
-     let (len2, _) = build_array_len env ll2 in
+     let len1 = build_array_len env.ebuilder ll1 "len1" in
+     let len2 = build_array_len env.ebuilder ll2 "len2" in
      let n = L.build_add len1 len2 "n" env.ebuilder in
 
      (* Pre-GEP the arrays *)
-     let data_ref1 = L.build_gep ll1 [|l0; l0|] ("dataref1") env.ebuilder in
-     let data_ref2 = L.build_gep ll2 [|l0; l0|] ("dataref2") env.ebuilder in
-     let data1 = L.build_load data_ref1 ("data1") env.ebuilder in
-     let data2 = L.build_load data_ref2 ("data2") env.ebuilder in
+     let data1 = build_array_data env.ebuilder ll1 "data1" in
+     let data2 = build_array_data env.ebuilder ll2 "data2" in
 
      (* Create a new array *)
      let el_typ = match t2 with Array(et) -> et | _ -> Void in
      let data = L.build_array_malloc (ltype_of_typ el_typ) n
        "data" env.ebuilder in 
      (* Set up loop *)
-     let i_addr = L.build_alloca i32_t "i" env.ebuilder in
-     ignore (L.build_store l0 i_addr env.ebuilder);
-     let j_addr = L.build_alloca i32_t "j" env.ebuilder in
-     ignore (L.build_store l0 j_addr env.ebuilder);
+     let i_addr = build_zero env.ebuilder "i" in
+     let j_addr = build_zero env.ebuilder "j" in
 
      let loop1 = L.append_block context "loop1" env.ecurrent_fxn in
      let inbtw = L.append_block context "inbtw" env.ecurrent_fxn in
@@ -291,6 +304,7 @@ let translate prog =
      arr_struct, env
    in
 
+   (* Struct ops *)
    (* Finds the integer field index *)
    let find_field struct_typ field = 
        let sargl = match struct_typ with Struct(l) -> l | _  -> [] in
@@ -302,13 +316,16 @@ let translate prog =
        find_field_inner sargl field 0
    in
 
-   (*
-   let array_map = make_opmap
-   [(Of, build_of); (Concat, build_concat)]
+   let build_struct_field builder lv n nm =
+     let ref = L.build_gep lv [|l0; L.const_int i32_t n|] (nm^"ref") builder in
+     L.build_load ref nm builder
+   in     
+
+   let build_struct_store builder lv s_lv n = 
+     let ref = L.build_gep s_lv [|l0; L.const_int i32_t n|] "ref" builder in
+     ignore (L.build_store lv ref builder)
    in
-   *)
-   
-   (* Struct ops *)
+
    let dot_product stype slist env =
      let atype = match slist with
        (hd, _) :: _ -> if hd = Float then Float else Int
@@ -328,17 +345,8 @@ let translate prog =
 
        let bind = { ftype = atype; formals = [stype, "a"; stype, "b"] } in
 
-       let parama = (Array.get (L.params decl) 0) in
-       L.set_value_name "a" parama ;
-       let locala = L.build_alloca ltype "a" builder in
-       ignore (L.build_store parama locala builder);
-       let a = L.build_load locala "a" builder in
-
-       let paramb = (Array.get (L.params decl) 1) in
-       L.set_value_name "b" paramb ;
-       let localb = L.build_alloca ltype "b" builder in
-       ignore (L.build_store paramb localb builder);
-       let b = L.build_load localb "b" builder in
+       let a = build_param builder decl ltype 0 "a" in
+       let b = build_param builder decl ltype 1 "b" in
 
        let res = L.build_alloca (ltype_of_typ atype) "dot" builder in
        let tmp = L.build_alloca (ltype_of_typ atype) "tmp" builder in
@@ -348,10 +356,8 @@ let translate prog =
        let opadd = StringMap.find "Add" map in
        let rec dot_prod n = 
          if n < len then 
-           let aref = L.build_gep a [|l0; L.const_int i32_t n|] "aref" builder in
-           let bref = L.build_gep b [|l0; L.const_int i32_t n|] "bref" builder in
-           let aval = L.build_load aref "aval" builder in
-           let bval = L.build_load bref "bval" builder in
+           let aval = build_struct_field builder a n "aval" in
+           let bval = build_struct_field builder b n "bval" in
            ignore (L.build_store (opmul aval bval "tmp" builder) tmp builder);
            let tmpv = L.build_load tmp "tmp" builder in
            let resv = L.build_load res "res" builder in
@@ -387,29 +393,17 @@ let translate prog =
 
        let bind = { ftype = stype; formals = [stype, "a"; stype, "b"] } in
 
-       let parama = (Array.get (L.params decl) 0) in
-       L.set_value_name "a" parama ;
-       let locala = L.build_alloca ltype "a" builder in
-       ignore (L.build_store parama locala builder);
-       let a = L.build_load locala "a" builder in
-
-       let paramb = (Array.get (L.params decl) 1) in
-       L.set_value_name "b" paramb ;
-       let localb = L.build_alloca ltype "b" builder in
-       ignore (L.build_store paramb localb builder);
-       let b = L.build_load localb "b" builder in
+       let a = build_param builder decl ltype 0 "a" in
+       let b = build_param builder decl ltype 1 "b" in
 
        let struc = L.build_malloc (L.element_type ltype) "ret" builder in
        let map = (if atype=Float then float_map else int_map) in
        let sumop = StringMap.find (opstr op) map in
        let rec strsum n = 
          if n < len then 
-           let aref = L.build_gep a [|l0; L.const_int i32_t n|] "aref" builder in
-           let bref = L.build_gep b [|l0; L.const_int i32_t n|] "bref" builder in
-           let aval = L.build_load aref "aval" builder in
-           let bval = L.build_load bref "bval" builder in
-           let rref = L.build_gep struc [|l0; L.const_int i32_t n|] "rref" builder in
-           ignore (L.build_store (sumop aval bval "tmp" builder) rref builder);
+           let aval = build_struct_field builder a n "aval" in
+           let bval = build_struct_field builder b n "bval" in
+           build_struct_store builder (sumop aval bval "tmp" builder) struc n;
            strsum (n+1)
          else ()
        in
@@ -441,17 +435,8 @@ let translate prog =
 
        let bind = { ftype = stype; formals = [stype, "a"; stype, "b"] } in
 
-       let parama = (Array.get (L.params decl) 0) in
-       L.set_value_name "a" parama ;
-       let locala = L.build_alloca ltype "a" builder in
-       ignore (L.build_store parama locala builder);
-       let a = L.build_load locala "a" builder in
-
-       let paramb = (Array.get (L.params decl) 1) in
-       L.set_value_name "b" paramb ;
-       let localb = L.build_alloca altype "b" builder in
-       ignore (L.build_store paramb localb builder);
-       let b = L.build_load localb "b" builder in
+       let a = build_param builder decl ltype 0 "a" in
+       let b = build_param builder decl altype 1 "b" in
 
        let struc = L.build_malloc (L.element_type ltype) "ret" builder in
        let map = (if atype=Float then float_map else int_map) in
@@ -460,8 +445,7 @@ let translate prog =
          if n < len then 
            let aref = L.build_gep a [|l0; L.const_int i32_t n|] "aref" builder in
            let aval = L.build_load aref "aval" builder in
-           let rref = L.build_gep struc [|l0; L.const_int i32_t n|] "rref" builder in
-           ignore (L.build_store (sumop aval b "tmp" builder) rref builder);
+           build_struct_store builder (sumop aval b "tmp" builder) struc n;
            strscl (n+1)
          else ()
        in
@@ -493,17 +477,8 @@ let translate prog =
        let bind = { ftype = Bool; formals =
            [stype, "a"; stype, "b"] } in
 
-       let parama = (Array.get (L.params decl) 0) in
-       L.set_value_name "a" parama ;
-       let locala = L.build_alloca ltype "a" builder in
-       ignore (L.build_store parama locala builder);
-       let a = L.build_load locala "a" builder in
-
-       let paramb = (Array.get (L.params decl) 1) in
-       L.set_value_name "b" paramb ;
-       let localb = L.build_alloca ltype "b" builder in
-       ignore (L.build_store paramb localb builder);
-       let b = L.build_load localb "b" builder in
+       let a = build_param builder decl ltype 0 "a" in
+       let b = build_param builder decl ltype 1 "b" in
 
        let ret = L.build_alloca (ltype_of_typ Bool) "ret" builder in
        let eq = StringMap.find (opstr op) (if atype=Float then float_map
@@ -512,10 +487,8 @@ let translate prog =
        ignore(L.build_store (L.const_int i1_t (if op=Eq then 1 else 0)) ret builder);
        let rec streq n = 
          if n < len then
-           let aref = L.build_gep a [|l0; L.const_int i32_t n|] "aref" builder in
-           let aval = L.build_load aref "aval" builder in
-           let bref = L.build_gep b [|l0; L.const_int i32_t n|] "bref" builder in
-           let bval = L.build_load bref "bval" builder in
+           let aval = build_struct_field builder a n "aval" in
+           let bval = build_struct_field builder b n "bval" in
            let rval = L.build_load ret "rval" builder in
            ignore(L.build_store
              (combine rval (eq aval bval "eq" builder) "ret" builder) ret builder);
@@ -561,17 +534,8 @@ let translate prog =
        let bind =
         { ftype = rtype; formals = [Struct(slist1), "A"; Struct(slist2), "B"] } in
        
-       let parama = (Array.get (L.params decl) 0) in
-       L.set_value_name "A" parama ;
-       let locala = L.build_alloca ltype1 "A" builder in
-       ignore (L.build_store parama locala builder);
-       let a = L.build_load locala "A" builder in
-
-       let paramb = (Array.get (L.params decl) 1) in
-       L.set_value_name "B" paramb ;
-       let localb = L.build_alloca ltype2 "B" builder in
-       ignore (L.build_store paramb localb builder);
-       let b = L.build_load localb "B" builder in
+       let a = build_param builder decl ltype1 0 "A" in
+       let b = build_param builder decl ltype2 1 "B" in
 
        let struc = L.build_malloc (L.element_type rltype) "ret" builder in
        let map = (if atype=Float then float_map else int_map) in
@@ -586,22 +550,16 @@ let translate prog =
          ignore(L.build_store (if atype=Float then L.const_float altype 0.0 else L.const_int altype 0) tmp builder) ;
          let rec mmul_inner k = 
            if k < height then (
-           let aref = L.build_gep a [|l0; L.const_int i32_t (j+k*n)|] "aref" builder
-           in
-           let bref = L.build_gep b [|l0; L.const_int i32_t (k+i*n)|] "bref" builder
-           in
-           let aval = L.build_load aref "aval" builder in
-           let bval = L.build_load bref "bval" builder in
+           let aval = build_struct_field builder a (j+k*n) "aval" in
+           let bval = build_struct_field builder b (k+i*n) "bval" in
            let mval = mulop aval bval "tmp2" builder in
            let tval = L.build_load tmp "tval" builder in
            ignore (L.build_store (sumop mval tval "tmp" builder) tmp builder);
            mmul_inner (k+1))
            else ()
          in mmul_inner 0 ;
-         let rref = L.build_gep struc [|l0; L.const_int i32_t (j+i*n)|] "rref" builder
-         in
          let tval = L.build_load tmp "tval" builder in
-         ignore (L.build_store tval rref builder) ; 
+         build_struct_store builder tval struc (j+i*n);
          mmul (i+1) j )
          else (* j >= height *) ()
          else (* i >= width *)  mmul 0 (j+1)
@@ -612,7 +570,6 @@ let translate prog =
        ignore (L.build_ret struc builder) ;
        (decl, bind), { env with esfxns = StringMap.add name (decl, bind) env.esfxns }
    in
-
 
    (* Binops *)
    let rec binop op rt t1 t2 ll1 ll2 env = 
@@ -639,11 +596,10 @@ let translate prog =
      | (Struct(l1), _) -> let (decl, _), env = struct_scale t1 l1 op env 
        in L.build_call decl [|ll1; ll2|] "result" env.ebuilder, env
      | (Array(_), _) ->
-       let (len, env) = build_array_len env ll1 in
+       let len = build_array_len env.ebuilder ll1 "len" in
       
        (* Pre-GEP the array *)
-       let argref = L.build_gep ll1 [|l0; l0|] ("argref") env.ebuilder in
-       let argdata = L.build_load argref ("argdata") env.ebuilder in
+       let argdata = build_array_data env.ebuilder ll1 "argdata" in
        let el_typ = match t1 with Array(et) -> et | _ -> Void in
      
        (* Create a new array *)
@@ -651,21 +607,18 @@ let translate prog =
        let data = L.build_array_malloc (ltype_of_typ rtel_typ) len
          "arrdata" env.ebuilder in
        (* Set up loop *)
-       let i_addr = L.build_alloca i32_t "i" env.ebuilder in
-       ignore (L.build_store l0 i_addr env.ebuilder);
+       let i_addr = build_zero env.ebuilder "i" in
        let loop_bb = L.append_block context "loop" env.ecurrent_fxn in
        let cont_bb = L.append_block context "cont" env.ecurrent_fxn in
        ignore (L.build_br loop_bb env.ebuilder);
        (* Build loop *)
        build_loop i_addr len "i" loop_bb cont_bb (
          fun i builder -> 
-         let vref = L.build_gep argdata [|i|] ("vref") builder in
-         let v = L.build_load vref "v" builder in
+         let v = build_array_load argdata i "v" builder in
          let fenv = { env with ebuilder = builder } in
          let llv, fenv = binop op rtel_typ el_typ t2 v ll2 fenv in
          let builder = fenv.ebuilder in
-         let dref = L.build_gep data [|i|] ("dref") builder in
-         ignore (L.build_store llv dref builder);
+         build_array_store data i llv builder;
          builder ) ;
        (* Continue *)
        let builder = L.builder_at_end context cont_bb in
@@ -675,11 +628,10 @@ let translate prog =
        arr_struct, env
 
      | (_, Array(_)) -> 
-       let (len, env) = build_array_len env ll2 in
+       let len = build_array_len env.ebuilder ll2 "len" in
       
        (* Pre-GEP the array *)
-       let argref = L.build_gep ll2 [|l0; l0|] ("argref") env.ebuilder in
-       let argdata = L.build_load argref ("argdata") env.ebuilder in
+       let argdata = build_array_data env.ebuilder ll2 "argdata" in
        let el_typ = match t2 with Array(et) -> et | _ -> Void in
      
        (* Create a new array *)
@@ -687,21 +639,18 @@ let translate prog =
        let data = L.build_array_malloc (ltype_of_typ el_typ) len
          "arrdata" env.ebuilder in
        (* Set up loop *)
-       let i_addr = L.build_alloca i32_t "i" env.ebuilder in
-       ignore (L.build_store l0 i_addr env.ebuilder);
+       let i_addr = build_zero env.ebuilder "i" in
        let loop_bb = L.append_block context "loop" env.ecurrent_fxn in
        let cont_bb = L.append_block context "cont" env.ecurrent_fxn in
        ignore (L.build_br loop_bb env.ebuilder);
        (* Build loop *)
        build_loop i_addr len "i" loop_bb cont_bb (
          fun i builder -> 
-         let vref = L.build_gep argdata [|i|] ("vref") builder in
-         let v = L.build_load vref "v" builder in
+         let v = build_array_load argdata i "v" builder in
          let fenv = { env with ebuilder = builder } in
          let llv, fenv = binop op rtel_typ t1 el_typ ll1 v fenv in
          let builder = fenv.ebuilder in
-         let dref = L.build_gep data [|i|] ("dref") builder in
-         ignore (L.build_store llv dref builder);
+         build_array_store data i llv builder;
          builder ) ;
        (* Continue *)
        let builder = L.builder_at_end context cont_bb in
@@ -758,9 +707,7 @@ let translate prog =
      get_variable env nm, env
      else (* All other variables *) 
      (L.build_load (get_variable env nm) nm env.ebuilder),env
-   (* (match t with
-        Func(_) -> get_variable env nm , env
-      | _ -> (L.build_load (get_variable env nm) nm env.ebuilder),env  )*)
+
    | SArrayAccess(arr_exp, idx) -> 
      let (arr, env) = expr env arr_exp in
      let (idx_lv, env) = expr env idx in
@@ -772,7 +719,7 @@ let translate prog =
      build_array_load d idx_lv "el" env.ebuilder, env
 
    | SArrayLength (arr_exp) -> let (arr, env) = expr env arr_exp in
-     build_array_len env arr
+     build_array_len env.ebuilder arr "len", env
 
    | SStructField (str_exp, fl) ->
        let (stype, _) = str_exp in
@@ -801,15 +748,11 @@ let translate prog =
        let (lv, env) = ex' in
        (* Find field index *)
        let idx = find_field stype fl in
-       (* GEP *)
-       let adr = L.build_gep struc [|l0; L.const_int i32_t idx|]
-         "fieldadr" env.ebuilder in
-       ignore(L.build_store lv adr env.ebuilder); ex'
+       build_struct_store env.ebuilder lv struc idx; ex'
 
    | SAssignArray (arr_exp, idx, ex) ->
        let (arr, env) = expr env arr_exp in
-       let dataref = L.build_gep arr [|l0; l0|] "dataref" env.ebuilder in
-       let data = L.build_load dataref "data" env.ebuilder in
+       let data = build_array_data env.ebuilder arr "dataref" in
        let (i, env) = expr env idx in
        let (el, env) = expr env ex in
        build_array_store data i el env.ebuilder; (el, env)
@@ -856,17 +799,15 @@ let translate prog =
       (
       match ctype with
         Array(atype)    -> 
-          let n, env = build_array_len env arg in
+          let n = build_array_len env.ebuilder arg "len"in
           (* Pre-GEP the array *)
-          let cdata_ref = L.build_gep arg [|l0; l0|] ("crf") env.ebuilder in
-          let cdata = L.build_load cdata_ref ("cdata") env.ebuilder in
+          let cdata = build_array_data env.ebuilder arg "cdata" in
      
           (* Create a new array *)
           let data = L.build_array_malloc (ltype_of_typ atype) n
             "arrdata" env.ebuilder in
           (* Set up loop *)
-          let i_addr = L.build_alloca i32_t "i" env.ebuilder in
-          ignore (L.build_store l0 i_addr env.ebuilder);
+          let i_addr = build_zero env.ebuilder "i" in
           let loop_bb = L.append_block context "loop" env.ecurrent_fxn in
           let continue_bb = L.append_block context "continue" env.ecurrent_fxn in
           ignore (L.build_br loop_bb env.ebuilder);
@@ -899,21 +840,16 @@ let translate prog =
 
            let bind = { ftype = ctype; formals = [ctype, "to_copy"] } in
 
-           let param = (Array.get (L.params decl) 0) in
-           L.set_value_name "to_copy" param ;
-           let local = L.build_alloca (ltype_of_typ ctype) "to_copy" builder in
-           ignore (L.build_store param local builder);
-           let tocopy = L.build_load local "to_copy" builder in
+           let tocopy = build_param builder decl (ltype_of_typ ctype) 0 "to_copy" in
 
            (* Create a new struct *)
            let struc = L.build_malloc (L.element_type (ltype_of_typ ctype))
              "struct" builder in
            let rec copy_struct n =
              if n < len then
-             let flref = L.build_gep tocopy [|l0; L.const_int i32_t n|] ("flref") builder in
-             let fl = L.build_load flref ("fl") builder in
-             let newref = L.build_gep struc [|l0; L.const_int i32_t n|] ("newref") builder in
-             ignore (L.build_store fl newref builder); copy_struct (n+1)
+             let fl = build_struct_field builder tocopy n "fl" in
+             build_struct_store builder fl struc n;
+             copy_struct (n+1)
              else ()
            in
            copy_struct 0 ;
@@ -936,8 +872,7 @@ let translate prog =
       match ctype with
         Array(_)    -> 
          (* Need to free data as well as the structure *)
-         let data = L.build_gep arg [|l0; l0|] "data" env.ebuilder in
-         let dataref = L.build_load data "dataref" env.ebuilder in
+         let dataref = build_array_data env.ebuilder arg "data" in
          ignore(L.build_free dataref env.ebuilder);
       | _ -> () ) ;
       (* Free structure *)
@@ -973,20 +908,18 @@ let translate prog =
         (hd :: tl) -> if List.hd bools then hd else find_first (List.tl bools) tl
       | _ -> raise (Failure "Unexpected arguments")
       in let first = find_first arr_args llargs in
-      let len, env = build_array_len env first in
+      let len = build_array_len env.ebuilder first "len" in
       (* Pre-GEP all the arrays *)
       let datalist = List.map2
         (fun llarg b -> if b then 
-          let cdata_ref = L.build_gep llarg [|l0; l0|] ("rf") env.ebuilder in
-          Some(L.build_load cdata_ref ("data") env.ebuilder)
+          Some(build_array_data env.ebuilder llarg "data")
          else None) llargs arr_args in
 
       (* Create a new array *)
       let data = L.build_array_malloc (ltype_of_typ rt) len
        "arrdata" env.ebuilder in
       (* Set up loop *)
-      let i_addr = L.build_alloca i32_t "i" env.ebuilder in
-      ignore (L.build_store l0 i_addr env.ebuilder);
+      let i_addr = build_zero env.ebuilder "i" in
       let loop_bb = L.append_block context "loop" env.ecurrent_fxn in
       let cont_bb = L.append_block context "continue" env.ecurrent_fxn in
       ignore (L.build_br loop_bb env.ebuilder);
