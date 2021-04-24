@@ -20,5 +20,4 @@ test:
 clean : 
 	ocamlbuild -clean
 	rm util_math.o util_opengl.o
-	rm ./tests/compiler/*.diff
-	rm ./tests/compiler/*.err
+
