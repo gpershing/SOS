@@ -3,12 +3,9 @@
 #include <string.h>
 #include "GL/osmesa.h"
 
-<<<<<<< HEAD
-#define maxpoints 1000
-=======
 // reference: https://github.com/freedesktop/mesa-demos
 
->>>>>>> 0b980f83f3ab67059d1b0649bd2a620023f5ac60
+#define maxpoints 1000
 static int Width = 400;
 static int Height = 400;
 
@@ -230,7 +227,7 @@ static void endRendering(int fileNumber){
     free(buffer);
     OSMesaDestroyContext(ctx);
 }
-
+/*
 //sample program
 //#ifdef BUILD_TEST
 int main(int argc, char *argv[]){
@@ -269,3 +266,4 @@ int main(int argc, char *argv[]){
     return 0;
 }
 //#endif
+*/
