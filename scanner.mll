@@ -1,6 +1,12 @@
 (* SOS Scanner *)
 
-{ open Parser }
+{ open Parser 
+  
+  let find_file file = 
+      if Sys.file_exists file then file
+      else if Sys.file_exists ("lib/"^file) then ("lib/"^file)
+      else raise (Failure ("Could not find file "^file))
+}
 
 (* Definitions *)
 let digit = ['0'-'9']
@@ -13,6 +19,7 @@ rule token = parse
 | "/*"     { comment 0 lexbuf }           (* Comments *)
 | "//"     { single_comment lexbuf }            (* Single line comments *)
 | "import " ([^'\n']+".sos" as file) { 
+  let file = find_file file in
   let read = Lexing.from_channel (open_in file) in
   let parsed = Parser.program token read in
   IMPORT parsed } 
