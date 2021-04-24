@@ -3,16 +3,9 @@ import color.sos
 
 startCanvas: () -> Void = startRendering()
 
-//points: a struct of float x, float y
-//path: an array of points
-//color: a struct of rgba floats
-//colors: an array of colors
 
+//algorithm: for each point in path, access x and y coords. concat x then y to an array. repeat for color. call c drawCurve
 
-if keeping util_opengl.c to functions that accept structs of arrays.
-/*
-algorithm: for each point in path, access x and y coords. concat x then y to an array. repeat for color. call c drawCurve
-*/
 
 
 struct helper = {array float : points_ret, array float : colors_ret}
@@ -37,8 +30,6 @@ drawHelper : (point_structs : path, color_structs : array color, numOfPoints : i
         colors[4*i+3] = ca;
 
         drawPathHelper(point_structs, color_structs, numOfPoints, index + 1, points, colors)
-
-
 
 
 
@@ -83,7 +74,7 @@ drawShape : (point_structs : path, color_structs : array color,  colorMode : int
         drawShape(points, colors, colorMode, filled)
 
 
-
+endCanvas : (fileNumber : int) -> endRendering(fileNumber)
 
 
 
