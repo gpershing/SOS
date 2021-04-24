@@ -1,0 +1,55 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+%\usepackage{graphicx,float}
+%\usepackage{amsmath}
+%\usepackage{ dsfont }
+%\usepackage{mathtools}
+\usepackage{array}
+\usepackage{listings}
+\usepackage{xcolor}
+
+%Load last
+\usepackage{subfiles}
+
+%SOS names
+\newcommand{\SOSA}{Shape Open System}
+\newcommand{\SOSB}{Sad Oblique Shapes}
+\newcommand{\SOSC}{Stylistically Observed Structures}
+\newcommand{\SOSD}{Shapes of Sorrow}
+\newcommand{\SOSE}{SOS Object System}
+\newcommand{\SOSF}{Silly Odd Shapes}
+
+
+% for code block styles
+\definecolor{bg}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{mystyle}{
+    basicstyle=\ttfamily,
+    backgroundcolor=\color{bg},
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                            
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=2
+}
+
+\lstset{style=mystyle}
+
+
+\title{SOS Project Report}
+\author{Terric Abella, Sitong Feng, G Pershing, Sheron Wang}
+
+\begin{document}
+	
+	\maketitle
+	
+	\subfile{tutorial}
+	
+	\subfile{style}
+	
+	\subfile{lrm}
+	
+\end{document}
