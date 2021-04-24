@@ -37,6 +37,7 @@ let basic_print sast =
       GreaterEq -> ">=" | And -> "&&" | Or -> "||" | Seq -> ";" |
       Of -> "of" | Concat -> "@" in
     "("^typeid_string t^") ("^sexp_string e1^" "^opstr^" "^sexp_string e2^")"
+  | SIterFxnApp (fe, expl)
   | SFxnApp (fe, expl) -> "("^typeid_string t^") "^sexp_string fe^"("^
     (explstr expl)^")\n"
   | SIfElse(e1, e2, e3) -> "("^typeid_string t^") if "^sexp_string e1^"\nthen "^sexp_string e2^"\nelse "^sexp_string e3^"\n"
