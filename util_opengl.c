@@ -36,7 +36,7 @@ static void rendering_helper_close(){
  * startRendering: an initalization that must be called before drawing
  * any image. Creates Mesa and OpenGL contexts and image buffer.
  */
-void startRendering(){
+void gl_startRendering(){
     ctx = OSMesaCreateContextExt(OSMESA_RGBA, 16, 0, 0, NULL);
     if (!ctx){
         printf("OSMesaCreateContext failed!\n");
@@ -65,7 +65,7 @@ void startRendering(){
  * color_mode: 0 -> between points i and i+1, the color of the segment is the color of point i+1
  *             1 -> each point has its own color. The segment between each point is a gradient between point colors
  */
-void drawCurve(struct array *spoints, struct array *scolors, int color_mode){
+void gl_drawCurve(struct array *spoints, struct array *scolors, int color_mode){
     glPushMatrix();
     
     if (color_mode == 0){
@@ -101,7 +101,7 @@ void drawCurve(struct array *spoints, struct array *scolors, int color_mode){
  * filed: 0 -> shape is not filled with color
  *        1 -> shape will be filled with color
  */
-void drawShape(struct array *spoints, struct array *scolors, int color_mode, int filled){
+void gl_drawShape(struct array *spoints, struct array *scolors, int color_mode, int filled){
     glPushMatrix();
 
     if (color_mode == 0){
@@ -139,7 +139,7 @@ void drawShape(struct array *spoints, struct array *scolors, int color_mode, int
  * size_arr: the number of points
  * point_size: the size of each point
  */
-void drawPoint(struct array *spoints, struct array *scolors, int point_size){
+void gl_drawPoint(struct array *spoints, struct array *scolors, int point_size){
     glPushMatrix();
     
     float points[maxpoints];
@@ -156,7 +156,7 @@ void drawPoint(struct array *spoints, struct array *scolors, int point_size){
     glPopMatrix();
 }
 
-static void clearCanvas(){
+static void gl_clearCanvas(){
     glMatrixMode(GL_MODELVIEW);
     glClear(GL_COLOR_BUFFER_BIT);
 }
@@ -221,7 +221,7 @@ static void write_ppm(int fileNumber, const GLubyte *buffer, int width, int heig
  * endRendering: closes OpenGL and Mesa contexts and saves drawing
  * by calling write_ppm
  */
-void endRendering(int fileNumber){
+void gl_endRendering(int fileNumber){
     rendering_helper_close();
     write_ppm(fileNumber, buffer, Width, Height);
     free(buffer);
