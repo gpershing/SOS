@@ -14,7 +14,7 @@ c1 : color = {255.0, 0.0, 0.0, 0.8}
 c2 : color = {0.0, 255.0, 0.0, 0.8}
 c3 : color = {0.0, 0.0, 255.0, 0.8}
 c4 : color = {100.0, 100.0, 0.0, 0.8}
-color_arr : colors = [c1, c2, c3]
+color_arr : colors = [c1, c2, c3, c4]
 
 my_canvas : canvas = {800, 400, 2}
 
