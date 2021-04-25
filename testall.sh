@@ -20,7 +20,7 @@ CC="cc"
 # Try "_build/sos.native" if ocamlbuild was unable to create a symbolic link.
 SOS="./sos.native"
 
-OPENGL_FLAGS="-lOSMesa -lGLU -lm"
+OPENGL_FLAGS="-lOSMesa -lm"
 
 # Set time limit for all operations
 ulimit -t 30

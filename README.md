@@ -9,8 +9,8 @@
 ```
     ./docker_connect.sh
 ```
-the above command would automatically pull image if the given image doesn't exist
 
+the above command would automatically pull image if the given image doesn't exist
 
 pull/build image `sheronw1174/sos-env` with
 
@@ -74,7 +74,7 @@ should see
 
 ## MESA & OpenGL
 
-1. compile code with GL and GLU libraries linked
+1. compile code with GL and GLU libraries linked (we did not use GLU)
 
 ```
     gcc -o [filename] [filename].c -I/usr/local/include/ -L/user/local/lib/ -lOSMesa -lGLU -lm

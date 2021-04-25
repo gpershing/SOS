@@ -27,7 +27,7 @@ basename=${filename%.sos}
 
 $SOS $filename >${basename}.ll
 $LLC -relocation-model=pic ${basename}.ll >${basename}.s
-$CC -o ${basename}.exe ${basename}.s util_math.o -lm util_opengl.o -I/usr/local/include/ -L/user/local/lib/ -lOSMesa -lGLU
+$CC -o ${basename}.exe ${basename}.s util_math.o -lm util_opengl.o -I/usr/local/include/ -L/user/local/lib/ -lOSMesa
 
 rm ${basename}.ll ${basename}.s
 
