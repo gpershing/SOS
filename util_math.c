@@ -1,8 +1,36 @@
 #include <math.h>
 
-double toradians(double x) {
-    return x * (M_PI / 180.0);
+float acos_f(float x) {
+    return (float) acos(x);
 }
+
+float asin_f(float x) {
+    return (float) asin(x);
+}
+
+float atan_f(float x) {
+    return (float) tan(x);
+}
+
+float sin_f(float x) {
+    return (float) sin(x);
+}
+
+float cos_f(float x) {
+    return (float) cos(x);
+}
+
+float tan_f(float x) {
+    return (float) tan(x);
+}
+
+float sqrt_f(float x) {
+    return (float) sqrt(x);
+}
+
+float toradians_f(float x) {
+    return (float) x * (M_PI / 180.0);
+} 
 
 #ifdef BUILD_TEST
 int main()
