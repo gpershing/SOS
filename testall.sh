@@ -20,6 +20,8 @@ CC="cc"
 # Try "_build/sos.native" if ocamlbuild was unable to create a symbolic link.
 SOS="./sos.native"
 
+OPENGL_FLAGS="-lOSMesa -lGLU -lm"
+
 # Set time limit for all operations
 ulimit -t 30
 
@@ -94,7 +96,7 @@ Check() {
     generatedfiles="$generatedfiles ${basename}.ll ${basename}.s ${basename}.exe ${basename}.out" &&
     Run "$SOS" "$1" ">" "${basename}.ll" &&
     Run "$LLC" "-relocation-model=pic" "${basename}.ll" ">" "${basename}.s" &&
-    Run "$CC" "-o" "${basename}.exe" "${basename}.s" "util_opengl.o" "util_math.o" "-lm"  &&
+    Run "$CC" "-o" "${basename}.exe" "${basename}.s" "util_opengl.o" "util_math.o" "$OPENGL_FLAGS" &&
     Run "./${basename}.exe" > "${basename}.out" &&
     Compare ${basename}.out ${reffile}.out ${basename}.diff
 
@@ -157,12 +159,27 @@ done
 
 shift `expr $OPTIND - 1`
 
+LLIFail() {
+  echo "Could not find the LLVM interpreter \"$LLI\"."
+  echo "Check your LLVM installation and/or modify the LLI variable in testall.sh"
+  exit 1
+}
+
+which "$LLI" >> $globallog || LLIFail
+
+if [ ! -f util_opengl.o ]
+then
+    echo "Could not find util_opengl.o"
+    echo "Try \"make util_opengl.o\""
+    exit 1
+fi
 
 if [ $# -ge 1 ]
 then
     files=$@
 else
-    files="tests/test-*.sos tests/fail-*.sos"
+    files="test-helloworld.sos"
+    #"tests/test-*.sos tests/fail-*.sos"
 fi
 
 for file in $files
