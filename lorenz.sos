@@ -1,0 +1,35 @@
+import renderer.sos
+import array.sos
+alias path3 = array point3
+
+create_lorenz : (p: path3, i: int, sigma: float, rho: float, beta: float) -> void = 
+    if i == 0 then p[i] = {0.1,0.1,0.1}; create_lorenz(p,i+1,sigma,rho,beta)
+    else if i < p.length then
+      q: point3 = p[i-1] ;
+      dx: float = sigma * (q.y - q.x) ;
+      dy: float = q.x * (rho - q.z) - q.y ;
+      dz: float = q.x*q.y - beta * q.z ;
+      dt: float = 0.005 ;
+      p[i] = {q.x + dx*dt, q.y + dy*dt, q.z + dz*dt} ;
+      create_lorenz(p,i+1,sigma,rho,beta)
+    else void
+
+len: int = 5000
+l3: path3 = len of [{0.0,0.0,0.0}]
+create_lorenz (l3, 0, 10, 28, 8.0/3)
+rainbow: (r: int, len: int) -> color = 
+    h: float = (1.0*r)/len ;
+    hsv(h, 0.8, 0.8)
+c: colors = rainbow(ints(len), len+1000)
+
+
+reduce : (p: point3) -> point = {p.x/30.0, p.y/30.0}
+
+l: path = reduce(l3)
+
+my_canvas : canvas = {400,400,1}
+
+startCanvas(my_canvas)
+drawPath(l, c, 0)
+endCanvas(my_canvas)
+
