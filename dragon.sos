@@ -4,32 +4,44 @@ import transform.sos
 import array.sos
 import math.sos
 
+// Creates a dragon curve of depth n
 dragon: (n: int) -> path = 
-    if n == 0
+    if n == 0 // Base case
     then [point{0.0, 0.0}, point{1.0, 0.0}]
     else
+    // Create two copies of the previous depths
     d1: path = dragon(n-1) ; 
     d2: path = copy_path(d1) ;
-    s: float = sqrt(2.0)/2.0 ;
 
+    // Position d1
+    s: float = sqrt(2.0)/2.0 ;
     rotate(d1, toradians(45.0), -1, {0.0, 0.0}) ; 
     scale(d1, s, s) ; 
 
+    // Position d2
     rotate(d2, toradians(135.0), -1, {0., 0.}) ;
     scale(d2,s,s) ;
     trans(d2, {1., 0.}) ;
     reverse(d2) ;
+
+    // Merge the paths
     r: path = append(d1, d2, 1.0) ;
     free_path(d1); free_path(d2); r
 
+// Creates a rainbow color effect
 rainbow: (r: int, len: int) -> color = 
     h: float = (1.0*r)/len ;
     hsv(h, 0.8, 0.8)
 
+// Render a 400px by 400px canvas, name the image pic0
 my_canvas: canvas = {400, 400, 0}
 
+// Start render
 startCanvas(my_canvas)
 d: path = dragon(7)
+// Position the curve (0.4, 0.2 is approximately the center of mass of the curve for large n)
 trans(d, {-0.4, -0.2})
+
+// Draw it
 drawPath(d, rainbow(ints(d.length), d.length), 0)
 endCanvas(my_canvas)
