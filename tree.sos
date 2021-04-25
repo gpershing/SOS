@@ -1,0 +1,47 @@
+import affine.sos
+import renderer.sos
+
+branchHelper : (p: path, i: int, A: affine) -> void = 
+    if i < p.length then
+    p[i] = affine_mul(A, p[i-1]-p[i-2], 0) + p[i-1];
+    branchHelper(p,i+1,A)
+    else void
+
+makeBranch : (n: int, A: affine) -> path =
+    p: path = n of [{0.0,0.0}];
+    p[1] = {0.0, 0.2};
+    branchHelper(p, 2, A); p
+
+powersHelper : (arr: array affine, i: int, A: affine) -> void = 
+    if i < arr.length then
+    arr[i] = A ** arr[i-1];
+    powersHelper(arr,i+1,A)
+    else void
+
+powers : (n: int, A: affine) -> array affine = 
+    arr: array affine = n of [copy(A)];
+    powersHelper(arr, 1, A) ; arr
+
+A: affine = translate(0, 0.2) ** rotation_aff(0.06) ** scale_aff(0.8, 0.8)
+As: array affine = powers(8, A)
+L: affine = scale_aff(0.3, 0.3) ** rotation_aff(0.4)
+R: affine = scale_aff(0.43,0.43) ** rotation_aff(-0.5)
+base: path = makeBranch(10, A)
+
+white: colors = 10 of [rgb(1.0,1.0,1.0)]
+green: colors = 10 of [rgb(0.0,0.8,0.0)]
+
+my_canvas: canvas = {400,400,0}
+startCanvas(my_canvas)
+
+drawTree : (base: path, T: affine, A: affine, As: array affine, L: affine, R: affine, depth: int, c1: colors, c2: colors)
+  -> void = 
+  if depth==0 then drawPath(affine_mul(T,base,1), c2, 0) else
+  drawPath(affine_mul(T,base,1), c1, 0) ;
+  drawTree(base, T ** As ** L, A, As, L, R, depth-1, c1, c2) ;
+  drawTree(base, T ** As ** R, A, As, L, R, depth-1, c1, c2)
+
+drawTree (base, {1.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,1.0}, A, As, L, R, 2, white, green)
+
+endCanvas(my_canvas)
+
