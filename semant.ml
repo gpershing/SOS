@@ -132,6 +132,8 @@ let check prog =
     | (Void, Void) -> true
     | (Array(a1), Array(a2)) -> match_str_type a1 a2
     | (Struct(s1), Struct(s2)) -> 
+        if List.length s1 != List.length s2 then false
+        else
         List.fold_left2
           (fun b (st1, _) (st2, _) -> if match_str_type st1 st2 then
              b else false) true s1 s2
