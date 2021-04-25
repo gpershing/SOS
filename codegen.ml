@@ -636,7 +636,7 @@ let translate prog =
      
        (* Create a new array *)
        let rtel_typ = match rt with Array(et) -> et | _ -> Void in
-       let data = L.build_array_malloc (ltype_of_typ el_typ) len
+       let data = L.build_array_malloc (ltype_of_typ rtel_typ) len
          "arrdata" env.ebuilder in
        (* Set up loop *)
        let i_addr = build_zero env.ebuilder "i" in
