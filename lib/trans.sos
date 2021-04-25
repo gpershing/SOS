@@ -1,0 +1,19 @@
+import point.sos
+import shape.sos
+
+struct coordinate = {x: float, y: float}
+
+transHelper : (points: path, direction: coordinate, i: int) ->
+    if i >= path.size -1
+    then 0
+    else
+        float transx = direction.x;
+        float transy = direction.y;
+
+        path[i].x = path[i].x + transx
+        path[i].y = path[i].y + transy
+
+        transHelper(path, coordinate, i+1)
+
+trans : (points: path, direction: coordinate) ->
+    transHelper(points, direction, 0);

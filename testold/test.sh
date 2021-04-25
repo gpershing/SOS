@@ -21,6 +21,7 @@ CC="cc"
 # Path to the SOS compiler.  Usually "./sos.native"
 # Try "_build/sos.native" if ocamlbuild was unable to create a symbolic link.
 SOS="./sos.native"
+#SOS="_build/sos.native"
 
 # Set time limit for all operations
 ulimit -t 30
@@ -93,12 +94,12 @@ Check() {
 
     generatedfiles=""
 
-    generatedfiles="$generatedfiles ./tests/compiler/${basename}.ll ./tests/compiler/${basename}.s ./tests/compiler/${basename}.exe ./tests/compiler/${basename}.out" &&
-    Run "$SOS" "$1" ">" "./tests/compiler/${basename}.ll" &&
-    Run "$LLC" "-relocation-model=pic" "./tests/compiler/${basename}.ll" ">" "./tests/compiler/${basename}.s" &&
-    Run "$CC" "-o" "./tests/compiler/${basename}.exe" "./tests/compiler/${basename}.s" "util_opengl.c" "util_math.c" "-lm" &&
-    Run "./tests/compiler/${basename}.exe" > "./tests/compiler/${basename}.out" &&
-    Compare "./tests/compiler/${basename}.out" "./tests/compiler/${reffile}.out" "./tests/compiler/${basename}.diff"
+    generatedfiles="$generatedfiles ${basename}.ll ${basename}.s ${basename}.exe ${basename}.out" &&
+    Run "$SOS" "$1" ">" "${basename}.ll" &&
+    Run "$LLC" "-relocation-model=pic" "${basename}.ll" ">" "${basename}.s" &&
+    Run "$CC" "-o" "${basename}.exe" "${basename}.s" &&
+    Run "./${basename}.exe" > "${basename}.out" &&
+    Compare ${basename}.out ${reffile}.out ${basename}.diff
 
     # Report the status and clean up the generated files
 
@@ -128,9 +129,9 @@ CheckFail() {
 
     generatedfiles=""
 
-    generatedfiles="$generatedfiles ./tests/compiler/${basename}.err ./tests/compiler/${basename}.diff" &&
-    RunFail "$SOS" "<" $1 "2>" "./tests/compiler/${basename}.err" ">>" $globallog &&
-    Compare ./tests/compiler/${basename}.err ./tests/compiler/${reffile}.err ./tests/compiler/${basename}.diff
+    generatedfiles="$generatedfiles ${basename}.err ${basename}.diff" &&
+    RunFail "$SOS" "<" $1 "2>" "${basename}.err" ">>" $globallog &&
+    Compare ${basename}.err ${reffile}.err ${basename}.diff
 
     # Report the status and clean up the generated files
 
@@ -164,7 +165,8 @@ if [ $# -ge 1 ]
 then
     files=$@
 else
-    files="tests/compiler/test-a.sos"
+    files="helloworld2.sos"
+    # "tests/test-*.sos tests/fail-*.sos"
 fi
 
 for file in $files
@@ -176,6 +178,9 @@ do
 	*fail-*)
 	    CheckFail $file 2>> $globallog
 	    ;;
+    *helloworld*)
+        Check $file 2>> $globallog
+        ;;
 	*)
 	    echo "unknown file type $file"
 	    globalerror=1
