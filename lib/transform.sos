@@ -1,0 +1,37 @@
+import shape.sos
+import vector.sos
+
+// Rotates the given point by angle radians about the given point
+// Either rotate clockwise (1) or counterclockwise (-1)
+rotate : (p: point, angle: float, direction: int, about: point) -> void =
+    //shifted
+    px : float = p.x - about.x;
+    py : float = p.y - about.y;
+
+    if direction == -1
+    then //counterclockwise
+        p.x = (px*cos(angle) - py*sin(angle)) + about.x;
+        p.y = (px*sin(angle) + py*cos(angle)) + about.y
+    else if direction == 1
+    then //clockwise
+        p.x = (px*cos(angle) + py*sin(angle)) + about.x;
+        p.y = (-px*sin(angle)+ py*cos(angle)) + about.y
+    else //do no rotation
+        p.x = p.x;
+        p.y = p.y 
+
+// Translates the given point by the given vector
+trans : (p: point, direction: vector) -> void = 
+    p.x = p.x + direction.x ; p.y = p.y + direction.y
+
+// Performs rotate() on a new point
+rotated : (p: point, angle: float, direction: int, about: point) -> point =
+    q: point = copy(p) ;
+    rotate(q, angle, direction, about) ;
+    q
+
+// Performs translate() on a new point
+translated : (p: point, direction: vector) -> point =
+    q: point = copy(p) ;
+    trans(q, direction) ;
+    q
