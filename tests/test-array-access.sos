@@ -6,16 +6,17 @@ mult_2 : (i: int, arr: array int) -> array int =
         arr[i] = arr[i]*2; 
         mult_2(i - 1, arr)
 
-printingarray : (array int arr, int length, int current) -> void =
+printingarray : (arr: array int, length: int, current: int) -> void =
     if current == length
     then void
     else 
-        print(arr[curent]);
+        print(arr[current]);
         printingarray(arr, length, current+1)
 
 a: array int = [1,2,3]
 n: int = a[0]
-b: array int = mult_2(3, a)
+b: array int = copy(a)
+b = mult_2(3, b)
 
 printingarray(a, 3, 0) //1, 2, 3
 print(n) //1
