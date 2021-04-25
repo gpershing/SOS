@@ -783,7 +783,8 @@ let translate prog =
       let float_format_str =
        L.build_global_stringptr "%g\n" "fmt" env.ebuilder in
       let arg, env  = expr env e in 
-      L.build_call printf_func [| float_format_str ; arg |]
+      let dval = L.build_fpext arg (L.double_type context) "fmtp" env.ebuilder in
+      L.build_call printf_func [| float_format_str; dval |]
         "printf" env.ebuilder, env
    | SFxnApp((_, SVar("print")), [e]) ->
       let int_format_str = 
