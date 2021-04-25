@@ -3,6 +3,10 @@ import point.sos
 alias path = array point
 alias shape = array point
 
+copy_point : (p: point) -> point = copy(p)
+
+copy_path : (p: path) -> path = copy_point (p)
+
 appendhelp_copyin : (in: path, from: path, i: int) -> void = 
     if i<in.length then
     in[i]=from[i+1];
@@ -15,8 +19,8 @@ appendhelp_tail : (p: path) -> path =
 
 // Appends two paths, merging them at their endpoints, if needed
 append : (p1 : path, p2: path) -> path = 
-    if p1.length == 0 then copy(p2)
-    else if p2.length == 0 then copy(p1)
+    if p1.length == 0 then copy_path(p2)
+    else if p2.length == 0 then copy_path(p1)
     else 
     merge: bool = p1[p1.length-1] == p2[0];
     p2c: path = (if merge then appendhelp_tail(p2) else p2);
