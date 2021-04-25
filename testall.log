@@ -1,0 +1,51 @@
+/usr/bin/lli
+
+###### Testing test-helloworld
+./sos.native test-helloworld.sos > test-helloworld.ll
+llc -relocation-model=pic test-helloworld.ll > test-helloworld.s
+cc -o test-helloworld.exe test-helloworld.s util_opengl.o util_math.o -lm
+/usr/bin/ld: util_opengl.o: in function `rendering_helper_init':
+util_opengl.c:(.text+0xe): undefined reference to `glMatrixMode'
+/usr/bin/ld: util_opengl.c:(.text+0x13): undefined reference to `glLoadIdentity'
+/usr/bin/ld: util_opengl.c:(.text+0x1d): undefined reference to `glMatrixMode'
+/usr/bin/ld: util_opengl.c:(.text+0x27): undefined reference to `glClear'
+/usr/bin/ld: util_opengl.c:(.text+0x2c): undefined reference to `glPushMatrix'
+/usr/bin/ld: util_opengl.c:(.text+0x36): undefined reference to `glEnableClientState'
+/usr/bin/ld: util_opengl.c:(.text+0x40): undefined reference to `glEnableClientState'
+/usr/bin/ld: util_opengl.c:(.text+0x65): undefined reference to `glColor4f'
+/usr/bin/ld: util_opengl.o: in function `rendering_helper_close':
+util_opengl.c:(.text+0x75): undefined reference to `glFinish'
+/usr/bin/ld: util_opengl.o: in function `gl_startRendering':
+util_opengl.c:(.text+0x9f): undefined reference to `OSMesaCreateContextExt'
+/usr/bin/ld: util_opengl.c:(.text+0x125): undefined reference to `OSMesaMakeCurrent'
+/usr/bin/ld: util_opengl.o: in function `gl_drawCurve':
+util_opengl.c:(.text+0x191): undefined reference to `glPushMatrix'
+/usr/bin/ld: util_opengl.c:(.text+0x1a4): undefined reference to `glShadeModel'
+/usr/bin/ld: util_opengl.c:(.text+0x1b0): undefined reference to `glShadeModel'
+/usr/bin/ld: util_opengl.c:(.text+0x253): undefined reference to `glVertexPointer'
+/usr/bin/ld: util_opengl.c:(.text+0x271): undefined reference to `glColorPointer'
+/usr/bin/ld: util_opengl.c:(.text+0x288): undefined reference to `glDrawArrays'
+/usr/bin/ld: util_opengl.c:(.text+0x28d): undefined reference to `glPopMatrix'
+/usr/bin/ld: util_opengl.o: in function `gl_drawShape':
+util_opengl.c:(.text+0x2ed): undefined reference to `glPushMatrix'
+/usr/bin/ld: util_opengl.c:(.text+0x300): undefined reference to `glShadeModel'
+/usr/bin/ld: util_opengl.c:(.text+0x30c): undefined reference to `glShadeModel'
+/usr/bin/ld: util_opengl.c:(.text+0x3af): undefined reference to `glVertexPointer'
+/usr/bin/ld: util_opengl.c:(.text+0x3cd): undefined reference to `glColorPointer'
+/usr/bin/ld: util_opengl.c:(.text+0x3ed): undefined reference to `glDrawArrays'
+/usr/bin/ld: util_opengl.c:(.text+0x406): undefined reference to `glDrawArrays'
+/usr/bin/ld: util_opengl.c:(.text+0x40b): undefined reference to `glPopMatrix'
+/usr/bin/ld: util_opengl.o: in function `gl_drawPoint':
+util_opengl.c:(.text+0x465): undefined reference to `glPushMatrix'
+/usr/bin/ld: util_opengl.c:(.text+0x508): undefined reference to `glVertexPointer'
+/usr/bin/ld: util_opengl.c:(.text+0x526): undefined reference to `glColorPointer'
+/usr/bin/ld: util_opengl.c:(.text+0x533): undefined reference to `glPointSize'
+/usr/bin/ld: util_opengl.c:(.text+0x54a): undefined reference to `glDrawArrays'
+/usr/bin/ld: util_opengl.c:(.text+0x54f): undefined reference to `glPopMatrix'
+/usr/bin/ld: util_opengl.o: in function `gl_clearCanvas':
+util_opengl.c:(.text+0x578): undefined reference to `glMatrixMode'
+/usr/bin/ld: util_opengl.c:(.text+0x582): undefined reference to `glClear'
+/usr/bin/ld: util_opengl.o: in function `gl_endRendering':
+util_opengl.c:(.text+0xa22): undefined reference to `OSMesaDestroyContext'
+collect2: error: ld returned 1 exit status
+###### FAILED
