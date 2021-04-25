@@ -28,6 +28,6 @@ my_canvas: canvas = {400, 400, 0}
 
 startCanvas(my_canvas)
 d: path = dragon(7)
-trans(d, {-0.25, 0.0})
+trans(d, {-0.4, -0.2})
 drawPath(d, rainbow(ints(d.length), d.length), 0)
 endCanvas(my_canvas)
