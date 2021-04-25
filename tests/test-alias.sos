@@ -42,7 +42,7 @@ print(test5) //2021+2021=4042
 
 //alias operator alias2 -> primitive
 //year + month -> int
-int test6 = present_year + present_month
+test6: int = present_year + present_month
 print(test6) //2021+3=2024
 
 //alias operator aliasofalias -> primitive
@@ -52,8 +52,7 @@ print(test7) //2021+20=2041
 
 //mixing int operators and aliases
 test8: int = present_month*present_day-present_year/10%9
-print(test8) //3*20-2021/10%9=-1961
-
+print(test8) //3*20-(2021/10)%9=56
 
 /*alias comparison */
 //primitive vs alias
@@ -68,15 +67,14 @@ result2: bool = y1 == y2
 print(result2) //True
 
 //alias vs alias2
-month m1 = 1
-bool result3 = y1 == m1
+m1: month = 1
+result3: bool = y1 == m1
 print(result3) //True
 
 //alias vs aliasofalias
 d1: day = 1
 result4: bool = y1 == d1
 print(result4) //True
-
 
 /*alias of struct*/
 struct date = {day: int, yr: year, mth: month}
@@ -93,42 +91,41 @@ newer: new_date = present_day
 print(newer.day) //20
 
 newer2: new_date = {1, 2, 3}
-print(newer.day) //1
+print(newer2.day) //1
 
 result5: bool = newer == present_day
-printb(result5) //True (pass by reference)
+print(result5) //True (pass by reference)
 result6: bool = newer == newer2 
 print(result6) //False
-
 
 /*alias of float*/
 alias x_dist = float
 x: x_dist = 1.2
-print(x_dist) //1.2
+printf(x) //1.2
 
 /*alias array*/
 //alias of array int
 alias scores = array int
 class1: scores = [87,93,70]
 print(class1[0]) //87
-class1 + 3
+class1 = class1 + 3
 print(class1[0]) //90
 
 //alias of alias of array int
 alias marks = scores
 class2: marks = class1
 class3: marks = [87, 93, 70]
-result7: bool = class2 == class1
-print(result7) //True
-result8: bool = class3 == class1
-print(result8) //False
+result7: array array bool = class2 == class1
+print(result7[0][0]) //True
+result8: array array bool = class3 == class1
+print(result8[0][0]) //False
 
 //alias of array of alias of array int: array array int
-alias class-scores = array scores
-highschool1: class-scores = [class1, [1,2,3]]
-print(highschool1[0][0]) //87
+alias class_scores = array scores
+highschool1: class_scores = [class1, [1,2,3]]
+print(highschool1[0][0]) //90
 
 //alias of array array array int
-alias school-scores = array array array int
-district1: school-scores = [highschool1, [[[4,5,6], [7,8,9]], [[10,11], [12,13,14,15]]]
-print(district1[0][0][0]) //4
+alias school_scores = array array array int
+district1: school_scores = [highschool1, [[4,5,6], [7,8,9]], [[10,11], [12,13,14,15]]]
+print(district1[1][0][0]) //4
