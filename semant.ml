@@ -30,7 +30,7 @@ let external_functions : (typeid * string) list =
   Func([Float], Float), "asinf" ;
   Func([Float], Float), "acosf" ;
   Func([Float], Float), "atanf" ;
-  Func([Float], Float), "toradians_f" ;
+  Func([Float], Float), "toradiansf" ;
   Func([Int; Int], Void), "gl_startRendering" ;
   Func([Int; Int; Int], Void), "gl_endRendering" ;
   Func([Array(Float); Array(Float); Int], Void), "gl_drawCurve" ;
