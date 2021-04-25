@@ -10,7 +10,7 @@
 
 #define maxpoints 50000
 
-struct array{
+struct array {
     float *arr;
     int length;
 };
@@ -18,7 +18,7 @@ struct array{
 OSMesaContext ctx;
 void *buffer;
 
-static void rendering_helper_init(){
+static void rendering_helper_init() {
    glMatrixMode(GL_PROJECTION);
    glLoadIdentity();
    glMatrixMode(GL_MODELVIEW);
@@ -29,7 +29,7 @@ static void rendering_helper_init(){
    glColor4f(1.0, 1.0, 1.0, 1.0); //initalize color as white
 }
 
-static void rendering_helper_close(){
+static void rendering_helper_close() {
     glFinish();
 }
 
@@ -37,9 +37,9 @@ static void rendering_helper_close(){
  * startRendering: an initalization that must be called before drawing
  * any image. Creates Mesa and OpenGL contexts and image buffer.
  */
-void gl_startRendering(int width, int height){
+void gl_startRendering(int width, int height) {
     ctx = OSMesaCreateContextExt(OSMESA_RGBA, 16, 0, 0, NULL);
-    if (!ctx){
+    if (!ctx) {
         printf("OSMesaCreateContext failed!\n");
     }
 
@@ -66,17 +66,17 @@ void gl_startRendering(int width, int height){
  * color_mode: 0 -> between points i and i+1, the color of the segment is the color of point i+1
  *             1 -> each point has its own color. The segment between each point is a gradient between point colors
  */
-void gl_drawCurve(struct array *spoints, struct array *scolors, int color_mode){
+void gl_drawCurve(struct array *spoints, struct array *scolors, int color_mode) {
     if (spoints->length!=scolors->length/2) {
         fprintf( stderr, "Unable to draw: The length of points array and colors array mismatched!\n" );
         return;
     }
     glPushMatrix();
     
-    if (color_mode == 0){
+    if (color_mode == 0) {
         glShadeModel(GL_FLAT);
     }
-    else{
+    else {
         glShadeModel(GL_SMOOTH);
     }
 
@@ -106,7 +106,7 @@ void gl_drawCurve(struct array *spoints, struct array *scolors, int color_mode){
  * filed: 0 -> shape is not filled with color
  *        1 -> shape will be filled with color
  */
-void gl_drawShape(struct array *spoints, struct array *scolors, int color_mode, int filled){
+void gl_drawShape(struct array *spoints, struct array *scolors, int color_mode, int filled) {
     if (spoints->length!=scolors->length/2) {
         printf("%d %d", spoints->length, scolors->length);
         fprintf( stderr, "Unable to draw: The length of points array and colors array mismatched!\n" );
@@ -114,10 +114,10 @@ void gl_drawShape(struct array *spoints, struct array *scolors, int color_mode, 
     }
     glPushMatrix();
 
-    if (color_mode == 0){
+    if (color_mode == 0) {
         glShadeModel(GL_FLAT);
     }
-    else{
+    else {
         glShadeModel(GL_SMOOTH);
     }
 
@@ -131,10 +131,10 @@ void gl_drawShape(struct array *spoints, struct array *scolors, int color_mode, 
     glVertexPointer(2, GL_FLOAT, 0, points);
     glColorPointer(3, GL_FLOAT, 0, colors);
 
-    if (filled==1){
+    if (filled==1) {
         glDrawArrays(GL_POLYGON, 0, size_arr);
     }
-    else{
+    else {
         glDrawArrays(GL_LINE_LOOP, 0, size_arr);
     }
 
@@ -149,7 +149,7 @@ void gl_drawShape(struct array *spoints, struct array *scolors, int color_mode, 
  * size_arr: the number of points
  * point_size: the size of each point
  */
-void gl_drawPoint(struct array *spoints, struct array *scolors, int point_size){
+void gl_drawPoint(struct array *spoints, struct array *scolors, int point_size) {
     if (spoints->length!=scolors->length/2) {
         fprintf( stderr, "Unable to draw: The length of points array and colors array mismatched!\n" );
         return;
@@ -170,7 +170,7 @@ void gl_drawPoint(struct array *spoints, struct array *scolors, int point_size){
     glPopMatrix();
 }
 
-static void gl_clearCanvas(){
+static void gl_clearCanvas() {
     glMatrixMode(GL_MODELVIEW);
     glClear(GL_COLOR_BUFFER_BIT);
 }
@@ -183,7 +183,7 @@ static void gl_clearCanvas(){
  * width: canvas width
  * height: canvas height
  */
-static void write_ppm(int fileNumber, const GLubyte *buffer, int width, int height){
+static void write_ppm(int fileNumber, const GLubyte *buffer, int width, int height) {
     char filename[50];
     char filenumasstr[50];
     sprintf(filenumasstr, "%d.ppm", fileNumber);
@@ -235,7 +235,7 @@ static void write_ppm(int fileNumber, const GLubyte *buffer, int width, int heig
  * endRendering: closes OpenGL and Mesa contexts and saves drawing
  * by calling write_ppm
  */
-void gl_endRendering(int width, int height, int fileNumber){
+void gl_endRendering(int width, int height, int fileNumber) {
     rendering_helper_close();
     write_ppm(fileNumber, buffer, width, height);
     free(buffer);
@@ -245,7 +245,7 @@ void gl_endRendering(int width, int height, int fileNumber){
 /*
 //sample program
 //#ifdef BUILD_TEST
-int main(int argc, char *argv[]){
+int main(int argc, char *argv[]) {
     startRendering();
     
     float p[]= {-.5, 0, .5, 0, 0, .5};

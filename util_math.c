@@ -5,9 +5,8 @@ float toradiansf(float x) {
 } 
 
 #ifdef BUILD_TEST
-int main()
-{
-  toradiansf(12.5);
-  return 0;
+int main() {
+    toradiansf(12.5);
+    return 0;
 }
 #endif
