@@ -1,0 +1,92 @@
+//import shape.sos
+//import color.sos
+
+startCanvas: () -> Void = startRendering()
+
+
+//algorithm: for each point in path, access x and y coords. concat x then y to an array. repeat for color. call c drawCurve
+
+
+
+struct helper = {array float : points_ret, array float : colors_ret}
+drawHelper : (point_structs : path, color_structs : array color, numOfPoints : int, index = 0,  points : array float, colors : array float) - >
+    if index == numOfPoints - 1
+    then
+        ret : helper = {points, colors};
+        ret
+    else
+        float : px = point_structs[i].x;
+        float : xy = point_structs[i].y;
+        points[2*i] = px;
+        points[2*i+1] = py;
+
+        float : cr = color_structs[i].r;
+        float : cg = color_structs[i].g;
+        float : cb = color_structs[i].b;
+        float : ca = color_structs[i].a;
+        colors[4*i] = cr;
+        colors[4*i+1] = cg;
+        colors[4*i+2] = cb;
+        colors[4*i+3] = ca;
+
+        drawPathHelper(point_structs, color_structs, numOfPoints, index + 1, points, colors)
+
+
+
+drawPoints : (points : path, colors : array color, numOfPoints : int, pointSize : int) ->
+    Void = 
+        int : numOfPoints = point_structs.length;
+        array float : points = numOfPoints*2 of [0.0];
+        array float : colors = numOfPoints*4 of [0.0];
+
+        helper_ret : helper = drawHelper(point_structs, color_structs, numOfPoints, 0,  points, colors);
+        points = helper_ret.points;
+        colors = helper_return.colors;
+
+        drawPoint(points, colors, pointSize)
+
+
+
+drawPath : (point_structs : path, color_structs : array color,  colorMode : int) ->
+    Void = 
+        int : numOfPoints = point_structs.length;
+        array float : points = numOfPoints*2 of [0.0];
+        array float : colors = numOfPoints*4 of [0.0];
+
+        helper_ret : helper = drawHelper(point_structs, color_structs, numOfPoints, 0,  points, colors);
+        points = helper_ret.points;
+        colors = helper_return.colors;
+        
+        drawCurve(points, colors, colorMode)
+
+
+
+drawShape : (point_structs : path, color_structs : array color,  colorMode : int, filled : int) - >
+    Void = 
+        int : numOfPoints = point_structs.length;
+        array float : points = numOfPoints*2 of [0.0];
+        array float : colors = numOfPoints*4 of [0.0];
+
+        helper_ret : helper = drawHelper(point_structs, color_structs, numOfPoints, 0,  points, colors);
+        points = helper_ret.points;
+        colors = helper_return.colors;
+
+        drawShape(points, colors, colorMode, filled)
+
+
+endCanvas : (fileNumber : int) -> endRendering(fileNumber)
+
+
+
+
+
+
+
+//SAMPLE PROGRAM
+startCanvas()
+
+struct point = {x : float, y: float};
+point : p1 = {-0.5, 0};
+point : p2 = {0.5, 0};
+point : p3 = {0, 1};
+endCanvas()

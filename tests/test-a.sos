@@ -1,0 +1,65 @@
+startCanvas: () -> void = gl_startRendering()
+
+cvoid : () -> void = 0
+
+drawHelper : (point_structs: path, color_structs: array color, numOfPoints: int, i: int,  points: array float, colors: array float) -> void =
+    if i >= numOfPoints /*i>=numOfPoints-1?*/
+    then cvoid()
+    else
+        px : float = point_structs[i].x;
+        py : float= point_structs[i].y;
+        points[2*i] = px;
+        points[2*i+1] = py;
+
+        cr : float = color_structs[i].r;
+        cg : float = color_structs[i].g;
+        cb : float= color_structs[i].b;
+        ca : float= color_structs[i].a;
+        colors[4*i] = cr;
+        colors[4*i+1] = cg;
+        colors[4*i+2] = cb;
+        colors[4*i+3] = ca;
+
+        drawHelper(point_structs, color_structs, numOfPoints, i + 1, points, colors)
+
+drawPoints : (point_structs : path, color_structs : array color) -> void = 
+        numOfPoints : int = point_structs.length;
+        points : array float = numOfPoints*2 of [0.0];
+        colors : array float = numOfPoints*4 of [0.0];
+        
+        drawHelper(point_structs, color_structs, numOfPoints, 0,  points, colors);
+
+        gl_drawPoint(points, colors, 2)
+
+drawPath : (point_structs : path, color_structs : array color,  colorMode : int) -> void = 
+        numOfPoints : int= point_structs.length;
+        points : array float= numOfPoints*2 of [0.0];
+        colors : array float= numOfPoints*4 of [0.0];
+
+        drawHelper(point_structs, color_structs, numOfPoints, 0,  points, colors);
+        
+        gl_drawCurve(points, colors, colorMode)
+
+
+drawShape : (point_structs : path, color_structs : array color,  colorMode : int, filled : int) ->
+    void = 
+        numOfPoints : int = point_structs.length;
+        points : array float = numOfPoints*2 of [0.0];
+        colors : array float = numOfPoints*4 of [0.0];
+
+        drawHelper(point_structs, color_structs, numOfPoints, 0,  points, colors);
+
+        gl_drawShape(points, colors, colorMode, filled)
+
+
+endCanvas : (fileNumber : int) -> void = gl_endRendering(fileNumber)
+
+/*
+//this is the test
+point: p1 = {-.5, 0}
+point: p2 = {.5, 0}
+point: p3 = {0, 1}
+
+array path: 
+
+*/

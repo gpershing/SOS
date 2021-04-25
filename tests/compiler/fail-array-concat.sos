@@ -1,4 +1,0 @@
-array int x = [1, 2]
-array float y = [1.1, 2.2]
-
-array int z = x@y

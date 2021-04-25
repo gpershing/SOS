@@ -15,7 +15,7 @@ util_opengl: util_opengl.c
 .PHONY : clean
 
 test: 
-	./tests/testall.sh
+	./testall.sh
 
 clean : 
 	ocamlbuild -clean
