@@ -1,5 +1,8 @@
-struct s1 = {int a, float b}
+struct s1 = {a: int, b: float}
 
-struct s2 = {int a, int b}
+struct s2 = {a: int, b: int}
 
-s1 + s2
+a: s1 = {1, 1.0}
+b: s2 = {1, 1}
+
+a+b

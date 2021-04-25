@@ -1,2 +1,3 @@
 //fixed b to bool type. no type conversion
-bool b = -True
+
+b: bool = -true

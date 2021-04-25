@@ -1,1 +1,1 @@
-int x = if 1==2 then 1
+x: int = if 1==2 then 1

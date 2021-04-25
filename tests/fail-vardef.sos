@@ -1,1 +1,3 @@
-notatype x = 10
+//defining a variable with an undefined type id
+
+x: notatype = 10

@@ -1,0 +1,3 @@
+//an alias of an undefined type id
+
+alias x: notatype

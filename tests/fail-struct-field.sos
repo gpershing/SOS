@@ -1,5 +1,7 @@
-struct a = {int x}
+//accessing an undefined struct field
 
-a s = {1}
+struct a = {x: int}
 
-int b = s.y
+s: a = {1}
+
+b: int = s.y

@@ -1,5 +1,7 @@
-struct s = {int x}
+//attempting to access a field of a non-struct
 
-int b = 1
+struct s = {x: int}
+
+b: int = 1
 
 b.x

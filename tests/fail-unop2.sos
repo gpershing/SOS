@@ -1,1 +1,1 @@
-int x = !True
+x: int= !true
