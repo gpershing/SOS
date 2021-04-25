@@ -1,0 +1,11 @@
+
+fill_ints : (a: array int, i: int) -> void = 
+    if i < a.length then a[i] = i; fill_ints(a, i+1)
+    else 0
+
+// A very useful function that makes an array of consecutive ints
+// Use with implicit iteration for very nice results
+ints : (n : int) -> array int = 
+  if n <= 0 then (a: array int = [])
+  else arr : array int = n of [0];
+  fill_ints(arr, 0) ; arr
