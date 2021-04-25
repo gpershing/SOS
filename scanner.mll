@@ -6,6 +6,8 @@
       if Sys.file_exists file then file
       else if Sys.file_exists ("lib/"^file) then ("lib/"^file)
       else raise (Failure ("Could not find file "^file))
+
+  let import_table = Hashtbl.create 10
 }
 
 (* Definitions *)
@@ -20,9 +22,12 @@ rule token = parse
 | "//"     { single_comment lexbuf }            (* Single line comments *)
 | "import " ([^'\n']+".sos" as file) { 
   let file = find_file file in
+  if Hashtbl.mem import_table file then IMPORT [] (* Ignore *)
+  else (
+  Hashtbl.add import_table file ();
   let read = Lexing.from_channel (open_in file) in
   let parsed = Parser.program token read in
-  IMPORT parsed } 
+  IMPORT parsed ) } 
 | '('      { LPAREN }
 | ')'      { RPAREN }
 | '{'      { LBRACE }
