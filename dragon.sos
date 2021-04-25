@@ -1,6 +1,7 @@
 import renderer.sos
 import vector.sos
 import transform.sos
+import array.sos
 
 dragon: (n: int) -> path = 
     if n == 0
@@ -18,10 +19,14 @@ dragon: (n: int) -> path =
     r: path = append(d1, d2) ;
     free(d1); free(d2); r
 
-c: (p: point) -> color = {1.0,0.0,0.0,1.0}
+rainbow: (r: int, len: int) -> color = 
+    h: float = (1.0*r)/len ;
+    hsv(h, 0.8, 0.8)
 
-my_canvas : canvas = {400, 400, 0}
+my_canvas: canvas = {400, 400, 0}
+
 startCanvas(my_canvas)
-d: path = dragon(0)
-drawPath(d, c(d), 0)
+d: path = dragon(7)
+trans(d, {-0.25, 0.0})
+drawPath(d, rainbow(ints(d.length), d.length), 0)
 endCanvas(my_canvas)
