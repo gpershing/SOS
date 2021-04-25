@@ -1,3 +1,7 @@
+import shape.sos
+import math.sos
+import vector.sos
+
 // Rotates the given point by angle radians about the given point
 // Either rotate clockwise (1) or counterclockwise (-1)
 rotate : (p: point, angle: float, direction: int, about: point) -> void =
