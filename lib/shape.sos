@@ -3,9 +3,13 @@ import point.sos
 alias path = array point
 alias shape = array point
 
+// Wrappers to enable array iteration
 copy_point : (p: point) -> point = copy(p)
+free_point : (p: point) -> void = free(p)
 
-copy_path : (p: path) -> path = copy_point (p)
+// More convenient names
+copy_path : (p: path) -> path = copy_point(p)
+free_path : (p: path) -> void = free_point(p)
 
 appendhelp_copyin : (in: path, from: path, i: int) -> void = 
     if i<in.length then
@@ -25,7 +29,7 @@ append : (p1 : path, p2: path) -> path =
     merge: bool = p1[p1.length-1] == p2[0];
     p2c: path = (if merge then appendhelp_tail(p2) else p2);
     ret: path = p1 @ p2c;
-    (if merge then free(p2c) else 0); ret
+    (if merge then free_path(p2c) else 0); ret
 
 reversedhelp: (in: path, from: path, i: int) -> void = 
     if i < in.length then

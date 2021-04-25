@@ -1,15 +1,2 @@
-struct vector = {float x, float y}
+struct vector = {x: float, y: float}
 
-vector scalex(vector p, float scale) =
-    float x = p.x;
-    float y = p.y;
-    x = scale*x;
-    vector ret = {x, y};
-    ret
-
-vector scaley(vector p, float scale) =
-    float x = p.x;
-    float y = p.y;
-    y = scale*y;
-    vector ret = {x, y};
-    ret
