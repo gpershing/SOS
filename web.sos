@@ -1,0 +1,67 @@
+import renderer.sos
+import random.sos
+import array.sos
+import math.sos
+
+build_ring : (i: int, r: int, radius: float) -> point = 
+    angle: float = (i*6.2831852)/r  + 0.134;
+    {cos(angle) * radius, sin(angle) * radius}
+
+build_rings : (n: int, r: int, radius_interval: float, rr: rng) -> array point =
+    build_ring(ints(r), r, radius_interval * n * (randf(rr)*0.18+0.91))
+
+build_points : (n : int, r : int, max_radius: float, rr: rng) -> array array point = 
+    build_rings (ints(n), r, max_radius/(n-1), rr) 
+
+connect_ring_inner : (i: int, a: array point, c: colors) -> void =
+    if  i==a.length-1 then drawPath([a[i], a[0]], c, 0)
+    else drawPath([a[i], a[i+1]], c, 0); connect_ring_inner(i+1,a,c)
+
+connect_ring : (a: array point, c: colors) -> void =
+    connect_ring_inner(0, a, c) 
+
+ring_iter : (w: array array point, c: colors, i: int, j: int, r: rng,
+        f: func array array point, colors, int, int, rng -> void) -> void = 
+    if i < w.length then if j < w[i].length then
+    f(w,c,i,j,r) ; ring_iter(w,c,i,j+1,r,f)
+    else ring_iter(w,c,i+1,0,r,f) else void
+
+connect_lines_in : (w: array array point, c: colors, i: int, j: int, r: rng) -> void = 
+    if i < w.length - 1 then
+    drawPath([w[i][j], w[i+1][j]], c, 0)
+    else drawPath([w[i][j], 5*w[i][j]], c, 0)
+
+connect_lines : (w: array array point, c: colors, r: rng) -> void = 
+    ring_iter(w,c,0,0,r, connect_lines_in)
+
+random_connections_in : (w: array array point, c: colors, i: int, j: int, r: rng) -> void =
+    if i < w.length - 1 then
+    (if randf(r) > 0.65 then drawPath([w[i][j], w[i+1][(j+1)%w[0].length]], c, 0) else void); 
+    if randf(r) > 0.65 then
+      drawPath([w[i][j], w[i+1][(j-1+w[0].length)%w[0].length]], c, 0) else void
+    else void
+
+random_connections : (w: array array point, c: colors, r: rng) -> void = 
+   ring_iter(w,c,1,0,r, random_connections_in)
+
+perturb_in : (w: array array point, c: colors, i: int, j: int, r: rng) -> void =
+    s: float = 0.1 ;
+    dx: float = randf(r) * s + 1.0 - s/2;
+    dy: float = randf(r) * s + 1.0 - s/2;
+    w[i][j].x = w[i][j].x * dx ;
+    w[i][j].y = w[i][j].y * dy
+
+perturb : (w: array array point, c: colors, r: rng) -> void = 
+   ring_iter(w,c,1,0,r, perturb_in)
+
+my_canvas: canvas = {400, 400, 3}
+r: rng = {35,62,21}
+startCanvas(my_canvas)
+
+w: array array point = build_points(7, 7, 0.95, r)
+perturb(w, [], r)
+connect_ring(w, [rgb(1,1,1), rgb(1,1,1)])
+connect_lines(w, [rgb(1,1,1), rgb(1,1,1)], r)
+random_connections(w, [rgb(1,1,1), rgb(1,1,1)], r)
+
+endCanvas(my_canvas)
