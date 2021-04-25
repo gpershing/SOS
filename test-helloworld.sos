@@ -1,12 +1,23 @@
-// for import:
-import color.sos
+import renderer.sos
+
+a: int = 5
+print(a)
+
+p1: point = {-0.9, -0.9}
+p2: point = {-0.9, -0.7}
+p3: point = {-0.7, -0.7}
+p4: point = {-0.7, -0.9}
+
+point_arr : path = [p1, p2, p3, p4]
+
 c1 : color = {255.0, 0.0, 0.0, 0.8}
 c2 : color = {0.0, 255.0, 0.0, 0.8}
-color_arr : colors = [c1, c2]
-printf(c1.r)
-// for using OpenGL call directly, without our stdlibs
-p : array float = [0.1, 0.0, 0.5, 0.0]
-c : array float = [255.0, 0.0, 0.0, 0.8, 0, 255.0, 0.0, 0.8]
-gl_startRendering()
-gl_drawCurve(p, c, 1)
-gl_endRendering(1)
+c3 : color = {0.0, 0.0, 255.0, 0.8}
+c4 : color = {100.0, 100.0, 0.0, 0.8}
+color_arr : colors = [c1, c2, c3]
+
+my_canvas : canvas = {800, 400, 2}
+
+startCanvas(my_canvas)
+drawShape(point_arr, color_arr, 0, 1)
+endCanvas(my_canvas)
