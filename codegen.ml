@@ -703,6 +703,7 @@ let translate prog =
 
      (* Access *)
    | SVar(nm) -> 
+     if nm="void" then l0, env else (* Void id *)
      if StringSet.mem nm env.efxns then (* Global fxn name, don't load *)
      get_variable env nm, env
      else (* All other variables *) 

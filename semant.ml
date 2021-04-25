@@ -72,6 +72,9 @@ let check prog =
     in List.fold_left add_type StringMap.empty [("int", Int); ("bool", Bool); ("float", Float); ("void", Void)] )
   in
 
+  (* Void id *)
+  let built_in_decls = StringMap.add "void" Void built_in_decls in
+
   (* Initial environment containing built-in types and functions *)
   let global_env = { typemap = built_in_types; varmap = built_in_decls 
   ; fxnnames = starting_fxns }
