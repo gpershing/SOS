@@ -2,6 +2,7 @@ import renderer.sos
 import vector.sos
 import transform.sos
 import array.sos
+import math.sos
 
 dragon: (n: int) -> path = 
     if n == 0
@@ -10,8 +11,8 @@ dragon: (n: int) -> path =
     d1: path = dragon(n-1) ; 
     d2: path = copy_path(d1) ;
     s: float = sqrt(2.0)/2.0 ;
-    rotate(d1, toradians(45.0), -1, {0.0, 0.0}) ;
-    scale(d1, s, s) ;
+    rotate(d1, toradians(45.0), -1, {0.0, 0.0}) ; 
+    scale(d1, s, s) ; 
     rotate(d2, toradians(135.0), -1, {0., 0.}) ;
     scale(d2,s,s) ;
     trans(d2, {1., 0.}) ;

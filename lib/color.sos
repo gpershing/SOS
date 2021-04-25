@@ -15,10 +15,10 @@ hsv: (h: float, s: float, v: float) -> color =
    m: float = v - c ;
    hh: float = h*6.0 ;
 
-   if h < 1.0 then rgb(v,x+m,m) else
-   if h < 2.0 then rgb(x+m,v,m) else
-   if h < 3.0 then rgb(m,v,x+m) else
-   if h < 4.0 then rgb(m,x+m,v) else
-   if h < 5.0 then rgb(x+m,m,v) else
-                   rgb(v,m,x+m)
+   if hh < 1.0 then rgb(v,x+m,m) else
+   if hh < 2.0 then rgb(x+m,v,m) else
+   if hh < 3.0 then rgb(m,v,x+m) else
+   if hh < 4.0 then rgb(m,x+m,v) else
+   if hh < 5.0 then rgb(x+m,m,v) else
+                    rgb(v,m,x+m)
     
