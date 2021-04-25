@@ -31,8 +31,8 @@ let external_functions : (typeid * string * string) list =
   Func([Float], Float), "acos", "acos_f" ;
   Func([Float], Float), "atan", "acos_f" ;
   Func([Float], Float), "toradians", "toradians" ;
-  Func([], Void), "gl_startRendering", "gl_startRendering" ;
-  Func([Int], Void), "gl_endRendering", "gl_endRendering" ;
+  Func([Int; Int], Void), "gl_startRendering", "gl_startRendering" ;
+  Func([Int; Int; Int], Void), "gl_endRendering", "gl_endRendering" ;
   Func([Array(Float); Array(Float); Int], Void), "gl_drawCurve", "gl_drawCurve" ;
   Func([Array(Float); Array(Float); Int; Int], Void), "gl_drawShape", "gl_drawShape" ;
   Func([Array(Float); Array(Float); Int], Void), "gl_drawPoint", "gl_drawPoint" ;

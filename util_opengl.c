@@ -3,11 +3,12 @@
 #include <string.h>
 #include "GL/osmesa.h"
 
-// reference: https://github.com/freedesktop/mesa-demos
+/* reference: 
+   https://github.com/freedesktop/mesa-demos/blob/master/src/osdemos/osdemo.c
+   (mainly for gl_startRendering, write_ppm and gl_endRendering)
+*/
 
-#define maxpoints 1000
-static int Width = 400;
-static int Height = 400;
+#define maxpoints 50000
 
 struct array{
     float *arr;
@@ -36,19 +37,19 @@ static void rendering_helper_close(){
  * startRendering: an initalization that must be called before drawing
  * any image. Creates Mesa and OpenGL contexts and image buffer.
  */
-void gl_startRendering(){
+void gl_startRendering(int width, int height){
     ctx = OSMesaCreateContextExt(OSMESA_RGBA, 16, 0, 0, NULL);
     if (!ctx){
         printf("OSMesaCreateContext failed!\n");
     }
 
-    buffer = malloc( Width * Height * 4 * sizeof(GLubyte) );
+    buffer = malloc( width * height * 4 * sizeof(GLubyte) );
     if (!buffer) {
         printf("Alloc image buffer failed!\n");
     }
 
     // Bind the buffer to the context and make it current
-    if (!OSMesaMakeCurrent(ctx, buffer, GL_UNSIGNED_BYTE, Width, Height)) {
+    if (!OSMesaMakeCurrent(ctx, buffer, GL_UNSIGNED_BYTE, width, height)) {
         printf("OSMesaMakeCurrent failed!\n");
     }
     printf("startRendering...\n");
@@ -221,9 +222,9 @@ static void write_ppm(int fileNumber, const GLubyte *buffer, int width, int heig
  * endRendering: closes OpenGL and Mesa contexts and saves drawing
  * by calling write_ppm
  */
-void gl_endRendering(int fileNumber){
+void gl_endRendering(int width, int height, int fileNumber){
     rendering_helper_close();
-    write_ppm(fileNumber, buffer, Width, Height);
+    write_ppm(fileNumber, buffer, width, height);
     free(buffer);
     OSMesaDestroyContext(ctx);
     printf("endRendering...\n");
