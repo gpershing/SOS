@@ -9,7 +9,7 @@ float asin_f(float x) {
 }
 
 float atan_f(float x) {
-    return (float) tan(x);
+    return (float) atan(x);
 }
 
 float sin_f(float x) {
