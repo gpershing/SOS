@@ -21,21 +21,21 @@ type environment = {
 
 (* External function signatures *)
 (* This is re-used in Codegen *)
-let external_functions : (typeid * string) list =
-[ Func([Float], Float), "sqrt" ;
-  Func([Float], Float), "sin" ;
-  Func([Float], Float), "cos" ;
-  Func([Float], Float), "tan" ;
-  Func([Float], Float), "asin" ;
-  Func([Float], Float), "acos" ;
-  Func([Float], Float), "atan" ;
-  Func([Float], Float), "toradians" ;
-  Func([], Void), "gl_startRendering" ;
-  Func([Int], Void), "gl_endRendering" ;
-  (*Func([Float, Float, Float], Void), "glTranslatef" ; ill try to implement affine transformations in sos*)
-  Func([Array(Float); Array(Float); Int], Void), "gl_drawCurve" ;
-  Func([Array(Float); Array(Float); Int; Int], Void), "gl_drawShape" ;
-  Func([Array(Float); Array(Float); Int], Void), "gl_drawPoint" ;
+(* type, name that to be called in SOS, name in c file *)
+let external_functions : (typeid * string * string) list =
+[ Func([Float], Float), "sqrt", "sqrt_f" ;
+  Func([Float], Float), "sin", "sin_f" ;
+  Func([Float], Float), "cos", "cos_f" ;
+  Func([Float], Float), "tan", "tan_f" ;
+  Func([Float], Float), "asin", "asin_f" ;
+  Func([Float], Float), "acos", "acos_f" ;
+  Func([Float], Float), "atan", "acos_f" ;
+  Func([Float], Float), "toradians", "toradians" ;
+  Func([], Void), "gl_startRendering", "gl_startRendering" ;
+  Func([Int], Void), "gl_endRendering", "gl_endRendering" ;
+  Func([Array(Float); Array(Float); Int], Void), "gl_drawCurve", "gl_drawCurve" ;
+  Func([Array(Float); Array(Float); Int; Int], Void), "gl_drawShape", "gl_drawShape" ;
+  Func([Array(Float); Array(Float); Int], Void), "gl_drawPoint", "gl_drawPoint" ;
 ]
 
 
@@ -51,11 +51,11 @@ let check prog =
   in
   (* add external functions *)
   let built_in_decls = List.fold_left
-    (fun map (decl, nm) -> StringMap.add nm decl map)
+    (fun map (decl, nm, _) -> StringMap.add nm decl map)
     built_in_decls external_functions
   in
   let starting_fxns = List.fold_left
-    (fun map (_, nm) -> StringSet.add nm map)
+    (fun map (_, nm, _) -> StringSet.add nm map)
     StringSet.empty external_functions
   in
   let starting_fxns = StringSet.add "print" starting_fxns in
