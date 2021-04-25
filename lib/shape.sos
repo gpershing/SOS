@@ -13,7 +13,7 @@ free_path : (p: path) -> void = free_point(p)
 
 appendhelp_copyin : (in: path, from: path, i: int) -> void = 
     if i<in.length then
-    in[i]=from[i+1];
+    in[i] = copy(from[i+1]);
     appendhelp_copyin (in, from, i+1)
     else 0
 
@@ -22,14 +22,15 @@ appendhelp_tail : (p: path) -> path =
     appendhelp_copyin(tail, p, 0); tail
 
 // Appends two paths, merging them at their endpoints, if needed
-append : (p1 : path, p2: path) -> path = 
+// Epsilon is the max distance that can be merged
+append : (p1: path, p2: path, epsilon: float) -> path = 
     if p1.length == 0 then copy_path(p2)
     else if p2.length == 0 then copy_path(p1)
     else 
-    merge: bool = p1[p1.length-1] == p2[0];
+    merge: bool = sqrDistance(p1[p1.length-1], p2[0]) < epsilon*epsilon;
     p2c: path = (if merge then appendhelp_tail(p2) else p2);
-    ret: path = p1 @ p2c;
-    (if merge then free_path(p2c) else 0); ret
+    ret: path = copy_path(p1) @ copy_path(p2c);
+    ret
 
 reversedhelp: (in: path, from: path, i: int) -> void = 
     if i < in.length then
