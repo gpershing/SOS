@@ -67,6 +67,10 @@ void gl_startRendering(int width, int height){
  *             1 -> each point has its own color. The segment between each point is a gradient between point colors
  */
 void gl_drawCurve(struct array *spoints, struct array *scolors, int color_mode){
+    if (spoints->length!=scolors->length/2) {
+        fprintf( stderr, "Unable to draw: The length of points array and colors array mismatched!\n" );
+        return;
+    }
     glPushMatrix();
     
     if (color_mode == 0){
@@ -103,6 +107,11 @@ void gl_drawCurve(struct array *spoints, struct array *scolors, int color_mode){
  *        1 -> shape will be filled with color
  */
 void gl_drawShape(struct array *spoints, struct array *scolors, int color_mode, int filled){
+    if (spoints->length!=scolors->length/2) {
+        printf("%d %d", spoints->length, scolors->length);
+        fprintf( stderr, "Unable to draw: The length of points array and colors array mismatched!\n" );
+        return;
+    }
     glPushMatrix();
 
     if (color_mode == 0){
@@ -141,6 +150,10 @@ void gl_drawShape(struct array *spoints, struct array *scolors, int color_mode, 
  * point_size: the size of each point
  */
 void gl_drawPoint(struct array *spoints, struct array *scolors, int point_size){
+    if (spoints->length!=scolors->length/2) {
+        fprintf( stderr, "Unable to draw: The length of points array and colors array mismatched!\n" );
+        return;
+    }
     glPushMatrix();
     
     float points[maxpoints];
