@@ -80,7 +80,8 @@ let translate prog =
   in
   
   (* Get a variable's llvalue from environment.evars *)
-  let get_variable env nm = StringMap.find nm env.evars
+  let get_variable env nm = if StringMap.mem nm env.evars then StringMap.find nm env.evars
+    else raise (Failure ("Unexpected variable name "^nm))
   in
 
   (* Add a function declaration to environment.efxns *)
@@ -352,6 +353,7 @@ let translate prog =
        let tmp = L.build_alloca (ltype_of_typ atype) "tmp" builder in
        ignore(L.build_store (if atype=Float then L.const_float (ltype_of_typ Float) 0.0 else L.const_int i32_t 0) res builder) ;
        let map = (if atype=Float then float_map else int_map) in
+       (if StringMap.mem "Mul" map && StringMap.mem "Add" map then () else raise (Failure("Could not find operator in dot_product"))) ;
        let opmul = StringMap.find "Mul" map in
        let opadd = StringMap.find "Add" map in
        let rec dot_prod n = 
@@ -398,6 +400,7 @@ let translate prog =
 
        let struc = L.build_malloc (L.element_type ltype) "ret" builder in
        let map = (if atype=Float then float_map else int_map) in
+       (if StringMap.mem (opstr op) map then () else raise (Failure("Could not find op "^(opstr op)^" in struct_sum map")) );
        let sumop = StringMap.find (opstr op) map in
        let rec strsum n = 
          if n < len then 
@@ -440,6 +443,7 @@ let translate prog =
 
        let struc = L.build_malloc (L.element_type ltype) "ret" builder in
        let map = (if atype=Float then float_map else int_map) in
+       (if StringMap.mem (opstr op) map then () else raise (Failure("Could not find op "^(opstr op)^" in struct_scale map")) );
        let sumop = StringMap.find (opstr op) map in
        let rec strscl n = 
          if n < len then 
@@ -588,19 +592,20 @@ let translate prog =
      | (Float, Float) -> StringMap.find (opstr op) float_map ll1 ll2
          "tmp" env.ebuilder, env
      | (Struct(l1), Struct(l2)) -> let (decl, _), env = 
-       if op=Mul then dot_product t1 l1 env 
-       else if op=MMul then mat_mul rt l1 l2 env 
-       else if op=Eq || op=Neq then struct_eq t1 l1 op env
-       else struct_sum t1 l1 op env in
+       (match op with
+          Mul -> dot_product t1 l1 env
+        | MMul-> mat_mul rt l1 l2 env
+        | Eq  -> struct_eq t1 l1 op env
+        | Neq -> struct_eq t1 l1 op env
+        | Add -> struct_sum t1 l1 op env
+        | Sub -> struct_sum t1 l1 op env
+        | _ -> raise (Failure("Unexpected struct operator "^(opstr op))) ) in
        L.build_call decl [|ll1; ll2|] "result" env.ebuilder, env
-     | (Struct(l1), _) -> let (decl, _), env = struct_scale t1 l1 op env 
-       in L.build_call decl [|ll1; ll2|] "result" env.ebuilder, env
-     | (Array(_), _) ->
+     | (Array(el_typ), _) ->
        let len = build_array_len env.ebuilder ll1 "len" in
       
        (* Pre-GEP the array *)
        let argdata = build_array_data env.ebuilder ll1 "argdata" in
-       let el_typ = match t1 with Array(et) -> et | _ -> Void in
      
        (* Create a new array *)
        let rtel_typ = match rt with Array(et) -> et | _ -> Void in
@@ -627,12 +632,11 @@ let translate prog =
        let arr_struct = build_array_struct (ltype_of_typ rt) data len "arr" env in
        arr_struct, env
 
-     | (_, Array(_)) -> 
+     | (_, Array(el_typ)) -> 
        let len = build_array_len env.ebuilder ll2 "len" in
       
        (* Pre-GEP the array *)
        let argdata = build_array_data env.ebuilder ll2 "argdata" in
-       let el_typ = match t2 with Array(et) -> et | _ -> Void in
      
        (* Create a new array *)
        let rtel_typ = match rt with Array(et) -> et | _ -> Void in
@@ -658,6 +662,8 @@ let translate prog =
        (* Create array struct *)
        let arr_struct = build_array_struct (ltype_of_typ rt) data len "arr" env in
        arr_struct, env
+     | (Struct(l1), _) -> let (decl, _), env = struct_scale t1 l1 op env 
+       in L.build_call decl [|ll1; ll2|] "result" env.ebuilder, env
      | _ -> raise (Failure "Unsupported operation")
      )
    in
