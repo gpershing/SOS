@@ -8,7 +8,7 @@
    (mainly for gl_startRendering, write_ppm and gl_endRendering)
 */
 
-#define maxpoints 1000
+#define maxpoints 50000
 
 struct array{
     float *arr;
