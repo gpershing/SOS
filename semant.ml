@@ -30,7 +30,7 @@ let external_functions : (typeid * string) list =
   Func([Float], Float), "asin_f" ;
   Func([Float], Float), "acos_f" ;
   Func([Float], Float), "atan_f" ;
-  Func([Float], Float), "toradians" ;
+  Func([Float], Float), "toradians_f" ;
   Func([Int; Int], Void), "gl_startRendering" ;
   Func([Int; Int; Int], Void), "gl_endRendering" ;
   (*Func([Float, Float, Float], Void), "glTranslatef" ; ill try to implement affine transformations in sos*)
