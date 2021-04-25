@@ -7,7 +7,7 @@ floor : (x: float) -> float =
 
 ceil : (x: float) -> float = -floor(-x)
 
-frac : (x: float) -> float = floor(x) - x
+frac : (x: float) -> float = x - floor(x) 
 
 max : (a: float, b: float) -> float = if a<b then b else a
 min : (a: float, b: float) -> float = if a<b then a else b
