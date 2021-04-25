@@ -23,13 +23,13 @@ type environment = {
 (* This is re-used in Codegen *)
 (* type, name that to be called in SOS, name in c file *)
 let external_functions : (typeid * string) list =
-[ Func([Float], Float), "sqrt" ;
-  Func([Float], Float), "sin" ;
-  Func([Float], Float), "cos" ;
-  Func([Float], Float), "tan" ;
-  Func([Float], Float), "asin" ;
-  Func([Float], Float), "acos" ;
-  Func([Float], Float), "atan" ;
+[ Func([Float], Float), "sqrt_f" ;
+  Func([Float], Float), "sin_f" ;
+  Func([Float], Float), "cos_f" ;
+  Func([Float], Float), "tan_f" ;
+  Func([Float], Float), "asin_f" ;
+  Func([Float], Float), "acos_f" ;
+  Func([Float], Float), "atan_f" ;
   Func([Float], Float), "toradians" ;
   Func([], Void), "gl_startRendering" ;
   Func([Int], Void), "gl_endRendering" ;
