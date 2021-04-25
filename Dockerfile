@@ -64,14 +64,16 @@ RUN apt-get build-dep mesa -y
 RUN meson build/ -Dosmesa=classic && ninja -C build/ && ninja -C build/ install
 WORKDIR ../
 
+# add OSMesa to path
+RUN echo "export LD_LIBRARY_PATH=/usr/local/lib/x86_64-linux-gnu/:$LD_LIBRARY_PATH" >> ~/.bashrc
 
-# install MESA GLU
-RUN git clone https://gitlab.freedesktop.org/mesa/glu.git
-RUN cd glu && ./autogen.sh && ./configure --enable-osmesa --prefix=/usr/local/ && make && make install
-RUN rm -r glu mesa-20.3.5 get-pip.py
+# install MESA GLU if you need more advanced features
+# RUN git clone https://gitlab.freedesktop.org/mesa/glu.git
+# RUN cd glu && ./autogen.sh && ./configure --enable-osmesa --prefix=/usr/local/ && make && make install
+# RUN rm -r glu mesa-20.3.5 get-pip.py
 
-# add glu and osmesa to path
-RUN echo "export LD_LIBRARY_PATH=/usr/local/lib/:/usr/local/lib/x86_64-linux-gnu/:$LD_LIBRARY_PATH" >> ~/.bashrc
+# add GLU to path
+# RUN echo "export LD_LIBRARY_PATH=/usr/local/lib/:$LD_LIBRARY_PATH" >> ~/.bashrc
 
 # install vim for testing
 # RUN apt-get install vim -y
