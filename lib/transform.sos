@@ -24,6 +24,10 @@ rotate : (p: point, angle: float, direction: int, about: point) -> void =
 trans : (p: point, direction: vector) -> void = 
     p.x = p.x + direction.x ; p.y = p.y + direction.y
 
+// Scales the point by (sx, sy)
+scale : (p: point, sx: float, sy: float) -> void =
+    p.x = p.x * sx ; p.y = p.y * sy
+
 // Performs rotate() on a new point
 rotated : (p: point, angle: float, direction: int, about: point) -> point =
     q: point = copy(p) ;
@@ -34,4 +38,9 @@ rotated : (p: point, angle: float, direction: int, about: point) -> point =
 translated : (p: point, direction: vector) -> point =
     q: point = copy(p) ;
     trans(q, direction) ;
+    q
+
+scaled : (p: point, sx: float, sy: float) -> point = 
+    q: point = copy(p) ; 
+    scale(p, sx, sy) ;
     q
