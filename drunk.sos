@@ -1,0 +1,40 @@
+import renderer.sos
+import random.sos
+
+n: int = 100
+p: path = n of [{0.0, 0.0}]
+c: colors = n of [{0.5, 0.5, 0.5, 0.5}]
+r: rng = {1,2,3}
+
+drunk_walk : (i: int, p: path, c: colors, r: rng) -> void = 
+    if i < p.length then
+      theta: float = randf(r) * 6.28319;
+      d: float = randf(r)*0.1 + 0.02;
+      dx: float = cos(theta)*d ; dy: float = sin(theta)*d ;
+      p[i] = {p[i-1].x+dx, p[i-1].y+dy} ;
+      dc: float = 0.1 ; 
+      dr: float = (randf(r) - 0.5) * dc ;
+      dg: float = (randf(r) - 0.5) * dc ;
+      db: float = (randf(r) - 0.5) * dc ;
+      c[i] = rgb(c[i-1].r + dr, c[i-1].g+dg, c[i-1].b+db) ;
+      drunk_walk(i+1,p,c,r)
+
+    else void
+
+
+my_canvas: canvas = {400, 400, 0}
+startCanvas(my_canvas)
+
+draw_walks : (count: int, p: path, c: colors, r: rng) -> void =
+    if count > 0 then
+    p[0] = {randf(r)*0.5-0.25, randf(r)*0.5-0.25};
+    c[0] = hsv(randf(r), 0.8, 0.8) ;
+    drunk_walk(1, p, c, r) ;
+    drawPath(p,c,0) ;
+    draw_walks(count-1,p,c,r)
+    else void
+
+draw_walks(20, p, c, r)
+
+endCanvas(my_canvas)
+
