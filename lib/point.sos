@@ -1,3 +1,13 @@
+import math.sos
+
 struct point = {x: float, y: float}
 struct point3 = {x: float, y: float, z: float}
 
+sqrMagnitude : (p: point) -> float = p * p
+magnitude : (p: point) -> float = sqrt(sqrMagnitude(p))
+
+sqrDistance : (a: point, b: point) -> float = 
+   p: point = a - b;
+   d: float = sqrMagnitude(p);
+   free(p) ; d
+distance : (a: point, b: point) -> float = sqrt(sqrDistance(a,b))
