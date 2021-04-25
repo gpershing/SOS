@@ -1,6 +1,6 @@
 import point.sos
 import shape.sos
-#direction : 1 for clockwise, 0 for counter-clockwise
+//direction : 1 for clockwise, 0 for counter-clockwise
 
 rotateHelper : (points: path, angle: float, direction: int, aboutPoint: point, i: int) ->
     if i >= path.size -1
