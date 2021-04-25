@@ -1,3 +1,24 @@
+import math.sos
+
 struct color = {r: float, g: float, b: float, a: float}
 
 alias colors = array color
+
+// Standard: r,g,b in [0, 1]
+rgb: (r: float, g: float, b: float) -> color = {r,g,b,1.0}
+
+// Hue/saturation/value: hsv in [0, 1]
+hsv: (h: float, s: float, v: float) -> color =
+   c: float = v * s ;
+   hfac: float = modf(h*6.0, 2.0) ;
+   x: float = c * (1.0-abs(hfac-1.0)) ;
+   m: float = v - c ;
+   hh: float = h*6.0 ;
+
+   if h < 1.0 then rgb(v,x+m,m) else
+   if h < 2.0 then rgb(x+m,v,m) else
+   if h < 3.0 then rgb(m,v,x+m) else
+   if h < 4.0 then rgb(m,x+m,v) else
+   if h < 5.0 then rgb(x+m,m,v) else
+                   rgb(v,m,x+m)
+    
