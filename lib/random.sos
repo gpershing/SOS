@@ -1,0 +1,11 @@
+// Wichmann-Hill PRNG
+// en.wikipedia.org/wiki/Wichmann-Hill
+import math.sos
+
+struct rng = {s1: int, s2: int, s3: int}
+
+randf : (r: rng) -> float =
+   r.s1 = 171 * r.s1 % 30269;
+   r.s2 = 172 * r.s2 % 30307;
+   r.s3 = 170 * r.s3 % 30323;
+   frac(r.s1/30269.0 + r.s2/30307.0 + r.s3/30323.0)
