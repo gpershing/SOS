@@ -1,9 +1,9 @@
-int add(int n) = 
+add(n: int) -> int = 
 if n == 0
 then 0
 else add(n-1) + n
 
-int x = 5
+x: int = 5
 x = add(x)
 print(x) //5+4+3+2+1+0=15
 

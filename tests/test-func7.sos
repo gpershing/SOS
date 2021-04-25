@@ -1,11 +1,6 @@
-//more complex function bodies: conditionals
+//sequencing functions
 
-int foo (int x) = 
-    if x == 0
-    then x
-    else int y = x; y - x
+foo() -> int = (bar(): int = 5); bar()
 
-int a = foo(0)
-int b = foo(5)
-print(a) //0
-print(b) //0
+a: int = foo()
+print(a) //5

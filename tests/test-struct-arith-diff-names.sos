@@ -1,0 +1,12 @@
+struct s1 = {a: int, b: int}
+
+struct s2 = {c: int, d: int}
+
+first: s1 = {1, 2}
+
+second: s2 = {3, 4}
+
+first = first + second
+
+print(first.a)
+print(first.b)

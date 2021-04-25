@@ -1,22 +1,22 @@
 /*negation of int and float: neg*/
 //int
-int a = 5
-int b = -a
+a: int = 5
+b: int = -a
 print(a) //5
 print(b) //-5
 print(-1+-2) //-3
 
 //float
-float c = 5.0
-float d = -c
+c: float = 5.0
+d: float = -c
 printf(c) //5.0
 printf(d) //-5.0
 printf(-1.0*-2.0) //2.0
 
 
 /*negation of bool: not*/
-bool e = True
-bool f = !e
-printb(e) //True
-printb(f) //False
-printb(!!!True) //False
+e: bool = True
+f: bool = !e
+print(e) //True
+print(f) //False
+print(!!!True) //False

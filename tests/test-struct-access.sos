@@ -1,9 +1,9 @@
 //construction
-struct person = {int identifier, int age, bool isMarried}
-person tom = {2, 20, False}
+struct person = {identifier: int, age: int, isMarried: bool}
+tom: person = {2, 20, false}
 
 //accessing struct field
-int tom_id = tom.identifier
+tom_id: int = tom.identifier
 print(tom_id) //2
 
 //changing struct field

@@ -1,6 +1,6 @@
 //comparison of unnamed structs
-bool x = {1,2} == {1,2}
-printb(x) //True
+x: bool = {1,2} == {1,2}
+print(x) //True
 
 //unnamed arrays
 x = [1,2,3] == [1,2,3]
@@ -8,17 +8,17 @@ printb(x) //True
 
 //derived types are passed by reference
 //array
-array arr1 = [1,2,3]
-array arr2 = [1,2,3]
-array arr3 = [3,2,1]
+arr1: array int = [1,2,3]
+arr2: array int = [1,2,3]
+arr3: array int= [3,2,1]
 
-bool out1 = arr1 == arr1
-printb(out1) //True
+out1: bool = arr1 == arr1
+print(out1) //True
 
-bool out2 =arr1 == arr2
-printb(out2) //False
+out2: bool =arr1 == arr2
+print(out2) //False
 
-bool out3 = arr1 == arr3
+out3: bool  = arr1 == arr3
 printb(out3) //False
 
 
@@ -28,11 +28,11 @@ s s1 = {1}
 s s2 = {1} 
 s s3 = {2} 
 
-bool out4 = s1 == s1
-printb(out4) //True
+out4: bool = s1 == s1
+print(out4) //True
 
-bool out5 = s1 == s2
-printb(out5) //False
+out5: bool  = s1 == s2
+print(out5) //False
 
-bool out6 = s1 == s3
-printb(out6) //False
+out6: bool  = s1 == s3
+print(out6) //False

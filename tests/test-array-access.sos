@@ -1,20 +1,23 @@
-array int mult_2(int i, array int arr) = 
+mult_2 : (i: int, arr: array int) -> array int = 
     if i == -1
-    then arr 
+    then arr
     //array access and assignment
-    else (arr[i] = arr[i]*2; mult_2(i - 1, arr))
+    else 
+        arr[i] = arr[i]*2; 
+        mult_2(i - 1, arr)
 
-int printingarray(array int arr, int length, int current) =
+printingarray : (array int arr, int length, int current) -> void =
     if current == length
-    then 1
-    else print(arr[curent]); printingarray(arr, length, current+1)
+    then void
+    else 
+        print(arr[curent]);
+        printingarray(arr, length, current+1)
 
-array a = [1,2,3]
-int n = a[0]
-array int b = mult_2(3, a)
+a: array int = [1,2,3]
+n: int = a[0]
+b: array int = mult_2(3, a)
 
-int x = printingarray(a, 3, 0) //1, 2, 3
+printingarray(a, 3, 0) //1, 2, 3
 print(n) //1
 print(a[0+1]) //2
-x = printingarray(b, 3, 0) //2, 4, 6
-
+printingarray(b, 3, 0) //2, 4, 6

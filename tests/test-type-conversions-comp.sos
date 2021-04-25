@@ -1,14 +1,14 @@
 /*float over int*/
-bool b = 3.5 > 3
-printb(b) //True
+b: bool = 3.5 > 3
+print(b) //True
 
 b = 3 < 3.5
-printb(b) //True
+print(b) //True
 
 /*int over bool*/
 b = 2 > True
-printb(b) //True
+print(b) //True
 
 /*float over bool*/
 b = 2.1 > True
-printb(b) //True
+print(b) //True

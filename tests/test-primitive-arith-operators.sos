@@ -1,17 +1,17 @@
 (* arithmetic operators on primitives int, float *)
 
-int add(int x, int y) = x + y
-int sub(int x, int y) = x - y
-int mult(int x, int y) = x * y
-int div(int x, int y) = x/y
-int mod(int x, int y) = x%y
+add(x: int, y: int) -> int = x + y
+int sub(x: int, y: int) -> int = x - y
+int mult(x: int, y: int) -> int = x * y
+int div(x: int, y: int) -> int = x/y
+int mod(x: int, y: int) -> int = x%y
 
-float add(float x, float y) = x + y 
-float sub(float x, float y) = x - y 
-float mult(float x, float y) = x * y 
-float div(float x, float y) = x/y 
+add(x: float, y: float) -> float = x + y 
+sub(x: float, y: float) -> float = x - y 
+mult(x: float, y: float) -> float = x * y 
+div(x: float, y: float) -> float = x/y 
 
-int x = add(1,2)
+x: int = add(1,2)
 print(x) //3
 x = sub(1,2)
 print(x) //-1
@@ -22,7 +22,7 @@ print(x) //0
 x = mod(10,8)
 print(x) //2
 
-float y = add(1.1, 2.1)
+y: float = add(1.1, 2.1)
 printf(y) //3.2
 y = sub(2.1, 1.1)
 printf(y) //1.0

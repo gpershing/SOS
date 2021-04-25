@@ -1,14 +1,14 @@
-struct first = {array int arr1}
+struct first = {arr1: array int}
 
-struct second = {array first arr2}
+struct second = {arr2: array first}
 
-struct third = {array second arr3}
+struct third = {arr3: array second}
 
-first s1 = {[1,2]}
-first s1_2 = {[3,4]}
-second s2 = {[s1, s1_2]}
-second s2_2 = {[{[-1, 0]}, {[-2, -1]}]}
-third s1 = {[s2, s2_2]}
+s1: first = {[1,2]}
+s1_2: first = {[3,4]}
+s2: second = {[s1, s1_2]}
+s2_2: second = {[{[-1, 0]}, {[-2, -1]}]}
+s1: third = {[s2, s2_2]}
 
-int x = s1.arr3[0].arr2[1].arr1[0]
+x: int = s1.arr3[0].arr2[1].arr1[0]
 print(x) //3

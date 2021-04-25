@@ -1,17 +1,6 @@
 //construction
-struct person = {int identifier, int age}
+struct person = {identifier: int, age: int}
 
-//ordered
-person p1 = {2, 20}
+p1: person = {2, 20}
 print(p1.identifier) //2
 print(p1.age) //20
-
-//named
-person p2 = {identifier:1, age:10}
-print(p2.identifier) //1
-print(p2.age) //10
-
-person p3 = {age:23, identifier: 3}
-print(p3.identifier) //3
-print(p3.age) //23
-

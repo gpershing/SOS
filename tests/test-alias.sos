@@ -5,9 +5,9 @@ alias month = int
 //alias of alias
 alias day = month 
 
-year present_year = 2021
-month present_month = 3
-day present_day = 20
+present_year: year = 2021
+present_month: month = 3
+present_day: day = 20
 print(present_year) //2021
 print(present_month) //3
 print(present_day) //20
@@ -17,27 +17,27 @@ print(present_day) //20
 
 //alias operator primitive -> alias
 //year + int -> year
-year test = present_year + 1
+test: year = present_year + 1
 print(test) //2021+1=2022
 
 //alias operator primitive -> alias2
 //year + int -> month
-month test2 = present_year + 1
-print(test) //2021+1=2022
+test2: month = present_year + 1
+print(test2) //2021+1=2022
 
 //alias operator primitive -> aliasofalias
 //year + int -> day
-day test3 = present_year + 3
+test3: day = present_year + 3
 print(test3) //2021+1=2022
 
 //alias operator primitive -> primitive
 //year + int -> int
-int test4 = present_year + 1
+test4: int = present_year + 1
 print(test4) //2021+1=2022
 
 //alias operator alias -> primitive
 //year + year -> int
-int test5 = present_year + present_year
+test5: int = present_year + present_year
 print(test5) //2021+2021=4042
 
 //alias operator alias2 -> primitive
@@ -47,25 +47,25 @@ print(test6) //2021+3=2024
 
 //alias operator aliasofalias -> primitive
 //year + month -> month
-int test7 = present_year + present_day
+test7: int = present_year + present_day
 print(test7) //2021+20=2041
 
 //mixing int operators and aliases
-day test8 = present_month*present_day-present_year/10%9
+test8: int = present_month*present_day-present_year/10%9
 print(test8) //3*20-2021/10%9=-1961
 
 
 /*alias comparison */
 //primitive vs alias
-int i1 = 1
-year y1 = 1
-bool result = i1 = y1
-printb(result) //True
+i1: int = 1
+y1: year = 1
+result: bool = i1 == y1
+print(result) //True
 
 //alias vs alias
-year y2 = 1
-bool result2 = y1 = y2
-printb(result2) //True
+y2: year = 1
+result2: bool = y1 == y2
+print(result2) //True
 
 //alias vs alias2
 month m1 = 1
@@ -73,14 +73,14 @@ bool result3 = y1 == m1
 print(result3) //True
 
 //alias vs aliasofalias
-day d1 = 1
-bool result4 = y1 == d1
+d1: day = 1
+result4: bool = y1 == d1
 print(result4) //True
 
 
 /*alias of struct*/
-struct date = {int day, year yr, month mth}
-date present_day = {20, present_year, present_month}
+struct date = {day: int, yr: year, mth: month}
+present_day: date = {20, present_year, present_month}
 print(present_day.yr) //2021
 
 //alias of struct field
@@ -89,46 +89,46 @@ print(present_day.yr) //3
 
 //alias of struct
 alias new_date = date
-new_date newer = present_day
+newer: new_date = present_day
 print(newer.day) //20
 
-new_date newer2 = {1, 2, 3}
+newer2: new_date = {1, 2, 3}
 print(newer.day) //1
 
-bool result5 = newer == present_day
+result5: bool = newer == present_day
 printb(result5) //True (pass by reference)
-bool result6 = newer == newer2 
-printb(result6) //False
+result6: bool = newer == newer2 
+print(result6) //False
 
 
 /*alias of float*/
 alias x_dist = float
-x_dist x = 1.2
+x: x_dist = 1.2
 print(x_dist) //1.2
 
 /*alias array*/
 //alias of array int
 alias scores = array int
-scores class1 = [87,93,70]
+class1: scores = [87,93,70]
 print(class1[0]) //87
 class1 + 3
 print(class1[0]) //90
 
 //alias of alias of array int
 alias marks = scores
-marks class2 = class1
-marks class3 = [87, 93, 70]
-bool result7 = class2 == class1
-printb(result7) //True
-bool result8 = class3 == class1
-printb(result8) //False
+class2: marks = class1
+class3: marks = [87, 93, 70]
+result7: bool = class2 == class1
+print(result7) //True
+result8: bool = class3 == class1
+print(result8) //False
 
 //alias of array of alias of array int: array array int
 alias class-scores = array scores
-class-scores highschool1 = [class1, [1,2,3]]
+highschool1: class-scores = [class1, [1,2,3]]
 print(highschool1[0][0]) //87
 
 //alias of array array array int
 alias school-scores = array array array int
-school-scores district1 = [highschool1, [[[4,5,6], [7,8,9]], [[10,11], [12,13,14,15]]]
+district1: school-scores = [highschool1, [[[4,5,6], [7,8,9]], [[10,11], [12,13,14,15]]]
 print(district1[0][0][0]) //4

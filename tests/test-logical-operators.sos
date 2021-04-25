@@ -1,19 +1,19 @@
 /* logical operators: AND, OR, NOT  */
 
-bool t = True
-bool f = False
+t: bool = true
+f: bool = false
 
 //and
-bool and_ans = t && f==False
-printb(and_ans)             //T AND T = T
+and_ans: bool = t && f==False
+print(and_ans)             //T AND T = T
 and_ans = t & f==True
-printb(and_ans)             //T AND F = F
+print(and_ans)             //T AND F = F
 and_ans = f && t == False
-printb(and_ans)             //F AND F = F
+print(and_ans)             //F AND F = F
 
 
 //or
-bool or_ans = t || f
+or_ans: bool = t || f
 print(or_ans)               //T OR T = T
 or_ans = t == True || f
 print(or_ans)               //T OR F = T
@@ -22,7 +22,7 @@ print(or_ans)               //F OR F = F
 
 
 //not
-bool not_ans = !t
+not_ans: bool = !t
 print(not_ans)              //NOT TRUE = F
 not_ans = !f == True
 print(not_ans)              //NOT FALSE = T

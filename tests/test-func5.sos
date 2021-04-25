@@ -1,6 +1,6 @@
 //ordered func app
 
-int pow(int x, int y) = n^x
+pow(x: int, y: int) -> int = n^x
 
-int var = pow(2,3)
+var: int = pow(2,3)
 print(var) //8

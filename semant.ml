@@ -33,7 +33,6 @@ let external_functions : (typeid * string) list =
   Func([Float], Float), "toradians_f" ;
   Func([Int; Int], Void), "gl_startRendering" ;
   Func([Int; Int; Int], Void), "gl_endRendering" ;
-  (*Func([Float, Float, Float], Void), "glTranslatef" ; ill try to implement affine transformations in sos*)
   Func([Array(Float); Array(Float); Int], Void), "gl_drawCurve" ;
   Func([Array(Float); Array(Float); Int; Int], Void), "gl_drawShape" ;
   Func([Array(Float); Array(Float); Int], Void), "gl_drawPoint" ;

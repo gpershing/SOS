@@ -1,9 +1,9 @@
-struct more = {int field1}
+struct more = {field1: int}
 
-struct stuff = {int field1, more field2}
+struct stuff = {field1: int, field2: more}
 
-more temp1 = {2}
-stuff temp2 = {1, temp1}
+temp1: more = {2}
+temp2: stuff = {1, temp1}
 
-int ans = temp2.field2.field1
+ans: int = temp2.field2.field1
 print(ans) //2

@@ -1,0 +1,14 @@
+struct point = {a: int, b: int}
+
+p1: point = {2, -3}
+
+p_mult: point = 3*p1
+
+print(p_mult.a) //6
+print(p_mult.b) //-9
+
+p_div: point = p1/2
+
+print(p_div.a) //1
+print(p_div.b) //-1
+

@@ -1,32 +1,32 @@
 //predefining struct in outer scope
-struct normal = {int field}
+struct normal = {field: int}
 
-normal func1(int x) = 
-    normal temp = {x}; temp
+func1(x: int) -> normal = 
+    temp: normal  = {x}; temp
 
-normal a = func1(5)
+a: normal = func1(5)
 print(a.field) //5
 
 
 //defining struct in function with known expression return type
-int func2(int x) = 
-    struct s = {int field};
-    s temp = {field:x};
+func2(x: int) -> int = 
+    struct s = {field: int};
+    temp: s = {x};
     s.field
 
-int x = func2(5)
+x: int = func2(5)
 print(x) //5
 
 
 //fancy: outer scruct has an assigned field during declaration
 struct outer = {
-    int field,
-    int func2() = 
+    field: int,
+    func2(): int = 
         struct s = {int field1, int field2};
         s temp = {1, 2};
         s.x + s.y
 }
 
-outer temp  = {5, 5}
+temp: outer  = {5, 5}
 print(temp.field) //5
 print(temp.func2()) //5

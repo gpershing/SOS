@@ -1,8 +1,8 @@
-int fib(int n) = 
+fib(n: int) -> int = 
 if n <= 1
 then n
 else fib(n-1) + fib(n-2)
 
-int x = 5
+x: int = 5
 x = fib(5)
 print(x) //5

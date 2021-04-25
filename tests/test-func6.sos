@@ -1,8 +1,11 @@
-//named func app
+//more complex function bodies: conditionals
 
-int pow(int x, int y) = x^y
+foo: (x: int) -> = 
+    if x == 0
+    then x
+    else int y = x; y - x
 
-int var = pow(x = 2, y = 3)
-int var2 = pow(y = 3, x = 2)
-print(var) //8
-print(var2) //8
+a: int = foo(0)
+b: int = foo(5)
+print(a) //0
+print(b) //0

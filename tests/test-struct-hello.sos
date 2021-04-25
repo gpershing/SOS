@@ -1,6 +1,0 @@
-struct p = {int x, int y}
-
-struct create_p(int x, int y) = 
-    p newp = {x, y}; p
-
-//finish this

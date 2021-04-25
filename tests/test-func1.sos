@@ -1,5 +1,5 @@
 //basic func, no parameters
 
-int foo() = 5
+foo: () -> int= 5
 
 print(foo()) //5
