@@ -1,7 +1,9 @@
 import shape.sos
 import color.sos
 
-startCanvas: () -> void = gl_startRendering()
+struct canvas = {width: int, height: int, file_number: int}
+
+startCanvas: (c : canvas) -> void = gl_startRendering(c.width, c.height)
 
 cvoid : () -> void = 0
 
@@ -55,4 +57,4 @@ drawShape : (point_structs : path, color_structs : array color,  colorMode : int
         gl_drawShape(points, colors, colorMode, filled)
 
 
-endCanvas : (fileNumber : int) -> void = gl_endRendering(fileNumber)
+endCanvas : (c : canvas) -> void = gl_endRendering(c.width, c.height, c.file_number)
