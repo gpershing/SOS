@@ -18,3 +18,12 @@ abs : (x: float) -> float = if x < 0 then -x else x
 
 // Returns the value y between 0 and m such that y = x+mn for an integer n
 modf : (x: float, m: float) -> float = m * frac(x/m)
+
+sin : (x: float) -> float = sin_f(x)
+cos : (x: float) -> float = cos_f(x)
+tan : (x: float) -> float = tan_f(x)
+asin : (x: float) -> float = asin_f(x)
+acos : (x: float) -> float = acos_f(x)
+atan : (x: float) -> float = atan_f(x)
+toradians : (x: float) -> float = toradians_f(x)
+sqrt : (x: float) -> float = sqrt_f(x)

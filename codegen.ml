@@ -59,12 +59,12 @@ let translate prog =
       L.declare_function "printf" printf_t the_module in
 
   (* External Functions *)
-  let add_external_fxn env (decl, name, binding_name) =
+  let add_external_fxn env (decl, name) =
       let formals, rt = match decl with Func(formals, rt) -> formals, rt
         | _ -> raise (Failure "Unexpected external function decl") in
       let ftype = L.function_type (ltype_of_typ rt)
         (Array.of_list (List.map (fun t -> ltype_of_typ t) formals)) in
-      let lldecl = L.declare_function binding_name ftype the_module in
+      let lldecl = L.declare_function name ftype the_module in
       { env with evars = StringMap.add name lldecl env.evars ;
           efxns = StringSet.add name env.efxns }
   in

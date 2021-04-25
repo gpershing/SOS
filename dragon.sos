@@ -20,14 +20,8 @@ dragon: (n: int) -> path =
 
 c: (p: point) -> color = {1.0,0.0,0.0,1.0}
 
-<<<<<<< HEAD
-startCanvas()
-d: path = dragon(7)
-trans(d, {-0.25, 0.0})
-=======
 my_canvas : canvas = {400, 400, 0}
 startCanvas(my_canvas)
 d: path = dragon(0)
->>>>>>> 0fe314a360757f20d59abc1c42f41bc8820f471c
 drawPath(d, c(d), 0)
 endCanvas(my_canvas)
