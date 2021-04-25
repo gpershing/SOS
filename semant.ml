@@ -52,11 +52,11 @@ let check prog =
   in
   (* add external functions *)
   let built_in_decls = List.fold_left
-    (fun map (decl, nm, _) -> StringMap.add nm decl map)
+    (fun map (decl, nm) -> StringMap.add nm decl map)
     built_in_decls external_functions
   in
   let starting_fxns = List.fold_left
-    (fun map (_, nm, _) -> StringSet.add nm map)
+    (fun map (_, nm) -> StringSet.add nm map)
     StringSet.empty external_functions
   in
   let starting_fxns = StringSet.add "print" starting_fxns in
