@@ -28,7 +28,7 @@ float sqrt_f(float x) {
     return (float) sqrt(x);
 }
 
-float toradians_f(float x) {
+float toradians(float x) {
     return (float) x * (M_PI / 180.0);
 } 
 
