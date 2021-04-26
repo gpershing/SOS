@@ -1,0 +1,28 @@
+import renderer.sos
+
+a: int = 5
+print(a)
+
+p1: point = {-0.9, -0.9}
+p2: point = {-0.9, -0.7}
+p3: point = {-0.7, -0.7}
+p4: point = {-0.7, -0.9}
+point_arr : path = [p1, p2, p3, p4]
+
+c1 : color = {255.0, 0.0, 0.0, 0.8}
+c2 : color = {0.0, 255.0, 0.0, 0.8}
+c3 : color = {0.0, 0.0, 255.0, 0.8}
+c4 : color = {100.0, 100.0, 0.0, 0.8}
+color_arr : colors = [c1, c2, c3, c4]
+
+canvas1 : canvas = {400, 400, 0}
+
+startCanvas(canvas1)
+drawShape(point_arr, color_arr, 0, 1)
+endCanvas(canvas1)
+
+canvas2 : canvas = {400, 400, 1}
+
+startCanvas(canvas2)
+drawShape(point_arr, color_arr, 0, 1)
+endCanvas(canvas2)
