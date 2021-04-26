@@ -9,10 +9,10 @@ If the function is short, then it should be on the same line. If it would take m
 
 \begin{lstlisting}
 var : type = expr...
-fxn : (type arg1, type arg2, ...) -> = short expr...
-fxn : (type arg1, type arg2, ...) -> =
- long expr...
- more expr...\end{lstlisting}
+fxn : (arg1: type, arg2: type, ...) -> type = expr
+fxn : (arg1: type, arg2: type, ...) -> type =
+    long expr...
+    more expr...\end{lstlisting}
 
 \subsection{Expressions}
 Most of an expression should fit on a single line. If a expression that should be a single line is very long, any additional lines needed should be indented by four spaces. The expressions that do not require indenting are if/else expressions and sequencing.
@@ -31,10 +31,10 @@ else longer expr \end{lstlisting}
 Spaces between identifiers and keywords are encouraged in most cases. Using more than one space is generally undesirable unless this is used to align similar elements in different lines for readability. No space may be used for simple arithmetic. The main exceptions are struct and array access, function application, and unary operators, where the identifier and symbol should always be directly adjacent.
 
 \begin{lstlisting}
-struct.field 	     // not struct . field
+struct.field       // not struct . field
 array[element]     // not array [ element ]
 function(args...)  // not function ( args )
--number			       // not - number \end{lstlisting}
+-number            // not - number \end{lstlisting}
 
 Statements should all be on separate lines, and should be grouped into related blocks of statements that are separated by a blank line. For instance, several associated variable definitions may be on adjacent lines, followed by a blank line.
 
