@@ -1,17 +1,15 @@
-(* arithmetic operators on primitives int, float *)
+/* arithmetic operators on primitives int, float */
 
 add: (x: int, y: int) -> int = x + y
 sub: (x: int, y: int) -> int = x - y
-mult:(x: int, y: int) -> int = x * y
+mult: (x: int, y: int) -> int = x * y
 div: (x: int, y: int) -> int = x/y
 mod: (x: int, y: int) -> int = x%y
 
-/*
 addf: (x: float, y: float) -> float = x + y 
 subf: (x: float, y: float) -> float = x - y 
 multf:(x: float, y: float) -> float = x * y 
 divf: (x: float, y: float) -> float = x/y 
-*/
 
 x: int = add(1,2)
 print(x) //3
@@ -24,7 +22,6 @@ print(x) //0
 x = mod(10,8)
 print(x) //2
 
-/*
 y: float = addf(1.1, 2.1)
 printf(y) //3.2
 y = subf(2.1, 1.1)
@@ -33,4 +30,3 @@ y = multf(1.1, 2.1)
 printf(y) //2.31
 y = divf(2.1, 1.1)
 printf(y) //1.9090...
-*/

@@ -8,7 +8,6 @@ print(t && t)
 
 
 //and
-/*
 and_ans: bool = t && t
 print(and_ans)             //T AND T = T
 and_ans = t && f
@@ -16,20 +15,16 @@ print(and_ans)             //T AND F = F
 and_ans = f && f
 print(and_ans)             //F AND F = F
 
-
 //or
 or_ans: bool = t || f
 print(or_ans)               //T OR T = T
-or_ans = t == true || f
+or_ans = t || f
 print(or_ans)               //T OR F = T
 or_ans = f || f
 print(or_ans)               //F OR F = F
-
 
 //not
 not_ans: bool = !t
 print(not_ans)              //NOT TRUE = F
 not_ans = !f
 print(not_ans)              //NOT FALSE = T
-
-*/

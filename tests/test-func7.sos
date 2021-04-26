@@ -1,18 +1,7 @@
-//sequencing nested functions
+//using func keyword to turn a function into a variable
 
 bar: () -> int = 5
-/*
-baruser: (func f -> int) -> int = f()
+baruser: (f: func  -> int) -> int = f()
+
 barvar: func -> int = bar
 print(baruser(barvar))
-*/
-
-
-
-/* can't define func within a func
-foo: () -> int = 
-    (bar: () -> int = 5); bar()
-
-a: int = foo()
-print(a) //5
-*/

@@ -1,9 +1,8 @@
+import point.sos
+import point.sos 
+p1: point = {0.0, 0.0} 
+printf(p1.x)
+
 /* can duplicate a file import.
 Usage example: dragon.sos imports renderer.sos and transform.sos, and both import shape.sos
 */
-
-import color.sos
-import color.sos
-
-c: color = {1.0, 1.0, 1.0, 1.0}
-print(color.r)

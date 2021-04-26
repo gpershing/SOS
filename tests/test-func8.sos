@@ -1,4 +1,8 @@
-//void return type
-f: () -> void = print(0); 0
+//sequencing nested functions, and function definition within a function
 
-f()
+bar: () -> int = 5
+baruser: (f: func  -> int) -> int = 
+    sum: (x: int, y: int) -> int = x+y; temp: int = f(); sum(temp, 5)
+
+barvar: func -> int = bar
+print(baruser(barvar))

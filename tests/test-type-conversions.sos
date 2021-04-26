@@ -4,10 +4,7 @@ x: bool = true
 y: int = x
 y = x + 9
 print(y) //10
-
-//Type conversion based on binary operator and/or printing type
-print(true + false) //1
-
+/*
 //Type conversion based on unary operator and/or printing type
 print(-true) //-1
 
@@ -62,3 +59,4 @@ printf(d) //2.0
 floatsum: (x: float, y: float) -> float = x + y
 e: float = floatsum(1, 2)
 printf(e) //3.0
+*/
