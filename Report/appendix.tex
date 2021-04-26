@@ -3410,3 +3410,329 @@ struct vector = {x: float, y: float}
 
 \end{lstlisting}
 
+\subsection{sample_programs/beach.sos}
+
+\begin{lstlisting}
+
+import renderer.sos
+import random.sos
+
+r: rng = {1, 1, 1}
+
+mountain: () -> void = 
+    p1: point = {-1.0, 0.7};
+    p2: point = {-0.7, 0.9};
+    p3: point = {-0.2, 0.1};
+    p4: point = {-0.5, 0.2};
+    p5: point = {-1.0, 0.0};
+
+    p: path = [p1, p2, p3, p5];
+
+    green: color = {0.0, 255.0, 0.0, 0.8};
+    c: colors = [{0.0, 255.0, 0.0, 0.8}, {0.0, 255.0, 0.0, 0.8}, {0.0, 255.0, 0.0, 0.8}, {0.0, 255.0, 0.0, 0.8}];
+    drawShape(p, c, 0, 1)
+
+sandhelp: (p: point) -> point =
+    px: float = randf(r)*0.5;
+    py: float = randf(r)*0.5;
+    if ((px < 0.1) && (py < 0.7))
+    then {px, py}
+    else {px/2, py/2}
+
+sand: (numPoints: int) -> void =
+    p: path = numPoints of [{0.0, 0.0}];
+    beachhelp(p);
+    c: colors = numPoints of [{255.0, 255.0, 40.0, 1.0}];
+    drawPoints(p, c)
+
+waterhelp: (p: point) -> point =
+    px: float = randf(r)*0.5;
+    py: float = randf(r)*0.5;
+    if ((px < 0.0) && (py < 0.5))
+    then {px, py}
+    else {px/2, py/2}
+
+water: (numPoints: int) -> void =
+    p: path = numPoints of [{0.0, 0.0}];
+    beachhelp(p);
+    c: colors = numPoints of [{0.0, 0.0, 255.0, 1.0}];
+    drawPoints(p, c)
+
+my_canvas : canvas = {800, 400, 2}
+
+startCanvas(my_canvas)
+mountain()
+sand(200)
+water(400)
+
+endCanvas(my_canvas)
+\end{lstlisting}
+
+\subsection{sample_programs/dragon.sos}
+
+\begin{lstlisting}
+
+import renderer.sos
+import vector.sos
+import transform.sos
+import array.sos
+import math.sos
+
+// Creates a dragon curve of depth n
+dragon: (n: int) -> path = 
+    if n == 0 // Base case
+    then [point{0.0, 0.0}, point{1.0, 0.0}]
+    else
+    // Create two copies of the previous depths
+    d1: path = dragon(n-1) ; 
+    d2: path = copy_path(d1) ;
+
+    // Position d1
+    s: float = sqrt(2.0)/2.0 ;
+    rotate(d1, toradians(45.0), -1, {0.0, 0.0}) ; 
+    scale(d1, s, s) ; 
+
+    // Position d2
+    rotate(d2, toradians(135.0), -1, {0., 0.}) ;
+    scale(d2,s,s) ;
+    trans(d2, {1., 0.}) ;
+    reverse(d2) ;
+
+    // Merge the paths
+    r: path = append(d1, d2, 1.0) ;
+    free_path(d1); free_path(d2); r
+
+// Creates a rainbow color effect
+rainbow: (r: int, len: int) -> color = 
+    h: float = (1.0*r)/len ;
+    hsv(h, 0.8, 0.8)
+
+// Render a 400px by 400px canvas, name the image pic0
+my_canvas: canvas = {400, 400, 0}
+
+// Start render
+startCanvas(my_canvas)
+d: path = dragon(7)
+// Position the curve (0.4, 0.2 is approximately the center of mass of the curve for large n)
+trans(d, {-0.4, -0.2})
+
+// Draw it
+drawPath(d, rainbow(ints(d.length), d.length), 0)
+endCanvas(my_canvas)
+\end{lstlisting}
+
+\subsection{sample_programs/drunk.sos}
+
+\begin{lstlisting}
+
+import renderer.sos
+import random.sos
+
+n: int = 100
+p: path = n of [{0.0, 0.0}]
+c: colors = n of [{0.5, 0.5, 0.5, 0.5}]
+r: rng = {1,2,3}
+
+drunk_walk : (i: int, p: path, c: colors, r: rng) -> void = 
+    if i < p.length then
+      theta: float = randf(r) * 6.28319;
+      d: float = randf(r)*0.1 + 0.02;
+      dx: float = cos(theta)*d ; dy: float = sin(theta)*d ;
+      p[i] = {p[i-1].x+dx, p[i-1].y+dy} ;
+      dc: float = 0.1 ; 
+      dr: float = (randf(r) - 0.5) * dc ;
+      dg: float = (randf(r) - 0.5) * dc ;
+      db: float = (randf(r) - 0.5) * dc ;
+      c[i] = rgb(c[i-1].r + dr, c[i-1].g+dg, c[i-1].b+db) ;
+      drunk_walk(i+1,p,c,r)
+
+    else void
+
+
+my_canvas: canvas = {400, 400, 0}
+startCanvas(my_canvas)
+
+draw_walks : (count: int, p: path, c: colors, r: rng) -> void =
+    if count > 0 then
+    p[0] = {randf(r)*0.5-0.25, randf(r)*0.5-0.25};
+    c[0] = hsv(randf(r), 0.8, 0.8) ;
+    drunk_walk(1, p, c, r) ;
+    drawPath(p,c,0) ;
+    draw_walks(count-1,p,c,r)
+    else void
+
+draw_walks(20, p, c, r)
+
+endCanvas(my_canvas)
+
+\end{lstlisting}
+
+\subsection{sample_programs/lorenz.sos}
+
+\begin{lstlisting}
+
+import renderer.sos
+import array.sos
+alias path3 = array point3
+
+create_lorenz : (p: path3, i: int, sigma: float, rho: float, beta: float) -> void = 
+    if i == 0 then p[i] = {0.1,0.1,0.1}; create_lorenz(p,i+1,sigma,rho,beta)
+    else if i < p.length then
+      q: point3 = p[i-1] ;
+      dx: float = sigma * (q.y - q.x) ;
+      dy: float = q.x * (rho - q.z) - q.y ;
+      dz: float = q.x*q.y - beta * q.z ;
+      dt: float = 0.005 ;
+      p[i] = {q.x + dx*dt, q.y + dy*dt, q.z + dz*dt} ;
+      create_lorenz(p,i+1,sigma,rho,beta)
+    else void
+
+len: int = 5000
+l3: path3 = len of [{0.0,0.0,0.0}]
+create_lorenz (l3, 0, 10, 28, 8.0/3)
+rainbow: (r: int, len: int) -> color = 
+    h: float = (1.0*r)/len ;
+    hsv(h, 0.8, 0.8)
+c: colors = rainbow(ints(len), len+1000)
+
+
+reduce : (p: point3) -> point = {p.x/30.0, p.y/30.0}
+
+l: path = reduce(l3)
+
+my_canvas : canvas = {400,400,1}
+
+startCanvas(my_canvas)
+drawPath(l, c, 0)
+endCanvas(my_canvas)
+
+\end{lstlisting}
+
+\subsection{sample_programs/tree.sos}
+
+\begin{lstlisting}
+
+import affine.sos
+import renderer.sos
+
+branchHelper : (p: path, i: int, A: affine) -> void = 
+    if i < p.length then
+    p[i] = affine_mul(A, p[i-1]-p[i-2], 0) + p[i-1];
+    branchHelper(p,i+1,A)
+    else void
+
+makeBranch : (n: int, A: affine) -> path =
+    p: path = n of [{0.0,0.0}];
+    p[1] = {0.0, 0.2};
+    branchHelper(p, 2, A); p
+
+powersHelper : (arr: array affine, i: int, A: affine) -> void = 
+    if i < arr.length then
+    arr[i] = A ** arr[i-1];
+    powersHelper(arr,i+1,A)
+    else void
+
+powers : (n: int, A: affine) -> array affine = 
+    arr: array affine = n of [copy(A)];
+    powersHelper(arr, 1, A) ; arr
+
+A: affine = translate(0, 0.2) ** rotation_aff(0.13) ** scale_aff(0.8, 0.8)
+As: array affine = powers(8, A)
+L: affine = scale_aff(0.36, 0.36) ** rotation_aff(0.66)
+R: affine = scale_aff(0.49,0.49) ** rotation_aff(-0.78)
+base: path = makeBranch(10, A)
+
+white: colors = 10 of [rgb(1.0,1.0,1.0)]
+green: colors = 10 of [rgb(0.0,0.8,0.0)]
+
+my_canvas: canvas = {400,400,0}
+startCanvas(my_canvas)
+
+drawTree : (base: path, T: affine, A: affine, As: array affine, L: affine, R: affine, depth: int, c1: colors, c2: colors)
+  -> void = 
+  if depth==0 then drawPath(affine_mul(T,base,1), c2, 0) else
+  drawPath(affine_mul(T,base,1), c1, 0) ;
+  drawTree(base, T ** As ** L, A, As, L, R, depth-1, c1, c2) ;
+  drawTree(base, T ** As ** R, A, As, L, R, depth-1, c1, c2)
+
+T: affine = {1.8,0.0,0.0,0.0,1.8,0.0,0.0,-0.8,1.0}
+drawTree (base, T, A, As, L, R, 3, white, green)
+
+endCanvas(my_canvas)
+
+\end{lstlisting}
+
+\subsection{sample_programs/web.sos}
+
+\begin{lstlisting}
+
+import renderer.sos
+import random.sos
+import array.sos
+import math.sos
+
+build_ring : (i: int, r: int, radius: float) -> point = 
+    angle: float = (i*6.2831852)/r  + 0.134;
+    {cos(angle) * radius, sin(angle) * radius}
+
+build_rings : (n: int, r: int, radius_interval: float, rr: rng) -> array point =
+    build_ring(ints(r), r, radius_interval * n * (randf(rr)*0.18+0.91))
+
+build_points : (n : int, r : int, max_radius: float, rr: rng) -> array array point = 
+    build_rings (ints(n), r, max_radius/(n-1), rr) 
+
+connect_ring_inner : (i: int, a: array point, c: colors) -> void =
+    if  i==a.length-1 then drawPath([a[i], a[0]], c, 0)
+    else drawPath([a[i], a[i+1]], c, 0); connect_ring_inner(i+1,a,c)
+
+connect_ring : (a: array point, c: colors) -> void =
+    connect_ring_inner(0, a, c) 
+
+ring_iter : (w: array array point, c: colors, i: int, j: int, r: rng,
+        f: func array array point, colors, int, int, rng -> void) -> void = 
+    if i < w.length then if j < w[i].length then
+    f(w,c,i,j,r) ; ring_iter(w,c,i,j+1,r,f)
+    else ring_iter(w,c,i+1,0,r,f) else void
+
+connect_lines_in : (w: array array point, c: colors, i: int, j: int, r: rng) -> void = 
+    if i < w.length - 1 then
+    drawPath([w[i][j], w[i+1][j]], c, 0)
+    else drawPath([w[i][j], 5*w[i][j]], c, 0)
+
+connect_lines : (w: array array point, c: colors, r: rng) -> void = 
+    ring_iter(w,c,0,0,r, connect_lines_in)
+
+random_connections_in : (w: array array point, c: colors, i: int, j: int, r: rng) -> void =
+    if i < w.length - 1 then
+    (if randf(r) > 0.65 then drawPath([w[i][j], w[i+1][(j+1)%w[0].length]], c, 0) else void); 
+    if randf(r) > 0.65 then
+      drawPath([w[i][j], w[i+1][(j-1+w[0].length)%w[0].length]], c, 0) else void
+    else void
+
+random_connections : (w: array array point, c: colors, r: rng) -> void = 
+   ring_iter(w,c,1,0,r, random_connections_in)
+
+perturb_in : (w: array array point, c: colors, i: int, j: int, r: rng) -> void =
+    s: float = 0.1 ;
+    dx: float = randf(r) * s + 1.0 - s/2;
+    dy: float = randf(r) * s + 1.0 - s/2;
+    w[i][j].x = w[i][j].x * dx ;
+    w[i][j].y = w[i][j].y * dy
+
+perturb : (w: array array point, c: colors, r: rng) -> void = 
+   ring_iter(w,c,1,0,r, perturb_in)
+
+my_canvas: canvas = {400, 400, 3}
+r: rng = {35,62,21}
+startCanvas(my_canvas)
+
+w: array array point = build_points(7, 7, 0.95, r)
+perturb(w, [], r)
+connect_ring(w, [rgb(1,1,1), rgb(1,1,1)])
+connect_lines(w, [rgb(1,1,1), rgb(1,1,1)], r)
+random_connections(w, [rgb(1,1,1), rgb(1,1,1)], r)
+
+endCanvas(my_canvas)
+\end{lstlisting}
+
+\end{document}
