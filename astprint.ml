@@ -1,3 +1,5 @@
+(* Very basic """pretty""" printer for the AST *)
+(* Written by G *)
 open Ast
 
 let rec comma_list_str f l = match l with

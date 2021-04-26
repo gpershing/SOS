@@ -1,4 +1,5 @@
 /* SOS Parser */
+/* Written primarily by Sheron, later polish by G */
 
 %{ open Ast %}
 

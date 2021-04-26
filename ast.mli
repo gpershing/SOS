@@ -1,3 +1,6 @@
+(* Abstract syntax tree for SOS *)
+(* Written by G *)
+
 type operator = 
 (*num operators*)
 Add | Sub | Mul | Div | Mod | MMul

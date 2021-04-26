@@ -1,4 +1,5 @@
 (* SOS Scanner *)
+(* Written primarily by Sheron, later polish by G *)
 
 { open Parser 
   

@@ -1,5 +1,6 @@
 (* Code generation: translate takes a semantically checked AST and
 produces LLVM IR *)
+(* Written primarily by G, some initial setup by Sitong & Sheron *)
 
 module L = Llvm
 open Ast
