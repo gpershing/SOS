@@ -1,0 +1,5 @@
+/*variables must start with a letters, then can have any
+number of letters, underscores, and numbers*/
+
+a_d1: int = 0
+a000___: float = 0.0

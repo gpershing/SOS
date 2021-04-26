@@ -1,6 +1,4 @@
-//sequencing functions
+//void return type
+f: () -> void = print(0); 0
 
-int foo() = (int bar() = 5); bar()
-
-int a = foo()
-print(a) //5
+f()

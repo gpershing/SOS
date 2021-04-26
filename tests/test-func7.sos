@@ -1,6 +1,7 @@
-//sequencing functions
+//sequencing nested functions
 
-foo() -> int = (bar(): int = 5); bar()
+foo: () -> int = 
+    (bar: () -> int = 5); bar()
 
 a: int = foo()
 print(a) //5

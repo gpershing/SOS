@@ -1,22 +1,16 @@
-printingarray(arr: array int, length: int, current: int) void =
-if current == length
-then 0
-else
-    print(arr[curent]);
-    printingarray(arr, length, current + 1)
+printing: (x: int) -> void = print(x)
 
 arr: array int = [1,2,3,4,5]
-printingarray(arr, 5, 0)
+printing(arr)
 
 arr2: array int = 5 + arr
-printingarray(arr2, 5, 0)
+printing(arr)
 
 arr3: array int = arr - 2
-printingarray(arr3, 5, 0)
+printing(arr)
 
 arr4: array int = 2 * arr
-printingarray(arr4, 5, 0)
+printing(arr)
 
 arr5: array int = arr/2
-printingarray(arr5, 5, 0)
-
+printing(arr)

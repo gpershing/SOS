@@ -1,6 +1,0 @@
-//not sure how to implement void
-/*
-void foo() = print("return nothing")
-
-foo()
-*/

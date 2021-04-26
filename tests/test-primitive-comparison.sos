@@ -37,8 +37,8 @@ print(x)
 
 /*float*/
 d: float = 1.2
-d: float = 1.2
-d: float = 2.3
+e: float = 1.2
+f: float = 2.3
 
 out4: bool = d == d
 print(out4) //True
@@ -68,9 +68,9 @@ print(x)
 
 
 /*bool*/
-g: bool = True
-h: bool = True
-i: bool = False
+g: bool = true
+h: bool = true
+i: bool = false
 
 out7: bool = g == g
 print(out7) //True

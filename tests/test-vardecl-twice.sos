@@ -1,0 +1,7 @@
+/* SOS allows variables to be redeclared to different types */
+
+a: int = 5
+print(a) //5
+
+a: bool = true
+print(a) //1

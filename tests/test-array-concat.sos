@@ -1,13 +1,8 @@
-printingarray: (arr: array int, length: int, current: int) -> void =
-    if current == length
-    then 0
-    else 
-        print(arr[curent]);
-        printingarray(arr, length, current+1)
+printing: (x: int) -> void = print(x)
 
 array int x = [1, 2]
 array int y = [3, 4]
 
 array int z = x@y
 
-printingarray(z, 4, 0)
+printing(z)

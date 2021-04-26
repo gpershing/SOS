@@ -6,9 +6,9 @@ b = 3 < 3.5
 print(b) //True
 
 /*int over bool*/
-b = 2 > True
+b = 2 > true
 print(b) //True
 
 /*float over bool*/
-b = 2.1 > True
+b = 2.1 > true
 print(b) //True

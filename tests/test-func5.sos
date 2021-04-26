@@ -1,6 +1,6 @@
-//ordered func app
+//multiple parameters
 
-pow(x: int, y: int) -> int = n^x
+add: (x: int, y: int) -> int = x+y
 
-var: int = pow(2,3)
+var: int = add(2,3)
 print(var) //8

@@ -1,0 +1,3 @@
+//variable declaration without an initialization to a value
+x: int
+x = 5

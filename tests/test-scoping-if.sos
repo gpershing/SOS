@@ -1,9 +1,12 @@
 y: int = 1
 x: int = 1
 
+print(x)
+print(y)
+
 x = 
 if 1==1
-then int x = 1
-else x = 2; int y = 0; x + y 
+then x = 3; y = 0; print(x); print(y); 4
+else 0
 
-print(x) //1
+print(x) //4

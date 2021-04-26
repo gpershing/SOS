@@ -1,11 +1,12 @@
-struct x = {int i}
-struct y = {int i}
+struct x = {i: int}
+struct y = {i: int}
 
-x distance1_x = {5}
-x distance2_x = {6}
-y distance1_y = {1}
+distance1_x: x = {5}
+distance2_x: x = {6}
+distance1_y: y = {1}
 
-array b = [distance1_x, {10}, distance1_y]
+array x b = [distance1_x, {10}, distance1_y]
+//array x b = [distanc1_x, {10}, {1}]
 print(b[0].i) //5
 print(b[1].i) //10
 print(b[2].i) //1

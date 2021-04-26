@@ -1,43 +1,43 @@
 /*bool to int*/
 //Type conversion during variable assignment
-bool x = True
-int y = x
+x: bool = true
+y: int = x
 y = x + 9
 print(y) //10
 
 //Type conversion based on binary operator and/or printing type
-print(True + False) //1
+print(true + false) //1
 
 //Type conversion based on unary operator and/or printing type
-print(-True) //-1
+print(-true) //-1
 
 //Type conversion during function application
-int sum(int x, int y) = x + y
-int summed = sum(True, False)
+sum: (x: int, y: int) -> int = x + y
+summed: int = sum(true, false)
 print(summed) //1
 
 
 /*int to bool*/
 //Type conversion during variable assignment
-int m = 1
-int n = 0
-bool o = m 
-bool p = n
-printb(o) //True
-printb(p) //False
+m: int = 1
+n: int = 0
+o: bool = m 
+p: bool = n
+print(o) //True
+print(p) //False
 
 //Type conversion based on unary operator and/or printing type
-printb(!1) //False
+print(!1) //False
 
 //Type conversion during function application
-bool not(bool x) = !x
-bool notted = not(1)
-printb(notted) //False
+not: (x: bool) -> bool = !x
+notted: bool  = not(1)
+print(notted) //False
 
 
 /*float to int (via truncation) */
-float a = -0.5
-int b = a
+a: float = -0.5
+b: int = a
 print(b) //0
 
 a = 2.9
@@ -49,17 +49,16 @@ b = a
 print(b) //-2
 
 //Type conversion during function application (use sum() on line 15)
-int summed2 = sum(1.2, 3.5)
+summed2: int = sum(1.2, 3.5)
 print(summed2) //4
 
 
 /*int to float (via injection) */
-int c = 2
-float d = c
+c: int = 2
+d: float = c
 printf(d) //2.0
 
 //Type conversion during function application
-float floatsum(float x, floaty) = x + y
-float e = floatsum(1, 2)
+floatsum: (x: float, y: float) -> float = x + y
+e: float = floatsum(1, 2)
 printf(e) //3.0
-

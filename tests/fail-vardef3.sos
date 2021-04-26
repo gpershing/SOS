@@ -1,2 +1,4 @@
+//type identifier doesn't match type of expression
+
 x: float = 2.0
 b: bool = x

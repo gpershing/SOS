@@ -1,10 +1,10 @@
 //nested function application
 
 first: () -> int = 1
-second(x: int) -> int = x
+second: (x: int) -> int = x
 
 a: int = second(first())
 print(a) //1
 
-b:int = second(second(second(first())))
+b: int = second(second(second(first())))
 print(b) //1

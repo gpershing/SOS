@@ -1,38 +1,21 @@
+/* structs, not arrays, allows for comparions */
+
 //comparison of unnamed structs
 x: bool = {1,2} == {1,2}
-print(x) //True
+print(x) //true
+x = {1,2} == {3,4,5}
+print(x) //false
 
-//unnamed arrays
-x = [1,2,3] == [1,2,3]
-printb(x) //True
-
-//derived types are passed by reference
-//array
-arr1: array int = [1,2,3]
-arr2: array int = [1,2,3]
-arr3: array int= [3,2,1]
-
-out1: bool = arr1 == arr1
-print(out1) //True
-
-out2: bool =arr1 == arr2
-print(out2) //False
-
-out3: bool  = arr1 == arr3
-printb(out3) //False
+//comparison of named structs
+struct point = {x: float, y: float}
+p1: point = {1.0, 2.0}
+p2: point = {1.0, 2.0}
+p3: point = {0.0, 0.0}
+x = p1 == p2
+print(x) //true
+x = p1 == p2
+print(x) //true
+x = p1 == p3
+print(x) //false
 
 
-//struct
-struct s = {int id}
-s s1 = {1} 
-s s2 = {1} 
-s s3 = {2} 
-
-out4: bool = s1 == s1
-print(out4) //True
-
-out5: bool  = s1 == s2
-print(out5) //False
-
-out6: bool  = s1 == s3
-print(out6) //False

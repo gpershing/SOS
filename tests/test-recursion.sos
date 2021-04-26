@@ -1,4 +1,4 @@
-add(n: int) -> int = 
+add: (n: int) -> int = 
 if n == 0
 then 0
 else add(n-1) + n

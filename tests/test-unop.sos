@@ -15,8 +15,8 @@ printf(-1.0*-2.0) //2.0
 
 
 /*negation of bool: not*/
-e: bool = True
+e: bool = true
 f: bool = !e
 print(e) //True
 print(f) //False
-print(!!!True) //False
+print(!true) //False

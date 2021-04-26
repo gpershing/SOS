@@ -13,10 +13,11 @@ printf(b) //2.5
 
 
 //bool
-c: bool = True
+c: bool = true
 print(c) //True
-c = False
+c = false
 print(c) //False
+
 
 //array
 d: array int = [1, 2]
@@ -26,11 +27,12 @@ d[1] = d[0]
 d[0] = temp
 print(d[0]) //2
 
+
 //struct
 struct point = {x: float, y: float}
 struct e = {v: int, w: float, x: bool, y: point, z: array int }
 
-e = {4, 4.4, True, {3.3, 4.5}, [5, 6, 7]}
+e = {4, 4.4, true, {3.3, 4.5}, [5, 6, 7]}
 print(e.v) //4
 printf(e.w) //4.4
 print(e.x) //True

@@ -1,0 +1,12 @@
+/*variable definitions must have a type id and an expression.
+This test case is for primitives only. Reference type definitions
+are tested in "construction" test cases.*/
+
+x: int = 0
+print(x)
+
+y: float = 0.0
+printf(y)
+
+z: bool = true
+print(z)

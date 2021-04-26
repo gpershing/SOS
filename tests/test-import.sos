@@ -2,4 +2,4 @@ import point.sos
 
 p1: point = {0.0, 0.0}
 
-print(p1.x)
+printf(p1.x)

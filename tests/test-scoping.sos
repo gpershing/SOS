@@ -1,14 +1,14 @@
-//outer x, x in function
+//global x vs x in function
 
-int func1(int x) = x+x
+double: (x: int) -> int = x+x
 
-int x = func1(3)
+x: int = double(3)
 print(x) //6
 
-x = func1(x)
-print(X) //12
+x = double(x)
+print(x) //12
 
-int func2() = int x = 3; x+x
+func2: () -> int = x: int = 3; x+x
 
 x = func2()
 print(x) //6
