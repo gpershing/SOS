@@ -13,3 +13,13 @@ The lessons I learned are:
     \item I am not saying that Professor's lectures are bad, but I did find some online tutorials also helpful - it builds the view of a compiler from a different perspective, which is really helpful.
     \item It is hard to build one language but fun to play with it.
 \end{itemize}
+
+\subsection{G}
+
+\begin{itemize}
+	\item Syntax exists for a reason. We set out aiming for a pretty light syntax but found out the hard why very few languages do that. I'd recommend others to aim for their ideal syntax but have some backups in mind: note that more distinct symbols will make parsing much easier.
+	
+	\item Codegen is where a language goes to die. All of your previous mistakes will be revealed to the world. I wish that I had spent some time learning about LLVM before we even started on the reference manual, to know what would be possible down the line.
+	
+	\item Remember that LLVM is designed to work like C. I had the most success when I thought about our features as existing in C. Plus, this will make connecting to C libraries easier!
+\end{itemize}
