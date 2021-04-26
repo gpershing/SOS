@@ -178,8 +178,7 @@ if [ $# -ge 1 ]
 then
     files=$@
 else
-    files="test-helloworld.sos"
-    #"tests/test-*.sos tests/fail-*.sos"
+    files="tests/test-*.sos tests/fail-*.sos"
 fi
 
 for file in $files
