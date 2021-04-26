@@ -1,0 +1,2 @@
+import color.sos
+printf($(c : color = {0.0, 255.0, 255.0, 0.8}).c)
