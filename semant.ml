@@ -1,4 +1,5 @@
 (* Semantic checking for the SOS compiler *)
+(* Written primarily by G *)
 
 open Ast
 open Sast

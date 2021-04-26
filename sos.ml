@@ -2,6 +2,7 @@
    check the resulting AST and generate an SAST from it, generate LLVM IR,
    and dump the module 
    Reference: The MicroC compiler *)
+(* Written by Sheron *)
  
 type action = Ast | Sast | LLVM_IR | Compile
 
