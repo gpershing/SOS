@@ -1,6 +1,6 @@
 struct point = {x: float, y: float}
 p: point = {1,2}
 
-pow(x: int, y: int) -> int = x^y
+pow(x: int, y: int) -> int = x+y
 
 pow(3, p)

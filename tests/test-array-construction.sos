@@ -6,20 +6,15 @@ print(arrr[0]) //1
 arrr2: array float = [1.2, 2.4]
 printf(arrr2[1]) //2.4
 
-
 /*bool array*/
 arrr3: array bool = [false]
 print(arrr3[0]) //False
 
-
 /*struct array in test-array-of-struct.sos*/
-
 
 /*nested arrays*/
 nested: array array int = [[1], [2,3], [4,5,6]]
 print(nested[0][0]) //1
-
-
 
 /*func arrays*/
 add1: (k: int) -> int = k+1
@@ -27,10 +22,12 @@ minus1: (k: int) -> int = k-1
 f1: func int -> int = add1
 f2: func int -> int = minus1
 
-
 f_usage: (i: int, f: func int -> int) -> int =
     f(i)
-
 arr_name: array func int -> int = [f1, f2]
-
 print(f_usage(1, arr_name[0]))
+
+/*construction with automatic type conversion*/
+printing: (x: int) -> void = print(x)
+a: array int = [1, 3.4, true]
+printing(a)

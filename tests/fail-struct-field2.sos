@@ -1,7 +1,5 @@
 //attempting to access a field of a non-struct
 
 struct s = {x: int}
-
 b: int = 1
-
-b.x
+y: int = b.x

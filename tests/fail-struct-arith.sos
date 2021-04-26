@@ -5,4 +5,4 @@ struct s2 = {a: int, b: int}
 a: s1 = {1, 1.0}
 b: s2 = {1, 1}
 
-a+b
+c: s3 = a+b

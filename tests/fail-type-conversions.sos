@@ -1,2 +1,2 @@
-bool b = 1
-bool b_fail = 2
+b: bool = 1
+b_fail: bool = 2

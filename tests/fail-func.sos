@@ -1,1 +1,3 @@
+//undefined func
+
 x: int = sum(1, 2)

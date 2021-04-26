@@ -1,0 +1,5 @@
+//struct defined in function definition
+func2: (x: int) -> int = 
+    struct s = {field: int};
+    temp: s = {x};
+    s.field
