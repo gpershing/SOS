@@ -1,10 +1,45 @@
 \documentclass[main.tex]{subfiles}
 
 \begin{document}
-	\section{Introduction}
+	\section{Language White Paper}
+	\subsection{Introduction}
+
+The SOS (Shape Open System) Language is an imperative language with some
+functional elements designed to render 2D images, especially mathematically interesting images, for example fractals. It is strictly typed and takes the very best syntax from C and Ocaml, but transforms into more elegant and concise language. It also employs OpenGL library to provide essential functions for shape lovers to create, manipulate, and enjoy 2D images rather easily. The goal of SOS is to provide a simple and intuitive tool for users to experiment with computer graphics efficiently, while having the language syntax well-documented and easy to learn.
+
 	
-	TBD
+	\subsection{Flexibility}
+	The SOS has a non-restrictive syntax for programmer to write program with their unique styling, while following the SOS style guidelines. Also, since SOS renders the image very efficiently, it would be beneficial for programmers to iterate the code based on the visual result. So it would be very quick and simple to test the program, and change the code, and achieve optimized performance.
+
 	
-	% Must include language white paper
+	\subsection{Usability}
+	SOS is very simple in the sense that it does not add complication to programmers who only want to do simple manipulation of images. The programming hides away the mathematical details and allows users to take all the easy-to-use but yet powerful standard library function for granted. These include math and graphics manipulation. The syntax also has good readability, which would be helpful to share and understand other's code.
+	
+	
+	\subsection{Error Handling}
+	Although SOS does not force the user to write code in a certain way, some generic error checking rules still hold. For example, int type variable cannot be reassigned to a struct. To help the users generate good-to-use code, we have a large volume of test cases to cover a wide range of problems.
+	
+	\subsection{Data Type}
+	SOS has three basic types: bool, int, and float. We also have three reference types: arrays, structures, and functions.
+	Structures of all floats or all ints are treated like mathematical vectors, meaning they can be added and scaled, and you can also take their dot product. 
+    SOS also features basic function definition, including recursion.
+    Structures of all floats or all ints are treated like mathematical vectors, meaning they can be added and scaled, and you can also take their dot product. 
+    
+    Matrix multiplication is even supported for square matrices and column vectors.Because in graphics you often need to iterate on a large array of data, we have a powerful implicit array iteration syntax. For example, a function or an operation can be applied to an array to iterate on all its elements, returning a new array of the results.
+
+    \subsection{Import Library}
+     To increase our language’s extensiblily, we implemented naive import which works similar to #include in c. Since it is very straightforward, We encourage users to use this feature to create more powerful and complicated projects. As mentioned. the SOS language has built-in several standard libraries on math operations and graphics. 
+     
+    \subsection{Sample Program}
+    ?
+
+    \subsection{Conclusion}
+    With the goal of helping those in need of creative computational manipulation of graphics, SOS has turned out to be the most suitable to graphics starters, as it is easy to user, and great for advanced users who long for efficiency and elegance in code. As it being developed further, more support on graphics will allow the users to achieve a lot more through easy manipulation of the 2D, or even 3D graphics.
+
 	
 \end{document}
+
+
+
+
+
