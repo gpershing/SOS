@@ -1,0 +1,25 @@
+\documentclass[main.tex]{subfiles}
+
+\section{Lessons Learned}
+
+\subsection{Sheron}
+Taking PLT is a really pleasant but painful experience to me. I thought that I could handle it at the beginning, while just writing some shitty scanner and parser. However, I got totally overwhelmed after I realized that we need to finish Hello World within one month. I feel like I am one idiot that can work hard on something but not accomplish anything. I got panicked for a while in March, struggled to read the slides and go over the lecture recordings without any progress. As a result, I just went to build the docker file and set up the environment for a while. Even though that part is also tedious, the accomplishment made me come back with a calm mind to deal with all those messy compiler things. If you dive into it, you'll get familiar with it (even though it is still hard). In the end, it is just so delightful to play with our toy language and write standard libraries, so just don't give up!
+
+The lessons I learned are:
+\begin{itemize}
+    \item Yeah, I am one idiot.
+    \item Don't panic. Start from things that you could do. It is really easy to give up in the middle.
+    \item GO TO THE OFFICE HOURS. I wish I did that more.
+    \item I am not saying that Professor's lectures are bad, but I did find some online tutorials also helpful - it builds the view of a compiler from a different perspective, which is really helpful.
+    \item It is hard to build one language but fun to play with it.
+\end{itemize}
+
+\subsection{G}
+
+\begin{itemize}
+	\item Syntax exists for a reason. We set out aiming for a pretty light syntax but found out the hard why very few languages do that. I'd recommend others to aim for their ideal syntax but have some backups in mind: note that more distinct symbols will make parsing much easier.
+	
+	\item Codegen is where a language goes to die. All of your previous mistakes will be revealed to the world. I wish that I had spent some time learning about LLVM before we even started on the reference manual, to know what would be possible down the line.
+	
+	\item Remember that LLVM is designed to work like C. I had the most success when I thought about our features as existing in C. Plus, this will make connecting to C libraries easier!
+\end{itemize}
