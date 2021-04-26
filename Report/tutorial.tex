@@ -312,4 +312,43 @@
 	The following is the list of strings that can never be used as identifers. In addition, any defined function names become reserved identifiers.
 	
 	\texttt{print}  \texttt{printf}  \texttt{copy}  \texttt{free}  \texttt{of}  \texttt{if} \texttt{then}  \texttt{else}  \texttt{array}  \texttt{func}  \texttt{true}  \texttt{false}  \texttt{import}
+
+	\subsection{Import and Standard Libraries}
+	To increase our language’s extendibility, we implement one naive import which works similar to #include in c. We encourage users of our language to use this feature to create more powerful and complicated projects.
+
+	The syntax is as follows:
+
+	\begin{lstlisting}
+    import math.sos
+	\end{lstlisting}
+
+	We have written several standard libraries regards of math and graphics, just to make life easier. Please check the lib folder for more details.
+	
+	\subsection{Setting up Environment}
+	All the dependencies needed are inside of the Dockerfile we provided. There are two ways to get the docker image: build or pull. Either way will get the same docker image on your computer. The docker image is ~7GB.
+
+	\begin{lstlisting}
+    ./docker_image_fetching.sh pull # or
+    ./docker_image_fetching.sh build
+	\end{lstlisting}
+
+	Then, you could connect to the docker environment using the script below. (It will pull the new docker image if you haven't done that yet.)
+
+	\begin{lstlisting}
+    ./docker_connect.sh
+	\end{lstlisting}
+
+	Then, compile everything needed by make.
+
+	\begin{lstlisting}
+    make
+	\end{lstlisting}
+
+	After writing any *.sos scripts, just run the shell script below to get one executable and run it automatically:
+
+	\begin{lstlisting}
+    ./compile_exec.sh *.sos
+	\end{lstlisting}
+
+
 \end{document}

@@ -1,15 +1,14 @@
 import shape.sos
 
-alias shape = array point
 struct minPoint = {float x, float y}
 
-# scale rightward downward
-# should based on a rectangular box aound the object and get that vertex? or just use opengl
+// scale rightward downward
+// should based on a rectangular box aound the object and get that vertex? or just use opengl
 
 min(a: point, b: minPoint) -> void =
     if a.x < b.x and a.y < b.y then b.x = a.x and b.y = a.y
     else 0
 
-shape size(float multiple) =
+// shape size(float multiple) =
     
 
