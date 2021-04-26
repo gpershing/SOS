@@ -1,6 +1,6 @@
 //variable declaration for x is an expression for assignment of y
 y: int = 5
-y= x: int = 5
+y= (x: int = 5)
 
 print(y) //5
 print(x) //5

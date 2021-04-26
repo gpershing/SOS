@@ -1,0 +1,4 @@
+t: bool = true
+f: bool = false
+
+sum: bool = t + f

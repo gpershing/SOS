@@ -4,11 +4,11 @@ t: bool = true
 f: bool = false
 
 //and
-and_ans: bool = t && f==false
+and_ans: bool = t && t
 print(and_ans)             //T AND T = T
-and_ans = t && f==true
+and_ans = t && f
 print(and_ans)             //T AND F = F
-and_ans = f && t == false
+and_ans = f && f
 print(and_ans)             //F AND F = F
 
 
@@ -24,5 +24,5 @@ print(or_ans)               //F OR F = F
 //not
 not_ans: bool = !t
 print(not_ans)              //NOT TRUE = F
-not_ans = !f == true
+not_ans = !f
 print(not_ans)              //NOT FALSE = T

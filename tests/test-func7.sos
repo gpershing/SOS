@@ -1,7 +1,14 @@
 //sequencing nested functions
 
+bar: () -> int = 5
+baruser: (func f -> int) -> int = f()
+barvar: func -> int = bar
+print(baruser(barvar))
+
+/* can't define func within a func
 foo: () -> int = 
     (bar: () -> int = 5); bar()
 
 a: int = foo()
 print(a) //5
+*/

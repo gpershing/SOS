@@ -4,4 +4,4 @@ x: float = 1.0
 y: float = 3.0
 
 sum: int = add_int(x, y)
-print(z)
+print(sum)

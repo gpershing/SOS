@@ -2,7 +2,6 @@
 array int arrr = [1]
 print(arrr[0]) //1
 
-
 /*float array*/
 array float arrr2 = [1.2, 2.4]
 printf(arrr2[1]) //2.4
@@ -31,4 +30,4 @@ f_usage: (i: int, f: func int -> int) -> int =
     f(i)
 
 array func int -> int arr_name = [f1, f2]
-print(f_usage(1, arr_name[0]))
+//print(f_usage(1, arr_name[0]))

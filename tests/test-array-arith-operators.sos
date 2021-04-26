@@ -4,13 +4,13 @@ arr: array int = [1,2,3,4,5]
 printing(arr)
 
 arr2: array int = 5 + arr
-printing(arr)
+printing(arr2)
 
 arr3: array int = arr - 2
-printing(arr)
+printing(arr3)
 
 arr4: array int = 2 * arr
-printing(arr)
+printing(arr4)
 
 arr5: array int = arr/2
-printing(arr)
+printing(arr5)

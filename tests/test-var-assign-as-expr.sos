@@ -1,4 +1,4 @@
 a: int = 2
 
 print(a = 3 + 3) //6
-print(a) //3
+print(a) //6

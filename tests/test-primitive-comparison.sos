@@ -44,10 +44,10 @@ out4: bool = d == d
 print(out4) //True
 
 out5: bool = d == e
-printb(out5) //True
+print(out5) //True
 
 out6: bool = e == f
-printb(out6) //False
+print(out6) //False
 
 
 x = 5.0 != 6.0
@@ -64,6 +64,7 @@ print(x)
 
 x = 5.0 < 6.0
 print(x)
+
 
 
 

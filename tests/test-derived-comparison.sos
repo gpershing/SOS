@@ -3,8 +3,8 @@
 //comparison of unnamed structs
 x: bool = {1,2} == {1,2}
 print(x) //true
-x = {1,2} == {3,4,5}
-print(x) //false
+x = {1, 3} == {2, 4}
+print(x)
 
 //comparison of named structs
 struct point = {x: float, y: float}

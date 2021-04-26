@@ -1,7 +1,7 @@
 //predefining struct in outer scope
 struct normal = {field: int}
 
-func1(x: int) -> normal = 
+func1: (x: int) -> normal = 
     temp: normal  = {x}; temp
 
 a: normal = func1(5)

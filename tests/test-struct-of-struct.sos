@@ -1,11 +1,11 @@
 //predefining field struct in outer scope
-struct a = {int field}
+struct a = {field: int}
 struct b = { 
-    int field,
-    a field2}
+    field: int,
+    field2: a}
 
-b test1 = {1, a temp = {2}; temp}
-int temp = test1.field2.field
+test1: b = {1, temp: a = {2}; temp}
+print(test1.field2.field)
 
 /*
 //field struct defined in outer struct

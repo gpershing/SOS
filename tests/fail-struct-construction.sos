@@ -1,0 +1,2 @@
+struct vector = {x: float, y: float}
+v2: vector = {1.0, 2, 0}
