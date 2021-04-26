@@ -4,9 +4,6 @@ x: bool = true
 y: int = x
 y = x + 9
 print(y) //10
-/*
-//Type conversion based on unary operator and/or printing type
-print(-true) //-1
 
 //Type conversion during function application
 sum: (x: int, y: int) -> int = x + y
@@ -23,8 +20,9 @@ p: bool = n
 print(o) //True
 print(p) //False
 
-//Type conversion based on unary operator and/or printing type
-print(!1) //False
+//Type conversion based on unary operator
+p = !1
+print(p) //False
 
 //Type conversion during function application
 not: (x: bool) -> bool = !x
@@ -59,4 +57,3 @@ printf(d) //2.0
 floatsum: (x: float, y: float) -> float = x + y
 e: float = floatsum(1, 2)
 printf(e) //3.0
-*/

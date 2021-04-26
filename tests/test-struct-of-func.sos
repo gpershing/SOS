@@ -1,10 +1,14 @@
 //defining function in struct
+add: (x: int, y: int) -> int = x + y
+addasvar: func int, int -> int = add
+
+binaryfunc: (x: int, y: int, f: func int, int -> int) -> int = f(x, y)
+
 struct s = {
     field: int, 
-    add2(x: int) -> int = x + 2
+    field2: func int, int -> int
     }
 
-s1: s = {5, 5}
-a: int = s1.add2
-print(a) //7
+s1: s = {5, addasvar}
+print(binaryfunc(1, 2, s1.field2)) //3
 

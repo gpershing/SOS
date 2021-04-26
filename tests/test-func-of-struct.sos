@@ -6,27 +6,3 @@ func1: (x: int) -> normal =
 
 a: normal = func1(5)
 print(a.field) //5
-
-//defining struct in function with known expression return type
-func2(x: int) -> int = 
-    struct s = {field: int};
-    temp: s = {x};
-    s.field
-
-x: int = func2(5)
-print(x) //5
-/*
-
-//fancy: outer scruct has an assigned field during declaration
-struct outer = {
-    field: int,
-    func2(): int = 
-        struct s = {int field1, int field2};
-        s temp = {1, 2};
-        s.x + s.y
-}
-
-temp: outer  = {5, 5}
-print(temp.field) //5
-print(temp.func2()) //5
-*/
