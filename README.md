@@ -4,7 +4,7 @@
 
 1. change directory to SOS
 
-2. (given image `sheronw1174/sos-env` exists) invoke docker with
+2. invoke docker with
 
 ```
     ./docker_connect.sh
@@ -12,7 +12,9 @@
 
 the above command would automatically pull image if the given image doesn't exist
 
-pull/build image `sheronw1174/sos-env` with
+or 
+
+pull/build the lastest image `sheronw1174/sos-env` with
 
 ```sh
     ./docker_image_fetching.sh pull # or
