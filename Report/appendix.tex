@@ -3410,64 +3410,6 @@ struct vector = {x: float, y: float}
 
 \end{lstlisting}
 
-\subsection{sample\_programs/beach.sos}
-
-\begin{lstlisting}
-
-import renderer.sos
-import random.sos
-
-r: rng = {1, 1, 1}
-
-mountain: () -> void = 
-    p1: point = {-1.0, 0.7};
-    p2: point = {-0.7, 0.9};
-    p3: point = {-0.2, 0.1};
-    p4: point = {-0.5, 0.2};
-    p5: point = {-1.0, 0.0};
-
-    p: path = [p1, p2, p3, p5];
-
-    green: color = {0.0, 255.0, 0.0, 0.8};
-    c: colors = [{0.0, 255.0, 0.0, 0.8}, {0.0, 255.0, 0.0, 0.8}, {0.0, 255.0, 0.0, 0.8}, {0.0, 255.0, 0.0, 0.8}];
-    drawShape(p, c, 0, 1)
-
-sandhelp: (p: point) -> point =
-    px: float = randf(r)*0.5;
-    py: float = randf(r)*0.5;
-    if ((px < 0.1) && (py < 0.7))
-    then {px, py}
-    else {px/2, py/2}
-
-sand: (numPoints: int) -> void =
-    p: path = numPoints of [{0.0, 0.0}];
-    beachhelp(p);
-    c: colors = numPoints of [{255.0, 255.0, 40.0, 1.0}];
-    drawPoints(p, c)
-
-waterhelp: (p: point) -> point =
-    px: float = randf(r)*0.5;
-    py: float = randf(r)*0.5;
-    if ((px < 0.0) && (py < 0.5))
-    then {px, py}
-    else {px/2, py/2}
-
-water: (numPoints: int) -> void =
-    p: path = numPoints of [{0.0, 0.0}];
-    beachhelp(p);
-    c: colors = numPoints of [{0.0, 0.0, 255.0, 1.0}];
-    drawPoints(p, c)
-
-my_canvas : canvas = {800, 400, 2}
-
-startCanvas(my_canvas)
-mountain()
-sand(200)
-water(400)
-
-endCanvas(my_canvas)
-\end{lstlisting}
-
 \subsection{sample\_programs/dragon.sos}
 
 \begin{lstlisting}
@@ -3607,6 +3549,39 @@ drawPath(l, c, 0)
 endCanvas(my_canvas)
 
 \end{lstlisting}
+
+\subsection{sample\_programs/square.sos}
+\begin{lstlisting}
+import renderer.sos
+
+a: int = 5 
+print(a)
+
+p1: point = {-0.5, -0.5}
+p2: point = {-0.5, 0.5}
+p3: point = {0.5, 0.5}
+p4: point = {0.5, -0.5}
+point_arr : path = [p1, p2, p3, p4] 
+
+c1 : color = {255.0, 0.0, 0.0, 0.8}
+c2 : color = {0.0, 255.0, 0.0, 0.8}
+c3 : color = {0.0, 0.0, 255.0, 0.8}
+c4 : color = {100.0, 100.0, 0.0, 0.8}
+color_arr : colors = [c1, c2, c3, c4] 
+
+canvas1 : canvas = {400, 400, 0}
+
+startCanvas(canvas1)
+drawShape(point_arr, color_arr, 0, 1)
+endCanvas(canvas1)
+
+canvas2 : canvas = {400, 400, 1}
+
+startCanvas(canvas2)
+drawShape(point_arr, color_arr, 0, 1)
+endCanvas(canvas2)
+\end{lstlisting}
+
 
 \subsection{sample\_programs/tree.sos}
 
