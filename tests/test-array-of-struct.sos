@@ -1,3 +1,5 @@
+//The structs within array of structs only need to have the same property types
+
 struct x = {i: int}
 struct y = {i: int}
 
@@ -5,8 +7,8 @@ distance1_x: x = {5}
 distance2_x: x = {6}
 distance1_y: y = {1}
 
-//array x b = [distance1_x, {10}, distance1_y]
-array x b = [distanc1_x, {10}, {1}]
+b: array x = [distance1_x, {10}, distance1_y]
+
 print(b[0].i) //5
 print(b[1].i) //10
 print(b[2].i) //1
@@ -14,9 +16,8 @@ print(b[2].i) //1
 b[0] = distance2_x
 print(b[0].i) //6
 
-//b[0] = distance1_y
-//print(b[0].i) //1
+b[0] = distance1_y
+print(b[0].i) //1
 
 b[0].i = 2
 print(b[0].i) //2
-

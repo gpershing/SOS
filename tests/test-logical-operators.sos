@@ -3,7 +3,12 @@
 t: bool = true
 f: bool = false
 
+
+print(t && t)
+
+
 //and
+/*
 and_ans: bool = t && t
 print(and_ans)             //T AND T = T
 and_ans = t && f
@@ -26,3 +31,5 @@ not_ans: bool = !t
 print(not_ans)              //NOT TRUE = F
 not_ans = !f
 print(not_ans)              //NOT FALSE = T
+
+*/

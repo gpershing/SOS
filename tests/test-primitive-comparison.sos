@@ -65,19 +65,3 @@ print(x)
 x = 5.0 < 6.0
 print(x)
 
-
-
-
-/*bool*/
-g: bool = true
-h: bool = true
-i: bool = false
-
-out7: bool = g == g
-print(out7) //True
-
-out8: bool = g == h
-print(out8) //True
-
-out9: bool = g == i
-print(out9) //False

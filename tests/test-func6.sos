@@ -1,6 +1,6 @@
 //more complex function bodies: conditionals
 
-foo: (x: int) -> = 
+foo: (x: int) -> int = 
     if x == 0
     then x
     else (y: int = x); y-x

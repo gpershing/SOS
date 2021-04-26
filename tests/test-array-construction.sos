@@ -1,33 +1,36 @@
 /*int array*/
-array int arrr = [1]
+arrr: array int = [1]
 print(arrr[0]) //1
 
 /*float array*/
-array float arrr2 = [1.2, 2.4]
+arrr2: array float = [1.2, 2.4]
 printf(arrr2[1]) //2.4
 
 
 /*bool array*/
-array bool arrr3 = [false]
-printb(arrr3[0]) //False
+arrr3: array bool = [false]
+print(arrr3[0]) //False
 
 
 /*struct array in test-array-of-struct.sos*/
 
 
 /*nested arrays*/
-array array int nested = [[1], [2,3], [4,5,6]]
+nested: array array int = [[1], [2,3], [4,5,6]]
 print(nested[0][0]) //1
+
 
 
 /*func arrays*/
 add1: (k: int) -> int = k+1
-minus2: (k: int) -> int = k-1
+minus1: (k: int) -> int = k-1
 f1: func int -> int = add1
 f2: func int -> int = minus1
+
 
 f_usage: (i: int, f: func int -> int) -> int =
     f(i)
 
-array func int -> int arr_name = [f1, f2]
-//print(f_usage(1, arr_name[0]))
+arr_name: array func int -> int = [f1, f2]
+
+print(f_usage(1, arr_name[0]))

@@ -1,8 +1,8 @@
 printing: (x: int) -> void = print(x)
 
-array int x = [1, 2]
-array int y = [3, 4]
+x: array int = [1, 2]
+y: array int = [3, 4]
 
-array int z = x@y
+z: array int = x @ y
 
 printing(z)
