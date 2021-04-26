@@ -28,9 +28,9 @@
     \paragraph{Codegen.ml} by G, Sheron and Sitong. This file contains all the instructions to generate LLVM IR and call external functions from C and OpenGL libraries.
     
     \paragraph{External Functions}
-        \subparagraph{util\_math.c} by Sheron and G. As we usually call functions of C Math library directly, there is only one function called "toradians" in this file.
+        \subparagraph{util\_math.c} by Sheron. As we usually call functions of C Math library directly, there is only one function called "toradians" in this file.
         
-        \subparagraph{util\_opengl.c} by Tojo, Sheron and G. Takes in pointers allocated in SOS and call the function such as start and stop render or draw points, path and shape. Standard libraries written in SOS provide more user friendly wrappers of these C functions. For the writing to file and canvas initialization part, we consulted the code from mesa-demos, an official collection of OpenGL / Mesa demos and test programs.
+        \subparagraph{util\_opengl.c} by Tojo, Sheron. Takes in pointers allocated in SOS and call the function such as start and stop render or draw points, path and shape. Standard libraries written in SOS provide more user friendly wrappers of these C functions. For the writing to file and canvas initialization part, we consulted the code from mesa-demos, an official collection of OpenGL / Mesa demos and test programs.
     
     \paragraph{Compile}
         \subparagraph{Makefile} by G, Sheron, Tojo and Sitong. Make, test and clean SOS native file.
