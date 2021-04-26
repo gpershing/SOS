@@ -3027,4 +3027,386 @@ drawShape(point_arr, color_arr, 0, 1)
 endCanvas(my_canvas)
 \end{lstlisting}
 
-\end{document}
+\subsection{lib/affine.sos}
+
+\begin{lstlisting}
+
+import point.sos
+
+struct mat2 = {a11: float, a21: float, a12: float, a22: float}
+struct mat3 = {a11: float, a21: float, a31: float,
+               a12: float, a22: float, a32: float,
+               a13: float, a23: float, a33: float}
+alias affine = mat3
+
+affine_mul : (A: affine, v: point, w: float) -> point =
+    to: point3 = {v.x, v.y, w};
+    res: point3 = A ** to;
+    free(to);
+    if w == 0 || res.z == 1 then
+    ret: point = {res.x, res.y};
+    free(res) ; ret
+    else
+    ret: point = {res.x/res.z, res.y/res.z};
+    free(res) ; ret
+
+rotation : (r: float) -> mat2 = 
+    c: float = cos(r) ; s: float = sin(r);
+    {c,s,-s,c}
+
+scale : (sx: float, sy: float) -> mat2 = 
+    {sx,0.0,0.0,sy}
+
+translate : (dx: float, dy: float) -> affine =
+    {1.0,0.0,0.0, 0.0,1.0,0.0, dx,dy,1.0}
+
+// For internal use only
+// Functions not normally free their arguments like this
+make_affine__ : (m: mat2) -> affine = 
+    ret: affine = {m.a11, m.a21, 0.0,
+                   m.a12, m.a22, 0.0,
+                   0.0, 0.0, 1.0};
+    free(m) ; ret
+
+rotation_aff : (r: float) -> affine = make_affine__(rotation(r))
+scale_aff : (sx: float, sy: float) -> affine = make_affine__(scale(sx,sy))
+\end{lstlisting}
+
+\subsection{lib/array.sos}
+
+\begin{lstlisting}
+
+
+fill_ints : (a: array int, i: int) -> void = 
+    if i < a.length then a[i] = i; fill_ints(a, i+1)
+    else 0
+
+// A very useful function that makes an array of consecutive ints
+// Use with implicit iteration for very nice results
+ints : (n : int) -> array int = 
+  if n <= 0 then (a: array int = [])
+  else arr : array int = n of [0];
+  fill_ints(arr, 0) ; arr
+\end{lstlisting}
+
+\subsection{lib/color.sos}
+
+\begin{lstlisting}
+
+import math.sos
+
+struct color = {r: float, g: float, b: float, a: float}
+
+alias colors = array color
+
+// Standard: r,g,b in [0, 1]
+rgb: (r: float, g: float, b: float) -> color = {r,g,b,1.0}
+
+// Hue/saturation/value: hsv in [0, 1]
+hsv: (h: float, s: float, v: float) -> color =
+   c: float = v * s ;
+   hfac: float = modf(h*6.0, 2.0) ;
+   x: float = c * (1.0-abs(hfac-1.0)) ;
+   m: float = v - c ;
+   hh: float = h*6.0 ;
+
+   if hh < 1.0 then rgb(v,x+m,m) else
+   if hh < 2.0 then rgb(x+m,v,m) else
+   if hh < 3.0 then rgb(m,v,x+m) else
+   if hh < 4.0 then rgb(m,x+m,v) else
+   if hh < 5.0 then rgb(x+m,m,v) else
+                    rgb(v,m,x+m)
+    
+\end{lstlisting}
+
+\subsection{lib/math.sos}
+
+\begin{lstlisting}
+
+// Some floating point ops
+
+floor : (x: float) -> float = 
+    z: float = (y: int = x);
+    if z <= x then z
+    else z - 1.0
+
+ceil : (x: float) -> float = -floor(-x)
+
+frac : (x: float) -> float = x - floor(x) 
+
+max : (a: float, b: float) -> float = if a<b then b else a
+min : (a: float, b: float) -> float = if a<b then a else b
+
+clamp : (x: float, m: float, M: float) -> float = min(M, max(x, m))
+
+abs : (x: float) -> float = if x < 0 then -x else x
+
+// Returns the value y between 0 and m such that y = x+mn for an integer n
+modf : (x: float, m: float) -> float = m * frac(x/m)
+
+sin : (x: float) -> float = sinf(x)
+cos : (x: float) -> float = cosf(x)
+tan : (x: float) -> float = tanf(x)
+asin : (x: float) -> float = asinf(x)
+acos : (x: float) -> float = acosf(x)
+atan : (x: float) -> float = atanf(x)
+sqrt : (x: float) -> float = sqrtf(x)
+toradians : (x: float) -> float = toradiansf(x)
+\end{lstlisting}
+
+\subsection{lib/point.sos}
+
+\begin{lstlisting}
+
+import math.sos
+
+struct point = {x: float, y: float}
+struct point3 = {x: float, y: float, z: float}
+
+sqrMagnitude : (p: point) -> float = p * p
+magnitude : (p: point) -> float = sqrt(sqrMagnitude(p))
+
+sqrDistance : (a: point, b: point) -> float = 
+   p: point = a - b;
+   d: float = sqrMagnitude(p);
+   free(p) ; d
+distance : (a: point, b: point) -> float = sqrt(sqrDistance(a,b))
+\end{lstlisting}
+
+\subsection{lib/random.sos}
+
+\begin{lstlisting}
+
+// Wichmann-Hill PRNG
+// en.wikipedia.org/wiki/Wichmann-Hill
+import math.sos
+
+struct rng = {s1: int, s2: int, s3: int}
+
+randf : (r: rng) -> float =
+   r.s1 = 171 * r.s1 % 30269;
+   r.s2 = 172 * r.s2 % 30307;
+   r.s3 = 170 * r.s3 % 30323;
+   frac(r.s1/30269.0 + r.s2/30307.0 + r.s3/30323.0)
+\end{lstlisting}
+
+\subsection{lib/renderer.sos}
+
+\begin{lstlisting}
+
+import shape.sos
+import color.sos
+
+struct canvas = {width: int, height: int, file_number: int}
+
+startCanvas: (c : canvas) -> void = gl_startRendering(c.width, c.height)
+
+cvoid : () -> void = 0
+
+drawHelper : (point_structs: path, color_structs: array color, numOfPoints: int, i: int,  points: array float, colors: array float) -> void =
+    if i >= numOfPoints /*i>=numOfPoints-1?*/
+    then cvoid()
+    else
+        px : float = point_structs[i].x;
+        py : float= point_structs[i].y;
+        points[2*i] = px;
+        points[2*i+1] = py;
+
+        cr : float = color_structs[i].r;
+        cg : float = color_structs[i].g;
+        cb : float= color_structs[i].b;
+        ca : float= color_structs[i].a;
+        colors[4*i] = cr;
+        colors[4*i+1] = cg;
+        colors[4*i+2] = cb;
+        colors[4*i+3] = ca;
+
+        drawHelper(point_structs, color_structs, numOfPoints, i + 1, points, colors)
+
+drawPoints : (point_structs : path, color_structs : array color) -> void = 
+        numOfPoints : int = point_structs.length;
+        points : array float = numOfPoints*2 of [0.0];
+        colors : array float = numOfPoints*4 of [0.0];
+        
+        drawHelper(point_structs, color_structs, numOfPoints, 0,  points, colors);
+
+        gl_drawPoint(points, colors, 2)
+
+drawPath : (point_structs : path, color_structs : array color,  colorMode : int) -> void = 
+        numOfPoints : int= point_structs.length;
+        points : array float= numOfPoints*2 of [0.0];
+        colors : array float= numOfPoints*4 of [0.0];
+
+        drawHelper(point_structs, color_structs, numOfPoints, 0,  points, colors);
+        
+        gl_drawCurve(points, colors, colorMode)
+
+
+drawShape : (point_structs : path, color_structs : array color,  colorMode : int, filled : int) ->
+    void = 
+        numOfPoints : int = point_structs.length;
+        points : array float = numOfPoints*2 of [0.0];
+        colors : array float = numOfPoints*4 of [0.0];
+
+        drawHelper(point_structs, color_structs, numOfPoints, 0,  points, colors);
+
+        gl_drawShape(points, colors, colorMode, filled)
+
+
+endCanvas : (c : canvas) -> void = gl_endRendering(c.width, c.height, c.file_number)
+\end{lstlisting}
+
+\subsection{lib/shape.sos}
+
+\begin{lstlisting}
+
+import point.sos
+
+alias path = array point
+alias shape = array point
+
+// Wrappers to enable array iteration
+copy_point : (p: point) -> point = copy(p)
+free_point : (p: point) -> void = free(p)
+
+// More convenient names
+copy_path : (p: path) -> path = copy_point(p)
+free_path : (p: path) -> void = free_point(p)
+
+appendhelp_copyin : (in: path, from: path, i: int) -> void = 
+    if i<in.length then
+    in[i] = copy(from[i+1]);
+    appendhelp_copyin (in, from, i+1)
+    else 0
+
+appendhelp_tail : (p: path) -> path = 
+    tail: path = p.length-1 of [{0.0, 0.0}];
+    appendhelp_copyin(tail, p, 0); tail
+
+// Appends two paths, merging them at their endpoints, if needed
+// Epsilon is the max distance that can be merged
+append : (p1: path, p2: path, epsilon: float) -> path = 
+    if p1.length == 0 then copy_path(p2)
+    else if p2.length == 0 then copy_path(p1)
+    else 
+    merge: bool = sqrDistance(p1[p1.length-1], p2[0]) < epsilon*epsilon;
+    p2c: path = (if merge then appendhelp_tail(p2) else p2);
+    ret: path = copy_path(p1) @ copy_path(p2c);
+    ret
+
+reversedhelp: (in: path, from: path, i: int) -> void = 
+    if i < in.length then
+    in[i].x = from[in.length-1-i].x;
+    in[i].y = from[in.length-1-i].y;
+    reversedhelp(in, from, i+1)
+    else 0
+
+// Creates a new array that is p reversed
+reversed: (p : path) -> path =
+    newpath : path = p.length of [{0.0, 0.0}];
+    reversedhelp(newpath, p, 0);
+    newpath
+
+reversehelp : (p: path, i: int) -> void =
+    if i < p.length/2 then
+    q: point = p[i];
+    p[i] = p[p.length-1-i];
+    p[p.length-1-i] = q;
+    reversehelp (p, i+1)
+    else 0
+
+// Reverses p in-place
+reverse: (p: path) -> void = reversehelp(p, 0)
+    
+\end{lstlisting}
+
+\subsection{lib/size.sos}
+
+\begin{lstlisting}
+
+import shape.sos
+
+struct minPoint = {float x, float y}
+
+// scale rightward downward
+// should based on a rectangular box aound the object and get that vertex? or just use opengl
+
+min(a: point, b: minPoint) -> void =
+    if a.x < b.x and a.y < b.y then b.x = a.x and b.y = a.y
+    else 0
+
+// shape size(float multiple) =
+    
+
+\end{lstlisting}
+
+\subsection{lib/std.sos}
+
+\begin{lstlisting}
+
+import vector.sos
+import affine.sos
+import renderer.sos
+\end{lstlisting}
+
+\subsection{lib/transform.sos}
+
+\begin{lstlisting}
+
+import shape.sos
+import math.sos
+import vector.sos
+
+// Rotates the given point by angle radians about the given point
+// Either rotate clockwise (1) or counterclockwise (-1)
+rotate : (p: point, angle: float, direction: int, about: point) -> void =
+    //shifted
+    px : float = p.x - about.x;
+    py : float = p.y - about.y;
+
+    if direction == -1
+    then //counterclockwise
+        p.x = (px*cos(angle) - py*sin(angle)) + about.x;
+        p.y = (px*sin(angle) + py*cos(angle)) + about.y
+    else if direction == 1
+    then //clockwise
+        p.x = (px*cos(angle) + py*sin(angle)) + about.x;
+        p.y = (-px*sin(angle)+ py*cos(angle)) + about.y
+    else //do no rotation
+        p.x = p.x;
+        p.y = p.y 
+
+// Translates the given point by the given vector
+trans : (p: point, direction: vector) -> void = 
+    p.x = p.x + direction.x ; p.y = p.y + direction.y
+
+// Scales the point by (sx, sy)
+scale : (p: point, sx: float, sy: float) -> void =
+    p.x = p.x * sx ; p.y = p.y * sy
+
+// Performs rotate() on a new point
+rotated : (p: point, angle: float, direction: int, about: point) -> point =
+    q: point = copy(p) ;
+    rotate(q, angle, direction, about) ;
+    q
+
+// Performs translate() on a new point
+translated : (p: point, direction: vector) -> point =
+    q: point = copy(p) ;
+    trans(q, direction) ;
+    q
+
+scaled : (p: point, sx: float, sy: float) -> point = 
+    q: point = copy(p) ; 
+    scale(p, sx, sy) ;
+    q
+\end{lstlisting}
+
+\subsection{lib/vector.sos}
+
+\begin{lstlisting}
+
+struct vector = {x: float, y: float}
+
+\end{lstlisting}
+
