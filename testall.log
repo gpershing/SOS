@@ -1,9 +1,0 @@
-/usr/bin/lli
-
-###### Testing test-helloworld
-./sos.native test-helloworld.sos > test-helloworld.ll
-llc -relocation-model=pic test-helloworld.ll > test-helloworld.s
-cc -o test-helloworld.exe test-helloworld.s util_opengl.o util_math.o -lOSMesa -lm
-./test-helloworld.exe
-diff -b test-helloworld.out test-helloworld.out > test-helloworld.diff
-###### SUCCESS
