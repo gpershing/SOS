@@ -1,0 +1,9 @@
+x: int = 1
+y: int = 3
+z: int = 8
+
+many_x: array int = [x, 4, y, 6, 3, z]
+
+printing: (x: int) -> void = print(x)
+
+printing(many_x)
