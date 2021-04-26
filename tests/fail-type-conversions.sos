@@ -1,2 +1,7 @@
-b: bool = 1
-b_fail: bool = 2
+struct point = {x: float, y: float}
+
+struct point3d = {x: float, y: float, z: float}
+
+p1: point = {1.0, 2.0}
+
+p2: point3d = p1

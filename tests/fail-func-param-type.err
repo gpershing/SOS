@@ -1,0 +1,1 @@
+Fatal error: exception Failure("Could not resolve type when defining p(Found struct {int, int}, expected struct {float, float})")

@@ -1,0 +1,1 @@
+Fatal error: exception Failure("Incorrect return type for function f (Found int, expected struct {float, float})")

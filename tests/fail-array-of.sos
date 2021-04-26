@@ -1,1 +1,4 @@
-a: array float = 1.0 of [0.0]
+struct point = {x: float, y: float}
+p1: point = {1.2, 2.3}
+
+a: array float = p1 of [0.0]

@@ -43,6 +43,17 @@ a = -2.9
 b = a
 print(b) //-2
 
+
+/*float to bool: anything other than 0.0 is true */
+b: bool = 1.1 //1
+print(b)
+b = -1.1 //1
+print(b)
+b = 0.1
+print(b) //1
+b = 0.0
+print(b) // 0
+
 //Type conversion during function application (use sum() on line 15)
 summed2: int = sum(1.2, 3.5)
 print(summed2) //4

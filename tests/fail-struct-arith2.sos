@@ -1,11 +1,11 @@
 //arithmetic on structs that do not match types
 
-struct s1 = {a: int, b: float}
+struct s1 = {a: float, b: float}
 
-struct s2 = {a: float, b: int}
+struct s2 = {a: float, b: bool}
 
-a: s1 = {1, 1.0}
-b: s2 = {1.0, 1}
+a: s1 = {1.4, 2.3}
+b: s2 = {1.0, false}
 
-a+b
+c: s1 = a + b
 
