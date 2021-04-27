@@ -2,9 +2,10 @@
 
 \begin{document}
 	\section{Appendix}
-	
 
-\subsection{sos.ml}
+\subsection{SOS Interpreter}	
+
+\subsubsection{sos.ml}
 
 \begin{lstlisting}
 (* Top-level of the SOS compiler: scan & parse the input,
@@ -43,7 +44,7 @@ let () =
 	print_string (Llvm.string_of_llmodule m)
 \end{lstlisting}
 
-\subsection{scanner.mll}
+\subsubsection{scanner.mll}
 \begin{lstlisting}
 	
 (* SOS Scanner *)
@@ -133,7 +134,7 @@ and single_comment = parse
 | _    { single_comment lexbuf }
 \end{lstlisting}
 
-\subsection{parser.mly}
+\subsubsection{parser.mly}
 \begin{lstlisting}
 
 /* SOS Parser */
@@ -280,7 +281,7 @@ program:
   | IMPORT program { $1 @ $2 }
 \end{lstlisting}
 
-\subsection{ast.mli}
+\subsubsection{ast.mli}
 \begin{lstlisting}
 (* Abstract syntax tree for SOS *)
 (* Written by G *)
@@ -342,7 +343,7 @@ type stmt =
 type program = stmt list
 \end{lstlisting}
 
-\subsection{astprint.ml}
+\subsubsection{astprint.ml}
 \begin{lstlisting}
 (* Very basic """pretty""" printer for the AST *)
 (* Written by G *)
@@ -414,7 +415,7 @@ let basic_print prog =
   basic_print prog *)
 \end{lstlisting}
 
-\subsection{semant.ml}
+\subsubsection{semant.ml}
 \begin{lstlisting}
 (* Semantic checking for the SOS compiler *)
 (* Written primarily by G *)
@@ -1095,7 +1096,7 @@ let check prog =
   in stmts global_env prog
 \end{lstlisting}
 
-\subsection{sast.mli}
+\subsubsection{sast.mli}
 \begin{lstlisting}
 (* Semantically-checked AST *)
 
@@ -1155,7 +1156,7 @@ type sstmt =
 type sprogram = sstmt list
 \end{lstlisting}
 
-\subsection{sastprint.ml}
+\subsubsection{sastprint.ml}
 \begin{lstlisting}
 (* Very basic """pretty""" printer for SAST *)
 (* Written by G *)
@@ -1232,7 +1233,7 @@ let _ =
   basic_print sast *)
 \end{lstlisting}
 
-\subsection{codegen.ml}
+\subsubsection{codegen.ml}
 \begin{lstlisting}
 (* Code generation: translate takes a semantically checked AST and
 produces LLVM IR *)
@@ -2302,7 +2303,7 @@ let translate prog =
    the_module
 \end{lstlisting}
 
-\subsection{util\_math.c}
+\subsubsection{util\_math.c}
 \begin{lstlisting}
 #include <math.h>
 
@@ -2318,7 +2319,7 @@ int main() {
 #endif
 \end{lstlisting}
 
-\subsection{util\_opengl.c}
+\subsubsection{util\_opengl.c}
 \begin{lstlisting}
 #include <stdio.h>
 #include <stdlib.h>
@@ -2606,7 +2607,7 @@ int main(int argc, char *argv[]) {
 */
 \end{lstlisting}
 
-\subsection{Makefile}
+\subsubsection{Makefile}
 \begin{lstlisting}
 .PHONY : all
 all: sos.native util_math.o util_opengl.o
@@ -2633,7 +2634,7 @@ clean :
 
 \end{lstlisting}
 
-\subsection{Dockerfile}
+\subsubsection{Dockerfile}
 \begin{lstlisting}
 # Sheron Wang
 # Based on 20.04 LTS
@@ -2736,7 +2737,7 @@ ENTRYPOINT ["opam", "config", "exec", "--"]
 CMD ["bash"]
 \end{lstlisting}
 
-\subsection{compile\_exec.sh}
+\subsubsection{compile\_exec.sh}
 \begin{lstlisting}
 #!/bin/sh
 
@@ -2774,14 +2775,14 @@ rm ${basename}.ll ${basename}.s
 ./${basename}.exe
 \end{lstlisting}
 
-\subsection{docker\_connect.sh}
+\subsubsection{docker\_connect.sh}
 \begin{lstlisting}
 #!/bin/sh
 
 docker run --rm -it -v `pwd`:/home/sos -w=/home/sos sheronw1174/sos-env:latest
 \end{lstlisting}
 
-\subsection{docker\_image\_fetching.sh}
+\subsubsection{docker\_image\_fetching.sh}
 \begin{lstlisting}
 #!/bin/sh
 
@@ -2796,7 +2797,7 @@ else
 fi
 \end{lstlisting}
 
-\subsection{testall.sh}
+\subsubsection{testall.sh}
 \begin{lstlisting}
 #!/bin/sh
 
@@ -3000,7 +3001,7 @@ done
 exit $globalerror
 \end{lstlisting}
 
-\subsection{helloworld.sos}
+\subsubsection{helloworld.sos}
 \begin{lstlisting}
 import renderer.sos
 
@@ -3027,7 +3028,9 @@ drawShape(point_arr, color_arr, 0, 1)
 endCanvas(my_canvas)
 \end{lstlisting}
 
-\subsection{lib/affine.sos}
+\subsection{Library Programs}
+
+\subsubsection{lib/affine.sos}
 
 \begin{lstlisting}
 
@@ -3072,7 +3075,7 @@ rotation_aff : (r: float) -> affine = make_affine__(rotation(r))
 scale_aff : (sx: float, sy: float) -> affine = make_affine__(scale(sx,sy))
 \end{lstlisting}
 
-\subsection{lib/array.sos}
+\subsubsection{lib/array.sos}
 
 \begin{lstlisting}
 
@@ -3089,7 +3092,7 @@ ints : (n : int) -> array int =
   fill_ints(arr, 0) ; arr
 \end{lstlisting}
 
-\subsection{lib/color.sos}
+\subsubsection{lib/color.sos}
 
 \begin{lstlisting}
 
@@ -3119,7 +3122,7 @@ hsv: (h: float, s: float, v: float) -> color =
     
 \end{lstlisting}
 
-\subsection{lib/math.sos}
+\subsubsection{lib/math.sos}
 
 \begin{lstlisting}
 
@@ -3154,7 +3157,7 @@ sqrt : (x: float) -> float = sqrtf(x)
 toradians : (x: float) -> float = toradiansf(x)
 \end{lstlisting}
 
-\subsection{lib/point.sos}
+\subsubsection{lib/point.sos}
 
 \begin{lstlisting}
 
@@ -3173,7 +3176,7 @@ sqrDistance : (a: point, b: point) -> float =
 distance : (a: point, b: point) -> float = sqrt(sqrDistance(a,b))
 \end{lstlisting}
 
-\subsection{lib/random.sos}
+\subsubsection{lib/random.sos}
 
 \begin{lstlisting}
 
@@ -3190,7 +3193,7 @@ randf : (r: rng) -> float =
    frac(r.s1/30269.0 + r.s2/30307.0 + r.s3/30323.0)
 \end{lstlisting}
 
-\subsection{lib/renderer.sos}
+\subsubsection{lib/renderer.sos}
 
 \begin{lstlisting}
 
@@ -3256,7 +3259,7 @@ drawShape : (point_structs : path, color_structs : array color,  colorMode : int
 endCanvas : (c : canvas) -> void = gl_endRendering(c.width, c.height, c.file_number)
 \end{lstlisting}
 
-\subsection{lib/shape.sos}
+\subsubsection{lib/shape.sos}
 
 \begin{lstlisting}
 
@@ -3320,7 +3323,7 @@ reverse: (p: path) -> void = reversehelp(p, 0)
     
 \end{lstlisting}
 
-\subsection{lib/size.sos}
+\subsubsection{lib/size.sos}
 
 \begin{lstlisting}
 
@@ -3340,7 +3343,7 @@ min(a: point, b: minPoint) -> void =
 
 \end{lstlisting}
 
-\subsection{lib/std.sos}
+\subsubsection{lib/std.sos}
 
 \begin{lstlisting}
 
@@ -3349,7 +3352,7 @@ import affine.sos
 import renderer.sos
 \end{lstlisting}
 
-\subsection{lib/transform.sos}
+\subsubsection{lib/transform.sos}
 
 \begin{lstlisting}
 
@@ -3402,7 +3405,7 @@ scaled : (p: point, sx: float, sy: float) -> point =
     q
 \end{lstlisting}
 
-\subsection{lib/vector.sos}
+\subsubsection{lib/vector.sos}
 
 \begin{lstlisting}
 
@@ -3410,7 +3413,9 @@ struct vector = {x: float, y: float}
 
 \end{lstlisting}
 
-\subsection{sample\_programs/dragon.sos}
+\subsection{Example Programs}
+
+\subsubsection{sample\_programs/dragon.sos}
 
 \begin{lstlisting}
 
@@ -3463,7 +3468,7 @@ drawPath(d, rainbow(ints(d.length), d.length), 0)
 endCanvas(my_canvas)
 \end{lstlisting}
 
-\subsection{sample\_programs/drunk.sos}
+\subsubsection{sample\_programs/drunk.sos}
 
 \begin{lstlisting}
 
@@ -3509,7 +3514,7 @@ endCanvas(my_canvas)
 
 \end{lstlisting}
 
-\subsection{sample\_programs/lorenz.sos}
+\subsubsection{sample\_programs/lorenz.sos}
 
 \begin{lstlisting}
 
@@ -3550,7 +3555,7 @@ endCanvas(my_canvas)
 
 \end{lstlisting}
 
-\subsection{sample\_programs/square.sos}
+\subsubsection{sample\_programs/square.sos}
 \begin{lstlisting}
 import renderer.sos
 
@@ -3583,7 +3588,7 @@ endCanvas(canvas2)
 \end{lstlisting}
 
 
-\subsection{sample\_programs/tree.sos}
+\subsubsection{sample\_programs/tree.sos}
 
 \begin{lstlisting}
 
@@ -3637,7 +3642,7 @@ endCanvas(my_canvas)
 
 \end{lstlisting}
 
-\subsection{sample\_programs/web.sos}
+\subsubsection{sample\_programs/web.sos}
 
 \begin{lstlisting}
 
@@ -3710,15 +3715,16 @@ random_connections(w, [rgb(1,1,1), rgb(1,1,1)], r)
 endCanvas(my_canvas)
 \end{lstlisting}
 
+\subsection{Test Programs}
 
-\subsection{tests/fail-alias.err}
+\subsubsection{tests/fail-alias.err}
 
 \begin{lstlisting}
 
 Fatal error: exception Failure("Cannot create an alias with preexisting name int")
 \end{lstlisting}
 
-\subsection{tests/fail-alias.sos}
+\subsubsection{tests/fail-alias.sos}
 
 \begin{lstlisting}
 
@@ -3726,14 +3732,14 @@ Fatal error: exception Failure("Cannot create an alias with preexisting name int
 alias int = int
 \end{lstlisting}
 
-\subsection{tests/fail-alias2.err}
+\subsubsection{tests/fail-alias2.err}
 
 \begin{lstlisting}
 
 Fatal error: exception Stdlib.Parsing.Parse_error
 \end{lstlisting}
 
-\subsection{tests/fail-alias2.sos}
+\subsubsection{tests/fail-alias2.sos}
 
 \begin{lstlisting}
 
@@ -3742,14 +3748,14 @@ Fatal error: exception Stdlib.Parsing.Parse_error
 alias x: notatype
 \end{lstlisting}
 
-\subsection{tests/fail-array-construction2.err}
+\subsubsection{tests/fail-array-construction2.err}
 
 \begin{lstlisting}
 
 Fatal error: exception Failure("Could not resolve type when defining a(Found array float, expected array int)")
 \end{lstlisting}
 
-\subsection{tests/fail-array-construction2.sos}
+\subsubsection{tests/fail-array-construction2.sos}
 
 \begin{lstlisting}
 
@@ -3757,14 +3763,14 @@ Fatal error: exception Failure("Could not resolve type when defining a(Found arr
 a: array int = [2.2, 1]
 \end{lstlisting}
 
-\subsection{tests/fail-array-of.err}
+\subsubsection{tests/fail-array-of.err}
 
 \begin{lstlisting}
 
 Fatal error: exception Failure("First operand of of operator must be an int")
 \end{lstlisting}
 
-\subsection{tests/fail-array-of.sos}
+\subsubsection{tests/fail-array-of.sos}
 
 \begin{lstlisting}
 
@@ -3774,14 +3780,14 @@ p1: point = {1.2, 2.3}
 a: array float = p1 of [0.0]
 \end{lstlisting}
 
-\subsection{tests/fail-array-void.err}
+\subsubsection{tests/fail-array-void.err}
 
 \begin{lstlisting}
 
 Fatal error: exception Stdlib.Parsing.Parse_error
 \end{lstlisting}
 
-\subsection{tests/fail-array-void.sos}
+\subsubsection{tests/fail-array-void.sos}
 
 \begin{lstlisting}
 
@@ -3789,14 +3795,14 @@ Fatal error: exception Stdlib.Parsing.Parse_error
 array void a = []
 \end{lstlisting}
 
-\subsection{tests/fail-bool-arith.err}
+\subsubsection{tests/fail-bool-arith.err}
 
 \begin{lstlisting}
 
 Fatal error: exception Failure("Cannot add or subtract bool and bool")
 \end{lstlisting}
 
-\subsection{tests/fail-bool-arith.sos}
+\subsubsection{tests/fail-bool-arith.sos}
 
 \begin{lstlisting}
 
@@ -3806,56 +3812,56 @@ f: bool = false
 sum: bool = t + f
 \end{lstlisting}
 
-\subsection{tests/fail-bool-comparison.err}
+\subsubsection{tests/fail-bool-comparison.err}
 
 \begin{lstlisting}
 
 Fatal error: exception Failure("Cannot equate bool and bool")
 \end{lstlisting}
 
-\subsection{tests/fail-bool-comparison.sos}
+\subsubsection{tests/fail-bool-comparison.sos}
 
 \begin{lstlisting}
 
 b: bool = true == true
 \end{lstlisting}
 
-\subsection{tests/fail-bool.err}
+\subsubsection{tests/fail-bool.err}
 
 \begin{lstlisting}
 
 Fatal error: exception Failure("Cannot equate bool and bool")
 \end{lstlisting}
 
-\subsection{tests/fail-bool.sos}
+\subsubsection{tests/fail-bool.sos}
 
 \begin{lstlisting}
 
 b: bool = true == true
 \end{lstlisting}
 
-\subsection{tests/fail-comparison-bool-float.err}
+\subsubsection{tests/fail-comparison-bool-float.err}
 
 \begin{lstlisting}
 
 Fatal error: exception Failure("Cannot compare bool and float")
 \end{lstlisting}
 
-\subsection{tests/fail-comparison-bool-float.sos}
+\subsubsection{tests/fail-comparison-bool-float.sos}
 
 \begin{lstlisting}
 
 b: bool = true > 0.1
 \end{lstlisting}
 
-\subsection{tests/fail-definitions-in-definitions.err}
+\subsubsection{tests/fail-definitions-in-definitions.err}
 
 \begin{lstlisting}
 
 Fatal error: exception Stdlib.Parsing.Parse_error
 \end{lstlisting}
 
-\subsection{tests/fail-definitions-in-definitions.sos}
+\subsubsection{tests/fail-definitions-in-definitions.sos}
 
 \begin{lstlisting}
 
@@ -3866,14 +3872,14 @@ func2: (x: int) -> int =
     s.field
 \end{lstlisting}
 
-\subsection{tests/fail-definitions-in-definitions2.err}
+\subsubsection{tests/fail-definitions-in-definitions2.err}
 
 \begin{lstlisting}
 
 Fatal error: exception Stdlib.Parsing.Parse_error
 \end{lstlisting}
 
-\subsection{tests/fail-definitions-in-definitions2.sos}
+\subsubsection{tests/fail-definitions-in-definitions2.sos}
 
 \begin{lstlisting}
 
@@ -3886,42 +3892,42 @@ barvar: func -> int = bar
 print(baruser(barvar))
 \end{lstlisting}
 
-\subsection{tests/fail-derived-comparison.err}
+\subsubsection{tests/fail-derived-comparison.err}
 
 \begin{lstlisting}
 
 Fatal error: exception Failure("Can only equate structs of matching type")
 \end{lstlisting}
 
-\subsection{tests/fail-derived-comparison.sos}
+\subsubsection{tests/fail-derived-comparison.sos}
 
 \begin{lstlisting}
 
 x: bool = {1,2} == {3,4,5}
 \end{lstlisting}
 
-\subsection{tests/fail-float.err}
+\subsubsection{tests/fail-float.err}
 
 \begin{lstlisting}
 
 Fatal error: exception Stdlib.Parsing.Parse_error
 \end{lstlisting}
 
-\subsection{tests/fail-float.sos}
+\subsubsection{tests/fail-float.sos}
 
 \begin{lstlisting}
 
 f: float = .1
 \end{lstlisting}
 
-\subsection{tests/fail-func-param-type.err}
+\subsubsection{tests/fail-func-param-type.err}
 
 \begin{lstlisting}
 
 Fatal error: exception Failure("Could not resolve type when defining p(Found struct {int, int}, expected struct {float, float})")
 \end{lstlisting}
 
-\subsection{tests/fail-func-param-type.sos}
+\subsubsection{tests/fail-func-param-type.sos}
 
 \begin{lstlisting}
 
@@ -3933,14 +3939,14 @@ sum: (x: int, y: int) -> int = x+y
 sum(3, p)
 \end{lstlisting}
 
-\subsection{tests/fail-func-return-type.err}
+\subsubsection{tests/fail-func-return-type.err}
 
 \begin{lstlisting}
 
 Fatal error: exception Failure("Incorrect return type for function f (Found int, expected struct {float, float})")
 \end{lstlisting}
 
-\subsection{tests/fail-func-return-type.sos}
+\subsubsection{tests/fail-func-return-type.sos}
 
 \begin{lstlisting}
 
@@ -3949,14 +3955,14 @@ struct point = {x: float, y: float}
 f: (x: int) -> point = if x == 1 then 1 else 2
 \end{lstlisting}
 
-\subsection{tests/fail-func.err}
+\subsubsection{tests/fail-func.err}
 
 \begin{lstlisting}
 
 Fatal error: exception Failure("Unknown variable name sum")
 \end{lstlisting}
 
-\subsection{tests/fail-func.sos}
+\subsubsection{tests/fail-func.sos}
 
 \begin{lstlisting}
 
@@ -3965,28 +3971,28 @@ Fatal error: exception Failure("Unknown variable name sum")
 x: int = sum(1, 2)
 \end{lstlisting}
 
-\subsection{tests/fail-if-elseless.err}
+\subsubsection{tests/fail-if-elseless.err}
 
 \begin{lstlisting}
 
 Fatal error: exception Stdlib.Parsing.Parse_error
 \end{lstlisting}
 
-\subsection{tests/fail-if-elseless.sos}
+\subsubsection{tests/fail-if-elseless.sos}
 
 \begin{lstlisting}
 
 x: int = if 1==2 then 1
 \end{lstlisting}
 
-\subsection{tests/fail-if-expr-type.err}
+\subsubsection{tests/fail-if-expr-type.err}
 
 \begin{lstlisting}
 
 Fatal error: exception Failure("Could not reconcile types of then and else clauses (int, array int)")
 \end{lstlisting}
 
-\subsection{tests/fail-if-expr-type.sos}
+\subsubsection{tests/fail-if-expr-type.sos}
 
 \begin{lstlisting}
 
@@ -3996,14 +4002,14 @@ then 1
 else [2]
 \end{lstlisting}
 
-\subsection{tests/fail-memory.err}
+\subsubsection{tests/fail-memory.err}
 
 \begin{lstlisting}
 
 Fatal error: exception Failure("Can only free memory of struct and array types")
 \end{lstlisting}
 
-\subsection{tests/fail-memory.sos}
+\subsubsection{tests/fail-memory.sos}
 
 \begin{lstlisting}
 
@@ -4017,35 +4023,35 @@ squareafteradd: (x: int, y: int) -> int =
     ret
 \end{lstlisting}
 
-\subsection{tests/fail-negate.err}
+\subsubsection{tests/fail-negate.err}
 
 \begin{lstlisting}
 
 Fatal error: exception Failure("Cannot negate non-arithmetic types")
 \end{lstlisting}
 
-\subsection{tests/fail-negate.sos}
+\subsubsection{tests/fail-negate.sos}
 
 \begin{lstlisting}
 
 x: int = -true
 \end{lstlisting}
 
-\subsection{tests/fail-struct-arith.err}
+\subsubsection{tests/fail-struct-arith.err}
 
 \begin{lstlisting}
 
 Fatal error: exception Failure("Can only add or subtract structs of matching type")
 \end{lstlisting}
 
-\subsection{tests/fail-struct-arith.out}
+\subsubsection{tests/fail-struct-arith.out}
 
 \begin{lstlisting}
 
 Can only add or subtract structs of matching type
 \end{lstlisting}
 
-\subsection{tests/fail-struct-arith.sos}
+\subsubsection{tests/fail-struct-arith.sos}
 
 \begin{lstlisting}
 
@@ -4059,21 +4065,21 @@ b: s2 = {1, 1}
 c: s3 = a+b
 \end{lstlisting}
 
-\subsection{tests/fail-struct-arith2.err}
+\subsubsection{tests/fail-struct-arith2.err}
 
 \begin{lstlisting}
 
 Fatal error: exception Failure("Can only add or subtract structs of matching type")
 \end{lstlisting}
 
-\subsection{tests/fail-struct-arith2.out}
+\subsubsection{tests/fail-struct-arith2.out}
 
 \begin{lstlisting}
 
 Can only operate on arithmetic structs
 \end{lstlisting}
 
-\subsection{tests/fail-struct-arith2.sos}
+\subsubsection{tests/fail-struct-arith2.sos}
 
 \begin{lstlisting}
 
@@ -4090,14 +4096,14 @@ c: s1 = a + b
 
 \end{lstlisting}
 
-\subsection{tests/fail-struct-construction.err}
+\subsubsection{tests/fail-struct-construction.err}
 
 \begin{lstlisting}
 
 Fatal error: exception Failure("Could not resolve type when defining v2(Found struct {float, int, int}, expected struct {float, float})")
 \end{lstlisting}
 
-\subsection{tests/fail-struct-construction.sos}
+\subsubsection{tests/fail-struct-construction.sos}
 
 \begin{lstlisting}
 
@@ -4105,14 +4111,14 @@ struct vector = {x: float, y: float}
 v2: vector = {1.0, 2, 0}
 \end{lstlisting}
 
-\subsection{tests/fail-struct-field.err}
+\subsubsection{tests/fail-struct-field.err}
 
 \begin{lstlisting}
 
 Fatal error: exception Failure("Could not find field y")
 \end{lstlisting}
 
-\subsection{tests/fail-struct-field.sos}
+\subsubsection{tests/fail-struct-field.sos}
 
 \begin{lstlisting}
 
@@ -4125,21 +4131,21 @@ s: a = {1}
 b: int = s.y
 \end{lstlisting}
 
-\subsection{tests/fail-struct-field2.err}
+\subsubsection{tests/fail-struct-field2.err}
 
 \begin{lstlisting}
 
 Fatal error: exception Failure("Cannot access fields for a non-struct variable")
 \end{lstlisting}
 
-\subsection{tests/fail-struct-field2.out}
+\subsubsection{tests/fail-struct-field2.out}
 
 \begin{lstlisting}
 
 Cannot access fields for a non-struct variable
 \end{lstlisting}
 
-\subsection{tests/fail-struct-field2.sos}
+\subsubsection{tests/fail-struct-field2.sos}
 
 \begin{lstlisting}
 
@@ -4150,14 +4156,14 @@ b: int = 1
 y: int = b.x
 \end{lstlisting}
 
-\subsection{tests/fail-type-conversions.err}
+\subsubsection{tests/fail-type-conversions.err}
 
 \begin{lstlisting}
 
 Fatal error: exception Failure("Could not resolve type when defining p2(Found struct {float, float}, expected struct {float, float, float})")
 \end{lstlisting}
 
-\subsection{tests/fail-type-conversions.sos}
+\subsubsection{tests/fail-type-conversions.sos}
 
 \begin{lstlisting}
 
@@ -4170,14 +4176,14 @@ p1: point = {1.0, 2.0}
 p2: point3d = p1
 \end{lstlisting}
 
-\subsection{tests/fail-unop.err}
+\subsubsection{tests/fail-unop.err}
 
 \begin{lstlisting}
 
 Fatal error: exception Failure("Cannot negate non-arithmetic types")
 \end{lstlisting}
 
-\subsection{tests/fail-unop.sos}
+\subsubsection{tests/fail-unop.sos}
 
 \begin{lstlisting}
 
@@ -4186,14 +4192,14 @@ Fatal error: exception Failure("Cannot negate non-arithmetic types")
 b: bool = -true
 \end{lstlisting}
 
-\subsection{tests/fail-unop2.err}
+\subsubsection{tests/fail-unop2.err}
 
 \begin{lstlisting}
 
 Fatal error: exception Failure("Cannot negate non-arithmetic types")
 \end{lstlisting}
 
-\subsection{tests/fail-unop2.sos}
+\subsubsection{tests/fail-unop2.sos}
 
 \begin{lstlisting}
 
@@ -4201,28 +4207,28 @@ x: int= -true
 print(x)
 \end{lstlisting}
 
-\subsection{tests/fail-value-access-modifier.err}
+\subsubsection{tests/fail-value-access-modifier.err}
 
 \begin{lstlisting}
 
 Fatal error: exception Failure("Could not find field c")
 \end{lstlisting}
 
-\subsection{tests/fail-value-access-modifier.sos}
+\subsubsection{tests/fail-value-access-modifier.sos}
 
 \begin{lstlisting}
 
 import color.sos
 printf($(c : color = {0.0, 255.0, 255.0, 0.8}).c)\end{lstlisting}
 
-\subsection{tests/fail-vardecl-as-expr-scoping.err}
+\subsubsection{tests/fail-vardecl-as-expr-scoping.err}
 
 \begin{lstlisting}
 
 Fatal error: exception Failure("Unknown variable name x")
 \end{lstlisting}
 
-\subsection{tests/fail-vardecl-as-expr-scoping.sos}
+\subsubsection{tests/fail-vardecl-as-expr-scoping.sos}
 
 \begin{lstlisting}
 
@@ -4233,14 +4239,14 @@ print(y) //5
 print(x) //5 
 \end{lstlisting}
 
-\subsection{tests/fail-vardef.err}
+\subsubsection{tests/fail-vardef.err}
 
 \begin{lstlisting}
 
 Fatal error: exception Failure("Could not resolve type id notatype")
 \end{lstlisting}
 
-\subsection{tests/fail-vardef.sos}
+\subsubsection{tests/fail-vardef.sos}
 
 \begin{lstlisting}
 
@@ -4249,14 +4255,14 @@ Fatal error: exception Failure("Could not resolve type id notatype")
 x: notatype = 10
 \end{lstlisting}
 
-\subsection{tests/fail-vardef2.err}
+\subsubsection{tests/fail-vardef2.err}
 
 \begin{lstlisting}
 
 Fatal error: exception Failure("Unknown variable name x")
 \end{lstlisting}
 
-\subsection{tests/fail-vardef2.sos}
+\subsubsection{tests/fail-vardef2.sos}
 
 \begin{lstlisting}
 
@@ -4265,14 +4271,14 @@ Fatal error: exception Failure("Unknown variable name x")
 x = 10
 \end{lstlisting}
 
-\subsection{tests/fail-vardef3.err}
+\subsubsection{tests/fail-vardef3.err}
 
 \begin{lstlisting}
 
 Fatal error: exception Stdlib.Parsing.Parse_error
 \end{lstlisting}
 
-\subsection{tests/fail-vardef3.sos}
+\subsubsection{tests/fail-vardef3.sos}
 
 \begin{lstlisting}
 
@@ -4281,28 +4287,28 @@ x: int
 x = 5
 \end{lstlisting}
 
-\subsection{tests/fail-void.err}
+\subsubsection{tests/fail-void.err}
 
 \begin{lstlisting}
 
 Fatal error: exception Failure("Cannot use a void type in this context")
 \end{lstlisting}
 
-\subsection{tests/fail-void.sos}
+\subsubsection{tests/fail-void.sos}
 
 \begin{lstlisting}
 
 x: void = 0
 \end{lstlisting}
 
-\subsection{tests/test-E.out}
+\subsubsection{tests/test-E.out}
 
 \begin{lstlisting}
 
 200
 \end{lstlisting}
 
-\subsection{tests/test-E.sos}
+\subsubsection{tests/test-E.sos}
 
 \begin{lstlisting}
 
@@ -4310,7 +4316,7 @@ x: float = 2.0E2
 print(x)
 \end{lstlisting}
 
-\subsection{tests/test-alias.out}
+\subsubsection{tests/test-alias.out}
 
 \begin{lstlisting}
 
@@ -4344,7 +4350,7 @@ print(x)
 4
 \end{lstlisting}
 
-\subsection{tests/test-alias.sos}
+\subsubsection{tests/test-alias.sos}
 
 \begin{lstlisting}
 
@@ -4481,7 +4487,7 @@ district1: school_scores = [highschool1, [[4,5,6], [7,8,9]], [[10,11], [12,13,14
 print(district1[1][0][0]) //4
 \end{lstlisting}
 
-\subsection{tests/test-array-access.out}
+\subsubsection{tests/test-array-access.out}
 
 \begin{lstlisting}
 
@@ -4495,7 +4501,7 @@ print(district1[1][0][0]) //4
 6
 \end{lstlisting}
 
-\subsection{tests/test-array-access.sos}
+\subsubsection{tests/test-array-access.sos}
 
 \begin{lstlisting}
 
@@ -4525,7 +4531,7 @@ print(a[0+1]) //2
 printingarray(b, 3, 0) //2, 4, 6
 \end{lstlisting}
 
-\subsection{tests/test-array-arith-operators.out}
+\subsubsection{tests/test-array-arith-operators.out}
 
 \begin{lstlisting}
 
@@ -4556,7 +4562,7 @@ printingarray(b, 3, 0) //2, 4, 6
 2
 \end{lstlisting}
 
-\subsection{tests/test-array-arith-operators.sos}
+\subsubsection{tests/test-array-arith-operators.sos}
 
 \begin{lstlisting}
 
@@ -4578,7 +4584,7 @@ arr5: array int = arr/2
 printing(arr5)
 \end{lstlisting}
 
-\subsection{tests/test-array-concat.out}
+\subsubsection{tests/test-array-concat.out}
 
 \begin{lstlisting}
 
@@ -4588,7 +4594,7 @@ printing(arr5)
 4
 \end{lstlisting}
 
-\subsection{tests/test-array-concat.sos}
+\subsubsection{tests/test-array-concat.sos}
 
 \begin{lstlisting}
 
@@ -4602,7 +4608,7 @@ z: array int = x @ y
 printing(z)
 \end{lstlisting}
 
-\subsection{tests/test-array-construction.out}
+\subsubsection{tests/test-array-construction.out}
 
 \begin{lstlisting}
 
@@ -4616,7 +4622,7 @@ printing(z)
 1
 \end{lstlisting}
 
-\subsection{tests/test-array-construction.sos}
+\subsubsection{tests/test-array-construction.sos}
 
 \begin{lstlisting}
 
@@ -4655,7 +4661,7 @@ a: array int = [1, 3.4, true]
 printing(a)
 \end{lstlisting}
 
-\subsection{tests/test-array-iteration.out}
+\subsubsection{tests/test-array-iteration.out}
 
 \begin{lstlisting}
 
@@ -4666,7 +4672,7 @@ printing(a)
 3
 8\end{lstlisting}
 
-\subsection{tests/test-array-iteration.sos}
+\subsubsection{tests/test-array-iteration.sos}
 
 \begin{lstlisting}
 
@@ -4681,7 +4687,7 @@ printing: (x: int) -> void = print(x)
 printing(many_x)
 \end{lstlisting}
 
-\subsection{tests/test-array-of-struct.out}
+\subsubsection{tests/test-array-of-struct.out}
 
 \begin{lstlisting}
 
@@ -4693,7 +4699,7 @@ printing(many_x)
 2
 \end{lstlisting}
 
-\subsection{tests/test-array-of-struct.sos}
+\subsubsection{tests/test-array-of-struct.sos}
 
 \begin{lstlisting}
 
@@ -4722,7 +4728,7 @@ b[0].i = 2
 print(b[0].i) //2
 \end{lstlisting}
 
-\subsection{tests/test-assign.out}
+\subsubsection{tests/test-assign.out}
 
 \begin{lstlisting}
 
@@ -4741,7 +4747,7 @@ print(b[0].i) //2
 5
 \end{lstlisting}
 
-\subsection{tests/test-assign.sos}
+\subsubsection{tests/test-assign.sos}
 
 \begin{lstlisting}
 
@@ -4787,7 +4793,7 @@ printf(es.y.x) //3.3
 print(es.z[0]) //5
 \end{lstlisting}
 
-\subsection{tests/test-associativity.out}
+\subsubsection{tests/test-associativity.out}
 
 \begin{lstlisting}
 
@@ -4805,7 +4811,7 @@ print(es.z[0]) //5
 50
 \end{lstlisting}
 
-\subsection{tests/test-associativity.sos}
+\subsubsection{tests/test-associativity.sos}
 
 \begin{lstlisting}
 
@@ -4838,7 +4844,7 @@ print((100/10)/5) //10/5 = 2
 print(100/(10/5)) //100/2 = 50
 \end{lstlisting}
 
-\subsection{tests/test-conditional.out}
+\subsubsection{tests/test-conditional.out}
 
 \begin{lstlisting}
 
@@ -4846,7 +4852,7 @@ print(100/(10/5)) //100/2 = 50
 0
 \end{lstlisting}
 
-\subsection{tests/test-conditional.sos}
+\subsubsection{tests/test-conditional.sos}
 
 \begin{lstlisting}
 
@@ -4861,7 +4867,7 @@ z: int = if y != 1 then 1 else 0
 print(z) //0
 \end{lstlisting}
 
-\subsection{tests/test-derived-comparison.out}
+\subsubsection{tests/test-derived-comparison.out}
 
 \begin{lstlisting}
 
@@ -4872,7 +4878,7 @@ print(z) //0
 0
 \end{lstlisting}
 
-\subsection{tests/test-derived-comparison.sos}
+\subsubsection{tests/test-derived-comparison.sos}
 
 \begin{lstlisting}
 
@@ -4899,14 +4905,14 @@ print(x) //false
 
 \end{lstlisting}
 
-\subsection{tests/test-dot-product.out}
+\subsubsection{tests/test-dot-product.out}
 
 \begin{lstlisting}
 
 11
 \end{lstlisting}
 
-\subsection{tests/test-dot-product.sos}
+\subsubsection{tests/test-dot-product.sos}
 
 \begin{lstlisting}
 
@@ -4919,14 +4925,14 @@ dotted: int = p1*p2
 print(dotted) //1*3 + 2*4 = 11
 \end{lstlisting}
 
-\subsection{tests/test-fibb.out}
+\subsubsection{tests/test-fibb.out}
 
 \begin{lstlisting}
 
 5
 \end{lstlisting}
 
-\subsection{tests/test-fibb.sos}
+\subsubsection{tests/test-fibb.sos}
 
 \begin{lstlisting}
 
@@ -4940,14 +4946,14 @@ x = fib(5)
 print(x) //5
 \end{lstlisting}
 
-\subsection{tests/test-func-of-struct.out}
+\subsubsection{tests/test-func-of-struct.out}
 
 \begin{lstlisting}
 
 5
 \end{lstlisting}
 
-\subsection{tests/test-func-of-struct.sos}
+\subsubsection{tests/test-func-of-struct.sos}
 
 \begin{lstlisting}
 
@@ -4961,14 +4967,14 @@ a: normal = func1(5)
 print(a.field) //5
 \end{lstlisting}
 
-\subsection{tests/test-func1.out}
+\subsubsection{tests/test-func1.out}
 
 \begin{lstlisting}
 
 5
 \end{lstlisting}
 
-\subsection{tests/test-func1.sos}
+\subsubsection{tests/test-func1.sos}
 
 \begin{lstlisting}
 
@@ -4979,14 +4985,14 @@ foo: () -> int= 5
 print(foo()) //5
 \end{lstlisting}
 
-\subsection{tests/test-func2.out}
+\subsubsection{tests/test-func2.out}
 
 \begin{lstlisting}
 
 5
 \end{lstlisting}
 
-\subsection{tests/test-func2.sos}
+\subsubsection{tests/test-func2.sos}
 
 \begin{lstlisting}
 
@@ -4998,14 +5004,14 @@ a: int = foo(1)
 print(a) //5
 \end{lstlisting}
 
-\subsection{tests/test-func3.out}
+\subsubsection{tests/test-func3.out}
 
 \begin{lstlisting}
 
 5
 \end{lstlisting}
 
-\subsection{tests/test-func3.sos}
+\subsubsection{tests/test-func3.sos}
 
 \begin{lstlisting}
 
@@ -5017,7 +5023,7 @@ a: int = foo(5)
 print(a) //5
 \end{lstlisting}
 
-\subsection{tests/test-func4.out}
+\subsubsection{tests/test-func4.out}
 
 \begin{lstlisting}
 
@@ -5025,7 +5031,7 @@ print(a) //5
 1
 \end{lstlisting}
 
-\subsection{tests/test-func4.sos}
+\subsubsection{tests/test-func4.sos}
 
 \begin{lstlisting}
 
@@ -5041,14 +5047,14 @@ b: int = second(second(second(first())))
 print(b) //1
 \end{lstlisting}
 
-\subsection{tests/test-func5.out}
+\subsubsection{tests/test-func5.out}
 
 \begin{lstlisting}
 
 5
 \end{lstlisting}
 
-\subsection{tests/test-func5.sos}
+\subsubsection{tests/test-func5.sos}
 
 \begin{lstlisting}
 
@@ -5060,7 +5066,7 @@ var: int = add(2,3)
 print(var) //8
 \end{lstlisting}
 
-\subsection{tests/test-func6.out}
+\subsubsection{tests/test-func6.out}
 
 \begin{lstlisting}
 
@@ -5068,7 +5074,7 @@ print(var) //8
 0
 \end{lstlisting}
 
-\subsection{tests/test-func6.sos}
+\subsubsection{tests/test-func6.sos}
 
 \begin{lstlisting}
 
@@ -5085,14 +5091,14 @@ print(a) //0
 print(b) //0
 \end{lstlisting}
 
-\subsection{tests/test-func7.out}
+\subsubsection{tests/test-func7.out}
 
 \begin{lstlisting}
 
 5
 \end{lstlisting}
 
-\subsection{tests/test-func7.sos}
+\subsubsection{tests/test-func7.sos}
 
 \begin{lstlisting}
 
@@ -5105,7 +5111,7 @@ barvar: func -> int = bar
 print(baruser(barvar))
 \end{lstlisting}
 
-\subsection{tests/test-helloworld.out}
+\subsubsection{tests/test-helloworld.out}
 
 \begin{lstlisting}
 
@@ -5116,7 +5122,7 @@ startRendering...
 endRendering...
 \end{lstlisting}
 
-\subsection{tests/test-helloworld.sos}
+\subsubsection{tests/test-helloworld.sos}
 
 \begin{lstlisting}
 
@@ -5150,7 +5156,7 @@ drawShape(point_arr, color_arr, 0, 1)
 endCanvas(canvas2)
 \end{lstlisting}
 
-\subsection{tests/test-if.out}
+\subsubsection{tests/test-if.out}
 
 \begin{lstlisting}
 
@@ -5158,7 +5164,7 @@ endCanvas(canvas2)
 0
 \end{lstlisting}
 
-\subsection{tests/test-if.sos}
+\subsubsection{tests/test-if.sos}
 
 \begin{lstlisting}
 
@@ -5182,14 +5188,14 @@ print(z) //0
 
 \end{lstlisting}
 
-\subsection{tests/test-import-protection.out}
+\subsubsection{tests/test-import-protection.out}
 
 \begin{lstlisting}
 
 0
 \end{lstlisting}
 
-\subsection{tests/test-import-protection.sos}
+\subsubsection{tests/test-import-protection.sos}
 
 \begin{lstlisting}
 
@@ -5203,14 +5209,14 @@ Usage example: dragon.sos imports renderer.sos and transform.sos, and both impor
 */
 \end{lstlisting}
 
-\subsection{tests/test-import.out}
+\subsubsection{tests/test-import.out}
 
 \begin{lstlisting}
 
 0
 \end{lstlisting}
 
-\subsection{tests/test-import.sos}
+\subsubsection{tests/test-import.sos}
 
 \begin{lstlisting}
 
@@ -5221,7 +5227,7 @@ p1: point = {0.0, 0.0}
 printf(p1.x)
 \end{lstlisting}
 
-\subsection{tests/test-logical-operators.out}
+\subsubsection{tests/test-logical-operators.out}
 
 \begin{lstlisting}
 
@@ -5236,7 +5242,7 @@ printf(p1.x)
 1
 \end{lstlisting}
 
-\subsection{tests/test-logical-operators.sos}
+\subsubsection{tests/test-logical-operators.sos}
 
 \begin{lstlisting}
 
@@ -5272,14 +5278,14 @@ not_ans = !f
 print(not_ans)              //NOT FALSE = T
 \end{lstlisting}
 
-\subsection{tests/test-memory.out}
+\subsubsection{tests/test-memory.out}
 
 \begin{lstlisting}
 
 5
 \end{lstlisting}
 
-\subsection{tests/test-memory.sos}
+\subsubsection{tests/test-memory.sos}
 
 \begin{lstlisting}
 
@@ -5296,7 +5302,7 @@ dotafteradd: (x: point, y: point) -> float =
 print(dotafteradd({0.0, 1.0}, {1.0, 1.0})) //{1, 2}*{1, 2} = 1+4 = 5
 \end{lstlisting}
 
-\subsection{tests/test-precedence.out}
+\subsubsection{tests/test-precedence.out}
 
 \begin{lstlisting}
 
@@ -5304,7 +5310,7 @@ print(dotafteradd({0.0, 1.0}, {1.0, 1.0})) //{1, 2}*{1, 2} = 1+4 = 5
 20
 \end{lstlisting}
 
-\subsection{tests/test-precedence.sos}
+\subsubsection{tests/test-precedence.sos}
 
 \begin{lstlisting}
 
@@ -5312,7 +5318,7 @@ print(5*3+1) //16
 print(5*(3+1)) //20
 \end{lstlisting}
 
-\subsection{tests/test-primitive-arith-operators.out}
+\subsubsection{tests/test-primitive-arith-operators.out}
 
 \begin{lstlisting}
 
@@ -5327,7 +5333,7 @@ print(5*(3+1)) //20
 1.90909
 \end{lstlisting}
 
-\subsection{tests/test-primitive-arith-operators.sos}
+\subsubsection{tests/test-primitive-arith-operators.sos}
 
 \begin{lstlisting}
 
@@ -5365,7 +5371,7 @@ y = divf(2.1, 1.1)
 printf(y) //1.9090...
 \end{lstlisting}
 
-\subsection{tests/test-primitive-comparison.out}
+\subsubsection{tests/test-primitive-comparison.out}
 
 \begin{lstlisting}
 
@@ -5387,7 +5393,7 @@ printf(y) //1.9090...
 1
 \end{lstlisting}
 
-\subsection{tests/test-primitive-comparison.sos}
+\subsubsection{tests/test-primitive-comparison.sos}
 
 \begin{lstlisting}
 
@@ -5460,7 +5466,7 @@ print(x)
 
 \end{lstlisting}
 
-\subsection{tests/test-print.out}
+\subsubsection{tests/test-print.out}
 
 \begin{lstlisting}
 
@@ -5470,7 +5476,7 @@ print(x)
 1
 \end{lstlisting}
 
-\subsection{tests/test-print.sos}
+\subsubsection{tests/test-print.sos}
 
 \begin{lstlisting}
 
@@ -5485,14 +5491,14 @@ printf(1.1) //1.1
 printf(y) //1
 \end{lstlisting}
 
-\subsection{tests/test-recursion.out}
+\subsubsection{tests/test-recursion.out}
 
 \begin{lstlisting}
 
 15
 \end{lstlisting}
 
-\subsection{tests/test-recursion.sos}
+\subsubsection{tests/test-recursion.sos}
 
 \begin{lstlisting}
 
@@ -5507,7 +5513,7 @@ print(x) //5+4+3+2+1+0=15
 
 \end{lstlisting}
 
-\subsection{tests/test-scoping-if.out}
+\subsubsection{tests/test-scoping-if.out}
 
 \begin{lstlisting}
 
@@ -5518,7 +5524,7 @@ print(x) //5+4+3+2+1+0=15
 4
 \end{lstlisting}
 
-\subsection{tests/test-scoping-if.sos}
+\subsubsection{tests/test-scoping-if.sos}
 
 \begin{lstlisting}
 
@@ -5536,7 +5542,7 @@ else 0
 print(x) //4
 \end{lstlisting}
 
-\subsection{tests/test-scoping.out}
+\subsubsection{tests/test-scoping.out}
 
 \begin{lstlisting}
 
@@ -5545,7 +5551,7 @@ print(x) //4
 6
 \end{lstlisting}
 
-\subsection{tests/test-scoping.sos}
+\subsubsection{tests/test-scoping.sos}
 
 \begin{lstlisting}
 
@@ -5565,7 +5571,7 @@ x = func2()
 print(x) //6
 \end{lstlisting}
 
-\subsection{tests/test-struct-access.out}
+\subsubsection{tests/test-struct-access.out}
 
 \begin{lstlisting}
 
@@ -5573,7 +5579,7 @@ print(x) //6
 3
 \end{lstlisting}
 
-\subsection{tests/test-struct-access.sos}
+\subsubsection{tests/test-struct-access.sos}
 
 \begin{lstlisting}
 
@@ -5592,7 +5598,7 @@ print(tom_id) //3
 
 \end{lstlisting}
 
-\subsection{tests/test-struct-arith-diff-names.out}
+\subsubsection{tests/test-struct-arith-diff-names.out}
 
 \begin{lstlisting}
 
@@ -5600,7 +5606,7 @@ print(tom_id) //3
 6
 \end{lstlisting}
 
-\subsection{tests/test-struct-arith-diff-names.sos}
+\subsubsection{tests/test-struct-arith-diff-names.sos}
 
 \begin{lstlisting}
 
@@ -5618,7 +5624,7 @@ print(first.a)
 print(first.b)
 \end{lstlisting}
 
-\subsection{tests/test-struct-construction.out}
+\subsubsection{tests/test-struct-construction.out}
 
 \begin{lstlisting}
 
@@ -5626,7 +5632,7 @@ print(first.b)
 20
 \end{lstlisting}
 
-\subsection{tests/test-struct-construction.sos}
+\subsubsection{tests/test-struct-construction.sos}
 
 \begin{lstlisting}
 
@@ -5638,14 +5644,14 @@ print(p1.identifier) //2
 print(p1.age) //20
 \end{lstlisting}
 
-\subsection{tests/test-struct-dot-assoc.out}
+\subsubsection{tests/test-struct-dot-assoc.out}
 
 \begin{lstlisting}
 
 2
 \end{lstlisting}
 
-\subsection{tests/test-struct-dot-assoc.sos}
+\subsubsection{tests/test-struct-dot-assoc.sos}
 
 \begin{lstlisting}
 
@@ -5660,14 +5666,14 @@ ans: int = temp2.field2.field1
 print(ans) //2
 \end{lstlisting}
 
-\subsection{tests/test-struct-dot-product.out}
+\subsubsection{tests/test-struct-dot-product.out}
 
 \begin{lstlisting}
 
 11
 \end{lstlisting}
 
-\subsection{tests/test-struct-dot-product.sos}
+\subsubsection{tests/test-struct-dot-product.sos}
 
 \begin{lstlisting}
 
@@ -5681,14 +5687,14 @@ dotted: int = first*second
 print(dotted)
 \end{lstlisting}
 
-\subsection{tests/test-struct-of-array.out}
+\subsubsection{tests/test-struct-of-array.out}
 
 \begin{lstlisting}
 
 3
 \end{lstlisting}
 
-\subsection{tests/test-struct-of-array.sos}
+\subsubsection{tests/test-struct-of-array.sos}
 
 \begin{lstlisting}
 
@@ -5708,7 +5714,7 @@ x: int = s1.arr3[0].arr2[1].arr1[0]
 print(x) //3
 \end{lstlisting}
 
-\subsection{tests/test-struct-of-same-types.out}
+\subsubsection{tests/test-struct-of-same-types.out}
 
 \begin{lstlisting}
 
@@ -5718,7 +5724,7 @@ print(x) //3
 2
 \end{lstlisting}
 
-\subsection{tests/test-struct-of-same-types.sos}
+\subsubsection{tests/test-struct-of-same-types.sos}
 
 \begin{lstlisting}
 
@@ -5737,14 +5743,14 @@ printf(p2.x) //1.0
 printf(p2.y) //2.0
 \end{lstlisting}
 
-\subsection{tests/test-struct-of-struct.out}
+\subsubsection{tests/test-struct-of-struct.out}
 
 \begin{lstlisting}
 
 2
 \end{lstlisting}
 
-\subsection{tests/test-struct-of-struct.sos}
+\subsubsection{tests/test-struct-of-struct.sos}
 
 \begin{lstlisting}
 
@@ -5769,7 +5775,7 @@ int temp2 = test2.field2.field
 */
 \end{lstlisting}
 
-\subsection{tests/test-struct-scaling.out}
+\subsubsection{tests/test-struct-scaling.out}
 
 \begin{lstlisting}
 
@@ -5779,7 +5785,7 @@ int temp2 = test2.field2.field
 -1
 \end{lstlisting}
 
-\subsection{tests/test-struct-scaling.sos}
+\subsubsection{tests/test-struct-scaling.sos}
 
 \begin{lstlisting}
 
@@ -5799,7 +5805,7 @@ print(p_div.b) //-1
 
 \end{lstlisting}
 
-\subsection{tests/test-type-conversions-comp.out}
+\subsubsection{tests/test-type-conversions-comp.out}
 
 \begin{lstlisting}
 
@@ -5808,7 +5814,7 @@ print(p_div.b) //-1
 1
 \end{lstlisting}
 
-\subsection{tests/test-type-conversions-comp.sos}
+\subsubsection{tests/test-type-conversions-comp.sos}
 
 \begin{lstlisting}
 
@@ -5824,14 +5830,14 @@ b = 2 > true
 print(b) //True
 \end{lstlisting}
 
-\subsection{tests/test-type-conversions-func.out}
+\subsubsection{tests/test-type-conversions-func.out}
 
 \begin{lstlisting}
 
 4
 \end{lstlisting}
 
-\subsection{tests/test-type-conversions-func.sos}
+\subsubsection{tests/test-type-conversions-func.sos}
 
 \begin{lstlisting}
 
@@ -5844,7 +5850,7 @@ sum: int = add_int(x, y)
 print(sum)
 \end{lstlisting}
 
-\subsection{tests/test-type-conversions.out}
+\subsubsection{tests/test-type-conversions.out}
 
 \begin{lstlisting}
 
@@ -5866,7 +5872,7 @@ print(sum)
 3
 \end{lstlisting}
 
-\subsection{tests/test-type-conversions.sos}
+\subsubsection{tests/test-type-conversions.sos}
 
 \begin{lstlisting}
 
@@ -5942,7 +5948,7 @@ e: float = floatsum(1, 2)
 printf(e) //3.0
 \end{lstlisting}
 
-\subsection{tests/test-unop.out}
+\subsubsection{tests/test-unop.out}
 
 \begin{lstlisting}
 
@@ -5957,7 +5963,7 @@ printf(e) //3.0
 0
 \end{lstlisting}
 
-\subsection{tests/test-unop.sos}
+\subsubsection{tests/test-unop.sos}
 
 \begin{lstlisting}
 
@@ -5985,21 +5991,21 @@ print(f) //False
 print(!true) //False
 \end{lstlisting}
 
-\subsection{tests/test-value-access-modifier.out}
+\subsubsection{tests/test-value-access-modifier.out}
 
 \begin{lstlisting}
 
 255
 \end{lstlisting}
 
-\subsection{tests/test-value-access-modifier.sos}
+\subsubsection{tests/test-value-access-modifier.sos}
 
 \begin{lstlisting}
 
 import color.sos
 printf($(c : color = {0.0, 255.0, 255.0, 0.8}).g)\end{lstlisting}
 
-\subsection{tests/test-var-assign-as-expr.out}
+\subsubsection{tests/test-var-assign-as-expr.out}
 
 \begin{lstlisting}
 
@@ -6007,7 +6013,7 @@ printf($(c : color = {0.0, 255.0, 255.0, 0.8}).g)\end{lstlisting}
 6
 \end{lstlisting}
 
-\subsection{tests/test-var-assign-as-expr.sos}
+\subsubsection{tests/test-var-assign-as-expr.sos}
 
 \begin{lstlisting}
 
@@ -6017,14 +6023,14 @@ print(a = 3 + 3) //6
 print(a) //6
 \end{lstlisting}
 
-\subsection{tests/test-vardecl-as-expr.out}
+\subsubsection{tests/test-vardecl-as-expr.out}
 
 \begin{lstlisting}
 
 10
 \end{lstlisting}
 
-\subsection{tests/test-vardecl-as-expr.sos}
+\subsubsection{tests/test-vardecl-as-expr.sos}
 
 \begin{lstlisting}
 
@@ -6035,7 +6041,7 @@ y= (x: int = 10)
 print(y) //10
 \end{lstlisting}
 
-\subsection{tests/test-vardecl-twice.out}
+\subsubsection{tests/test-vardecl-twice.out}
 
 \begin{lstlisting}
 
@@ -6043,7 +6049,7 @@ print(y) //10
 1
 \end{lstlisting}
 
-\subsection{tests/test-vardecl-twice.sos}
+\subsubsection{tests/test-vardecl-twice.sos}
 
 \begin{lstlisting}
 
@@ -6056,7 +6062,7 @@ a: bool = true
 print(a) //1
 \end{lstlisting}
 
-\subsection{tests/test-vardecl.out}
+\subsubsection{tests/test-vardecl.out}
 
 \begin{lstlisting}
 
@@ -6065,7 +6071,7 @@ print(a) //1
 1
 \end{lstlisting}
 
-\subsection{tests/test-vardecl.sos}
+\subsubsection{tests/test-vardecl.sos}
 
 \begin{lstlisting}
 
@@ -6083,7 +6089,7 @@ z: bool = true
 print(z)
 \end{lstlisting}
 
-\subsection{tests/test-vardecl2.out}
+\subsubsection{tests/test-vardecl2.out}
 
 \begin{lstlisting}
 
@@ -6091,7 +6097,7 @@ print(z)
 0
 \end{lstlisting}
 
-\subsection{tests/test-vardecl2.sos}
+\subsubsection{tests/test-vardecl2.sos}
 
 \begin{lstlisting}
 
@@ -6104,7 +6110,9 @@ print(a_d1)
 print(a000___)
 \end{lstlisting}
 
-\subsection{helloworld.ll}
+\subsection{Example LL Outputs}
+
+\subsubsection{helloworld.ll}
 {\small	
 \colorbox{green!30}{test-helloworld.ll}
 \begin{lstlisting}
@@ -8639,7 +8647,7 @@ entry:
 }
 \end{lstlisting}}
 
-\subsection{dragon.ll}
+\subsubsection{dragon.ll}
 \colorbox{blue!30}{dragon.sos}
 	\begin{lstlisting}
 import renderer.sos
