@@ -1,0 +1,11 @@
+struct point = {x: float, y: float}
+
+add: (x: point, y: point) -> point = 
+    x+y
+dotafteradd: (x: point, y: point) -> float =
+    temp: point = add(x, y);
+    ret: float = temp*temp;
+    free(temp);
+    ret
+
+print(dotafteradd({0.0, 1.0}, {1.0, 1.0})) //{1, 2}*{1, 2} = 1+4 = 5

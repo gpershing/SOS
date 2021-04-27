@@ -1,0 +1,8 @@
+add: (x: int, y: int) -> int = 
+    x + 7
+
+squareafteradd: (x: int, y: int) -> int =
+    temp: int = add(x, y);
+    ret: int = temp*temp;
+    free(temp);
+    ret
