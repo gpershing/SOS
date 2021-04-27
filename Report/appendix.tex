@@ -3710,4 +3710,2398 @@ random_connections(w, [rgb(1,1,1), rgb(1,1,1)], r)
 endCanvas(my_canvas)
 \end{lstlisting}
 
+
+\subsection{tests/fail-alias.err}
+
+\begin{lstlisting}
+
+Fatal error: exception Failure("Cannot create an alias with preexisting name int")
+\end{lstlisting}
+
+\subsection{tests/fail-alias.sos}
+
+\begin{lstlisting}
+
+//aliasing type id is already defined. could have problems if aliasing float as int, etc.
+alias int = int
+\end{lstlisting}
+
+\subsection{tests/fail-alias2.err}
+
+\begin{lstlisting}
+
+Fatal error: exception Stdlib.Parsing.Parse_error
+\end{lstlisting}
+
+\subsection{tests/fail-alias2.sos}
+
+\begin{lstlisting}
+
+//an alias of an undefined type id
+
+alias x: notatype
+\end{lstlisting}
+
+\subsection{tests/fail-array-construction2.err}
+
+\begin{lstlisting}
+
+Fatal error: exception Failure("Could not resolve type when defining a(Found array float, expected array int)")
+\end{lstlisting}
+
+\subsection{tests/fail-array-construction2.sos}
+
+\begin{lstlisting}
+
+//if first element in array construction does not match array type, automatic type conversion does not take place
+a: array int = [2.2, 1]
+\end{lstlisting}
+
+\subsection{tests/fail-array-of.err}
+
+\begin{lstlisting}
+
+Fatal error: exception Failure("First operand of of operator must be an int")
+\end{lstlisting}
+
+\subsection{tests/fail-array-of.sos}
+
+\begin{lstlisting}
+
+struct point = {x: float, y: float}
+p1: point = {1.2, 2.3}
+
+a: array float = p1 of [0.0]
+\end{lstlisting}
+
+\subsection{tests/fail-array-void.err}
+
+\begin{lstlisting}
+
+Fatal error: exception Stdlib.Parsing.Parse_error
+\end{lstlisting}
+
+\subsection{tests/fail-array-void.sos}
+
+\begin{lstlisting}
+
+//arrays cannot be of type void
+array void a = []
+\end{lstlisting}
+
+\subsection{tests/fail-bool-arith.err}
+
+\begin{lstlisting}
+
+Fatal error: exception Failure("Cannot add or subtract bool and bool")
+\end{lstlisting}
+
+\subsection{tests/fail-bool-arith.sos}
+
+\begin{lstlisting}
+
+t: bool = true
+f: bool = false
+
+sum: bool = t + f
+\end{lstlisting}
+
+\subsection{tests/fail-bool-comparison.err}
+
+\begin{lstlisting}
+
+Fatal error: exception Failure("Cannot equate bool and bool")
+\end{lstlisting}
+
+\subsection{tests/fail-bool-comparison.sos}
+
+\begin{lstlisting}
+
+b: bool = true == true
+\end{lstlisting}
+
+\subsection{tests/fail-bool.err}
+
+\begin{lstlisting}
+
+Fatal error: exception Failure("Cannot equate bool and bool")
+\end{lstlisting}
+
+\subsection{tests/fail-bool.sos}
+
+\begin{lstlisting}
+
+b: bool = true == true
+\end{lstlisting}
+
+\subsection{tests/fail-comparison-bool-float.err}
+
+\begin{lstlisting}
+
+Fatal error: exception Failure("Cannot compare bool and float")
+\end{lstlisting}
+
+\subsection{tests/fail-comparison-bool-float.sos}
+
+\begin{lstlisting}
+
+b: bool = true > 0.1
+\end{lstlisting}
+
+\subsection{tests/fail-definitions-in-definitions.err}
+
+\begin{lstlisting}
+
+Fatal error: exception Stdlib.Parsing.Parse_error
+\end{lstlisting}
+
+\subsection{tests/fail-definitions-in-definitions.sos}
+
+\begin{lstlisting}
+
+//struct defined in function definition
+func2: (x: int) -> int = 
+    struct s = {field: int};
+    temp: s = {x};
+    s.field
+\end{lstlisting}
+
+\subsection{tests/fail-definitions-in-definitions2.err}
+
+\begin{lstlisting}
+
+Fatal error: exception Stdlib.Parsing.Parse_error
+\end{lstlisting}
+
+\subsection{tests/fail-definitions-in-definitions2.sos}
+
+\begin{lstlisting}
+
+//defining function in function
+bar: () -> int = 5
+baruser: (f: func  -> int) -> int = 
+    sum: (x: int, y: int) -> int = x+y; temp: int = f(); sum(temp, 5)
+
+barvar: func -> int = bar
+print(baruser(barvar))
+\end{lstlisting}
+
+\subsection{tests/fail-derived-comparison.err}
+
+\begin{lstlisting}
+
+Fatal error: exception Failure("Can only equate structs of matching type")
+\end{lstlisting}
+
+\subsection{tests/fail-derived-comparison.sos}
+
+\begin{lstlisting}
+
+x: bool = {1,2} == {3,4,5}
+\end{lstlisting}
+
+\subsection{tests/fail-float.err}
+
+\begin{lstlisting}
+
+Fatal error: exception Stdlib.Parsing.Parse_error
+\end{lstlisting}
+
+\subsection{tests/fail-float.sos}
+
+\begin{lstlisting}
+
+f: float = .1
+\end{lstlisting}
+
+\subsection{tests/fail-func-param-type.err}
+
+\begin{lstlisting}
+
+Fatal error: exception Failure("Could not resolve type when defining p(Found struct {int, int}, expected struct {float, float})")
+\end{lstlisting}
+
+\subsection{tests/fail-func-param-type.sos}
+
+\begin{lstlisting}
+
+struct point = {x: float, y: float}
+p: point = {1,2}
+
+sum: (x: int, y: int) -> int = x+y
+
+sum(3, p)
+\end{lstlisting}
+
+\subsection{tests/fail-func-return-type.err}
+
+\begin{lstlisting}
+
+Fatal error: exception Failure("Incorrect return type for function f (Found int, expected struct {float, float})")
+\end{lstlisting}
+
+\subsection{tests/fail-func-return-type.sos}
+
+\begin{lstlisting}
+
+struct point = {x: float, y: float}
+
+f: (x: int) -> point = if x == 1 then 1 else 2
+\end{lstlisting}
+
+\subsection{tests/fail-func.err}
+
+\begin{lstlisting}
+
+Fatal error: exception Failure("Unknown variable name sum")
+\end{lstlisting}
+
+\subsection{tests/fail-func.sos}
+
+\begin{lstlisting}
+
+//undefined func
+
+x: int = sum(1, 2)
+\end{lstlisting}
+
+\subsection{tests/fail-if-elseless.err}
+
+\begin{lstlisting}
+
+Fatal error: exception Stdlib.Parsing.Parse_error
+\end{lstlisting}
+
+\subsection{tests/fail-if-elseless.sos}
+
+\begin{lstlisting}
+
+x: int = if 1==2 then 1
+\end{lstlisting}
+
+\subsection{tests/fail-if-expr-type.err}
+
+\begin{lstlisting}
+
+Fatal error: exception Failure("Could not reconcile types of then and else clauses (int, array int)")
+\end{lstlisting}
+
+\subsection{tests/fail-if-expr-type.sos}
+
+\begin{lstlisting}
+
+x: int = 
+if 1 == 1 
+then 1
+else [2]
+\end{lstlisting}
+
+\subsection{tests/fail-memory.err}
+
+\begin{lstlisting}
+
+Fatal error: exception Failure("Can only free memory of struct and array types")
+\end{lstlisting}
+
+\subsection{tests/fail-memory.sos}
+
+\begin{lstlisting}
+
+add: (x: int, y: int) -> int = 
+    x + 7
+
+squareafteradd: (x: int, y: int) -> int =
+    temp: int = add(x, y);
+    ret: int = temp*temp;
+    free(temp);
+    ret
+\end{lstlisting}
+
+\subsection{tests/fail-negate.err}
+
+\begin{lstlisting}
+
+Fatal error: exception Failure("Cannot negate non-arithmetic types")
+\end{lstlisting}
+
+\subsection{tests/fail-negate.sos}
+
+\begin{lstlisting}
+
+x: int = -true
+\end{lstlisting}
+
+\subsection{tests/fail-struct-arith.err}
+
+\begin{lstlisting}
+
+Fatal error: exception Failure("Can only add or subtract structs of matching type")
+\end{lstlisting}
+
+\subsection{tests/fail-struct-arith.out}
+
+\begin{lstlisting}
+
+Can only add or subtract structs of matching type
+\end{lstlisting}
+
+\subsection{tests/fail-struct-arith.sos}
+
+\begin{lstlisting}
+
+struct s1 = {a: int, b: float}
+
+struct s2 = {a: int, b: int}
+
+a: s1 = {1, 1.0}
+b: s2 = {1, 1}
+
+c: s3 = a+b
+\end{lstlisting}
+
+\subsection{tests/fail-struct-arith2.err}
+
+\begin{lstlisting}
+
+Fatal error: exception Failure("Can only add or subtract structs of matching type")
+\end{lstlisting}
+
+\subsection{tests/fail-struct-arith2.out}
+
+\begin{lstlisting}
+
+Can only operate on arithmetic structs
+\end{lstlisting}
+
+\subsection{tests/fail-struct-arith2.sos}
+
+\begin{lstlisting}
+
+//arithmetic on structs that do not match types
+
+struct s1 = {a: float, b: float}
+
+struct s2 = {a: float, b: bool}
+
+a: s1 = {1.4, 2.3}
+b: s2 = {1.0, false}
+
+c: s1 = a + b
+
+\end{lstlisting}
+
+\subsection{tests/fail-struct-construction.err}
+
+\begin{lstlisting}
+
+Fatal error: exception Failure("Could not resolve type when defining v2(Found struct {float, int, int}, expected struct {float, float})")
+\end{lstlisting}
+
+\subsection{tests/fail-struct-construction.sos}
+
+\begin{lstlisting}
+
+struct vector = {x: float, y: float}
+v2: vector = {1.0, 2, 0}
+\end{lstlisting}
+
+\subsection{tests/fail-struct-field.err}
+
+\begin{lstlisting}
+
+Fatal error: exception Failure("Could not find field y")
+\end{lstlisting}
+
+\subsection{tests/fail-struct-field.sos}
+
+\begin{lstlisting}
+
+//accessing an undefined struct field
+
+struct a = {x: int}
+
+s: a = {1}
+
+b: int = s.y
+\end{lstlisting}
+
+\subsection{tests/fail-struct-field2.err}
+
+\begin{lstlisting}
+
+Fatal error: exception Failure("Cannot access fields for a non-struct variable")
+\end{lstlisting}
+
+\subsection{tests/fail-struct-field2.out}
+
+\begin{lstlisting}
+
+Cannot access fields for a non-struct variable
+\end{lstlisting}
+
+\subsection{tests/fail-struct-field2.sos}
+
+\begin{lstlisting}
+
+//attempting to access a field of a non-struct
+
+struct s = {x: int}
+b: int = 1
+y: int = b.x
+\end{lstlisting}
+
+\subsection{tests/fail-type-conversions.err}
+
+\begin{lstlisting}
+
+Fatal error: exception Failure("Could not resolve type when defining p2(Found struct {float, float}, expected struct {float, float, float})")
+\end{lstlisting}
+
+\subsection{tests/fail-type-conversions.sos}
+
+\begin{lstlisting}
+
+struct point = {x: float, y: float}
+
+struct point3d = {x: float, y: float, z: float}
+
+p1: point = {1.0, 2.0}
+
+p2: point3d = p1
+\end{lstlisting}
+
+\subsection{tests/fail-unop.err}
+
+\begin{lstlisting}
+
+Fatal error: exception Failure("Cannot negate non-arithmetic types")
+\end{lstlisting}
+
+\subsection{tests/fail-unop.sos}
+
+\begin{lstlisting}
+
+//fixed b to bool type. no type conversion
+
+b: bool = -true
+\end{lstlisting}
+
+\subsection{tests/fail-unop2.err}
+
+\begin{lstlisting}
+
+Fatal error: exception Failure("Cannot negate non-arithmetic types")
+\end{lstlisting}
+
+\subsection{tests/fail-unop2.sos}
+
+\begin{lstlisting}
+
+x: int= -true
+print(x)
+\end{lstlisting}
+
+\subsection{tests/fail-value-access-modifier.err}
+
+\begin{lstlisting}
+
+Fatal error: exception Failure("Could not find field c")
+\end{lstlisting}
+
+\subsection{tests/fail-value-access-modifier.sos}
+
+\begin{lstlisting}
+
+import color.sos
+printf($(c : color = {0.0, 255.0, 255.0, 0.8}).c)\end{lstlisting}
+
+\subsection{tests/fail-vardecl-as-expr-scoping.err}
+
+\begin{lstlisting}
+
+Fatal error: exception Failure("Unknown variable name x")
+\end{lstlisting}
+
+\subsection{tests/fail-vardecl-as-expr-scoping.sos}
+
+\begin{lstlisting}
+
+y: int = 5 
+y= (x: int = 5)
+
+print(y) //5 
+print(x) //5 
+\end{lstlisting}
+
+\subsection{tests/fail-vardef.err}
+
+\begin{lstlisting}
+
+Fatal error: exception Failure("Could not resolve type id notatype")
+\end{lstlisting}
+
+\subsection{tests/fail-vardef.sos}
+
+\begin{lstlisting}
+
+//defining a variable with an undefined type id
+
+x: notatype = 10
+\end{lstlisting}
+
+\subsection{tests/fail-vardef2.err}
+
+\begin{lstlisting}
+
+Fatal error: exception Failure("Unknown variable name x")
+\end{lstlisting}
+
+\subsection{tests/fail-vardef2.sos}
+
+\begin{lstlisting}
+
+//assignment before variable declaration
+
+x = 10
+\end{lstlisting}
+
+\subsection{tests/fail-vardef3.err}
+
+\begin{lstlisting}
+
+Fatal error: exception Stdlib.Parsing.Parse_error
+\end{lstlisting}
+
+\subsection{tests/fail-vardef3.sos}
+
+\begin{lstlisting}
+
+//variable declaration without an initialization to a value
+x: int
+x = 5
+\end{lstlisting}
+
+\subsection{tests/fail-void.err}
+
+\begin{lstlisting}
+
+Fatal error: exception Failure("Cannot use a void type in this context")
+\end{lstlisting}
+
+\subsection{tests/fail-void.sos}
+
+\begin{lstlisting}
+
+x: void = 0
+\end{lstlisting}
+
+\subsection{tests/test-E.out}
+
+\begin{lstlisting}
+
+200
+\end{lstlisting}
+
+\subsection{tests/test-E.sos}
+
+\begin{lstlisting}
+
+x: float = 2.0E2
+print(x)
+\end{lstlisting}
+
+\subsection{tests/test-alias.out}
+
+\begin{lstlisting}
+
+2021
+3
+20
+2022
+2022
+2024
+2022
+4042
+2024
+2041
+56
+1
+1
+1
+1
+2021
+3
+20
+1
+1
+0
+1.2
+87
+90
+1
+0
+90
+4
+\end{lstlisting}
+
+\subsection{tests/test-alias.sos}
+
+\begin{lstlisting}
+
+/*alias of int */
+alias year = int
+alias month = int
+
+//alias of alias
+alias day = month 
+
+present_year: year = 2021
+present_month: month = 3
+present_day: day = 20
+print(present_year) //2021
+print(present_month) //3
+print(present_day) //20
+
+
+/*alias operations */
+
+//alias operator primitive -> alias
+//year + int -> year
+test: year = present_year + 1
+print(test) //2021+1=2022
+
+//alias operator primitive -> alias2
+//year + int -> month
+test2: month = present_year + 1
+print(test2) //2021+1=2022
+
+//alias operator primitive -> aliasofalias
+//year + int -> day
+test3: day = present_year + 3
+print(test3) //2021+1=2022
+
+//alias operator primitive -> primitive
+//year + int -> int
+test4: int = present_year + 1
+print(test4) //2021+1=2022
+
+//alias operator alias -> primitive
+//year + year -> int
+test5: int = present_year + present_year
+print(test5) //2021+2021=4042
+
+//alias operator alias2 -> primitive
+//year + month -> int
+test6: int = present_year + present_month
+print(test6) //2021+3=2024
+
+//alias operator aliasofalias -> primitive
+//year + month -> month
+test7: int = present_year + present_day
+print(test7) //2021+20=2041
+
+//mixing int operators and aliases
+test8: int = present_month*present_day-present_year/10%9
+print(test8) //3*20-(2021/10)%9=56
+
+/*alias comparison */
+//primitive vs alias
+i1: int = 1
+y1: year = 1
+result: bool = i1 == y1
+print(result) //True
+
+//alias vs alias
+y2: year = 1
+result2: bool = y1 == y2
+print(result2) //True
+
+//alias vs alias2
+m1: month = 1
+result3: bool = y1 == m1
+print(result3) //True
+
+//alias vs aliasofalias
+d1: day = 1
+result4: bool = y1 == d1
+print(result4) //True
+
+/*alias of struct*/
+struct date = {day: int, yr: year, mth: month}
+present_day: date = {20, present_year, present_month}
+print(present_day.yr) //2021
+
+//alias of struct field
+present_day.yr = present_month
+print(present_day.yr) //3
+
+//alias of struct
+alias new_date = date
+newer: new_date = present_day
+print(newer.day) //20
+
+newer2: new_date = {1, 2, 3}
+print(newer2.day) //1
+
+result5: bool = newer == present_day
+print(result5) //True (pass by reference)
+result6: bool = newer == newer2 
+print(result6) //False
+
+/*alias of float*/
+alias x_dist = float
+x: x_dist = 1.2
+printf(x) //1.2
+
+/*alias array*/
+//alias of array int
+alias scores = array int
+class1: scores = [87,93,70]
+print(class1[0]) //87
+class1 = class1 + 3
+print(class1[0]) //90
+
+//alias of alias of array int
+alias marks = scores
+class2: marks = class1
+class3: marks = [87, 93, 70]
+result7: array array bool = class2 == class1
+print(result7[0][0]) //True
+result8: array array bool = class3 == class1
+print(result8[0][0]) //False
+
+//alias of array of alias of array int: array array int
+alias class_scores = array scores
+highschool1: class_scores = [class1, [1,2,3]]
+print(highschool1[0][0]) //90
+
+//alias of array array array int
+alias school_scores = array array array int
+district1: school_scores = [highschool1, [[4,5,6], [7,8,9]], [[10,11], [12,13,14,15]]]
+print(district1[1][0][0]) //4
+\end{lstlisting}
+
+\subsection{tests/test-array-access.out}
+
+\begin{lstlisting}
+
+1
+2
+3
+1
+2
+2
+4
+6
+\end{lstlisting}
+
+\subsection{tests/test-array-access.sos}
+
+\begin{lstlisting}
+
+mult_2 : (i: int, arr: array int) -> array int = 
+    if i == -1
+    then arr
+    //array access and assignment
+    else 
+        arr[i] = arr[i]*2; 
+        mult_2(i - 1, arr)
+
+printingarray : (arr: array int, length: int, current: int) -> void =
+    if current == length
+    then void
+    else 
+        print(arr[current]);
+        printingarray(arr, length, current+1)
+
+a: array int = [1,2,3]
+n: int = a[0]
+b: array int = copy(a)
+b = mult_2(3, b)
+
+printingarray(a, 3, 0) //1, 2, 3
+print(n) //1
+print(a[0+1]) //2
+printingarray(b, 3, 0) //2, 4, 6
+\end{lstlisting}
+
+\subsection{tests/test-array-arith-operators.out}
+
+\begin{lstlisting}
+
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+-1
+0
+1
+2
+3
+2
+4
+6
+8
+10
+0
+1
+1
+2
+2
+\end{lstlisting}
+
+\subsection{tests/test-array-arith-operators.sos}
+
+\begin{lstlisting}
+
+printing: (x: int) -> void = print(x)
+
+arr: array int = [1,2,3,4,5]
+printing(arr)
+
+arr2: array int = 5 + arr
+printing(arr2)
+
+arr3: array int = arr - 2
+printing(arr3)
+
+arr4: array int = 2 * arr
+printing(arr4)
+
+arr5: array int = arr/2
+printing(arr5)
+\end{lstlisting}
+
+\subsection{tests/test-array-concat.out}
+
+\begin{lstlisting}
+
+1
+2
+3
+4
+\end{lstlisting}
+
+\subsection{tests/test-array-concat.sos}
+
+\begin{lstlisting}
+
+printing: (x: int) -> void = print(x)
+
+x: array int = [1, 2]
+y: array int = [3, 4]
+
+z: array int = x @ y
+
+printing(z)
+\end{lstlisting}
+
+\subsection{tests/test-array-construction.out}
+
+\begin{lstlisting}
+
+1
+2.4
+0
+1
+2
+1
+3
+1
+\end{lstlisting}
+
+\subsection{tests/test-array-construction.sos}
+
+\begin{lstlisting}
+
+/*int array*/
+arrr: array int = [1]
+print(arrr[0]) //1
+
+/*float array*/
+arrr2: array float = [1.2, 2.4]
+printf(arrr2[1]) //2.4
+
+/*bool array*/
+arrr3: array bool = [false]
+print(arrr3[0]) //False
+
+/*struct array in test-array-of-struct.sos*/
+
+/*nested arrays*/
+nested: array array int = [[1], [2,3], [4,5,6]]
+print(nested[0][0]) //1
+
+/*func arrays*/
+add1: (k: int) -> int = k+1
+minus1: (k: int) -> int = k-1
+f1: func int -> int = add1
+f2: func int -> int = minus1
+
+f_usage: (i: int, f: func int -> int) -> int =
+    f(i)
+arr_name: array func int -> int = [f1, f2]
+print(f_usage(1, arr_name[0]))
+
+/*construction with automatic type conversion*/
+printing: (x: int) -> void = print(x)
+a: array int = [1, 3.4, true]
+printing(a)
+\end{lstlisting}
+
+\subsection{tests/test-array-iteration.out}
+
+\begin{lstlisting}
+
+1
+4
+3
+6
+3
+8\end{lstlisting}
+
+\subsection{tests/test-array-iteration.sos}
+
+\begin{lstlisting}
+
+x: int = 1
+y: int = 3
+z: int = 8
+
+many_x: array int = [x, 4, y, 6, 3, z]
+
+printing: (x: int) -> void = print(x)
+
+printing(many_x)
+\end{lstlisting}
+
+\subsection{tests/test-array-of-struct.out}
+
+\begin{lstlisting}
+
+5
+10
+1
+6
+1
+2
+\end{lstlisting}
+
+\subsection{tests/test-array-of-struct.sos}
+
+\begin{lstlisting}
+
+//The structs within array of structs only need to have the same property types
+
+struct x = {i: int}
+struct y = {i: int}
+
+distance1_x: x = {5}
+distance2_x: x = {6}
+distance1_y: y = {1}
+
+b: array x = [distance1_x, {10}, distance1_y]
+
+print(b[0].i) //5
+print(b[1].i) //10
+print(b[2].i) //1
+
+b[0] = distance2_x
+print(b[0].i) //6
+
+b[0] = distance1_y
+print(b[0].i) //1
+
+b[0].i = 2
+print(b[0].i) //2
+\end{lstlisting}
+
+\subsection{tests/test-assign.out}
+
+\begin{lstlisting}
+
+5
+6
+1
+2.5
+1
+0
+1
+2
+4
+4.4
+1
+3.3
+5
+\end{lstlisting}
+
+\subsection{tests/test-assign.sos}
+
+\begin{lstlisting}
+
+//int
+a: int = 5
+print(a) //5
+a = 6
+print(a) //6
+
+
+//float
+b: float = 1.0
+printf(b) //1.0
+b = 2.5
+printf(b) //2.5
+
+
+//bool
+c: bool = true
+print(c) //True
+c = false
+print(c) //False
+
+
+//array
+d: array int = [1, 2]
+print(d[0]) //1
+temp: int = d[1]
+d[1] = d[0]
+d[0] = temp
+print(d[0]) //2
+
+
+//struct
+struct point = {x: float, y: float}
+struct e = {v: int, w: float, x: bool, y: point, z: array int }
+
+es: e = {4, 4.4, true, {3.3, 4.5}, [5, 6, 7]}
+print(es.v) //4
+printf(es.w) //4.4
+print(es.x) //True
+printf(es.y.x) //3.3
+print(es.z[0]) //5
+\end{lstlisting}
+
+\subsection{tests/test-associativity.out}
+
+\begin{lstlisting}
+
+1
+2
+2
+1
+0
+1
+1
+1
+3
+2
+2
+50
+\end{lstlisting}
+
+\subsection{tests/test-associativity.sos}
+
+\begin{lstlisting}
+
+/* 
+right associative: =, !, **
+left associative: ., *, /, %, +, -, @, of, (comparison), (boolean), ",", ;
+*/
+
+/*right*/
+//=
+a: int = 1
+print(a) //1
+b: int = a = 2 //b = (a=2) = 2
+print(a) //2
+print(b) //2
+
+//!
+b: bool = true
+print(b) //1
+print(!b) //0
+print(!!b) //1
+
+//left
+print(5 - 3 - 1) //2-1 = 1
+print((5 - 3) - 1) //2-1 = 1
+print(5 - (3 - 1)) //5-2=3
+
+print(100/10/5) // 10/5 = 2
+print((100/10)/5) //10/5 = 2
+print(100/(10/5)) //100/2 = 50
+\end{lstlisting}
+
+\subsection{tests/test-conditional.out}
+
+\begin{lstlisting}
+
+1
+0
+\end{lstlisting}
+
+\subsection{tests/test-conditional.sos}
+
+\begin{lstlisting}
+
+x: int = 1
+
+//if then
+y: int = if x == 1 then 1 else 0
+print(y) //1
+
+//else
+z: int = if y != 1 then 1 else 0
+print(z) //0
+\end{lstlisting}
+
+\subsection{tests/test-derived-comparison.out}
+
+\begin{lstlisting}
+
+1
+0
+1
+1
+0
+\end{lstlisting}
+
+\subsection{tests/test-derived-comparison.sos}
+
+\begin{lstlisting}
+
+/* structs, not arrays, allows for comparions */
+
+//comparison of unnamed structs
+x: bool = {1,2} == {1,2}
+print(x) //true
+x = {1, 3} == {2, 4}
+print(x)
+
+//comparison of named structs
+struct point = {x: float, y: float}
+p1: point = {1.0, 2.0}
+p2: point = {1.0, 2.0}
+p3: point = {0.0, 0.0}
+x = p1 == p2
+print(x) //true
+x = p1 == p2
+print(x) //true
+x = p1 == p3
+print(x) //false
+
+
+\end{lstlisting}
+
+\subsection{tests/test-dot-product.out}
+
+\begin{lstlisting}
+
+11
+\end{lstlisting}
+
+\subsection{tests/test-dot-product.sos}
+
+\begin{lstlisting}
+
+struct point = {x: int, y: int}
+
+p1: point = {1, 2}
+p2: point = {3, 4}
+
+dotted: int = p1*p2
+print(dotted) //1*3 + 2*4 = 11
+\end{lstlisting}
+
+\subsection{tests/test-fibb.out}
+
+\begin{lstlisting}
+
+5
+\end{lstlisting}
+
+\subsection{tests/test-fibb.sos}
+
+\begin{lstlisting}
+
+fib: (n: int) -> int = 
+if n <= 1
+then n
+else fib(n-1) + fib(n-2)
+
+x: int = 5
+x = fib(5)
+print(x) //5
+\end{lstlisting}
+
+\subsection{tests/test-func-of-struct.out}
+
+\begin{lstlisting}
+
+5
+\end{lstlisting}
+
+\subsection{tests/test-func-of-struct.sos}
+
+\begin{lstlisting}
+
+//predefining struct in outer scope
+struct normal = {field: int}
+
+func1: (x: int) -> normal = 
+    temp: normal  = {x}; temp
+
+a: normal = func1(5)
+print(a.field) //5
+\end{lstlisting}
+
+\subsection{tests/test-func1.out}
+
+\begin{lstlisting}
+
+5
+\end{lstlisting}
+
+\subsection{tests/test-func1.sos}
+
+\begin{lstlisting}
+
+//basic func, no parameters
+
+foo: () -> int= 5
+
+print(foo()) //5
+\end{lstlisting}
+
+\subsection{tests/test-func2.out}
+
+\begin{lstlisting}
+
+5
+\end{lstlisting}
+
+\subsection{tests/test-func2.sos}
+
+\begin{lstlisting}
+
+//function with parameter
+
+foo: (x: int) -> int = 5
+
+a: int = foo(1)
+print(a) //5
+\end{lstlisting}
+
+\subsection{tests/test-func3.out}
+
+\begin{lstlisting}
+
+5
+\end{lstlisting}
+
+\subsection{tests/test-func3.sos}
+
+\begin{lstlisting}
+
+//function with body dependent on parameter
+
+foo: (x: int) -> int = x
+
+a: int = foo(5)
+print(a) //5
+\end{lstlisting}
+
+\subsection{tests/test-func4.out}
+
+\begin{lstlisting}
+
+1
+1
+\end{lstlisting}
+
+\subsection{tests/test-func4.sos}
+
+\begin{lstlisting}
+
+//nested function application
+
+first: () -> int = 1
+second: (x: int) -> int = x
+
+a: int = second(first())
+print(a) //1
+
+b: int = second(second(second(first())))
+print(b) //1
+\end{lstlisting}
+
+\subsection{tests/test-func5.out}
+
+\begin{lstlisting}
+
+5
+\end{lstlisting}
+
+\subsection{tests/test-func5.sos}
+
+\begin{lstlisting}
+
+//multiple parameters
+
+add: (x: int, y: int) -> int = x+y
+
+var: int = add(2,3)
+print(var) //8
+\end{lstlisting}
+
+\subsection{tests/test-func6.out}
+
+\begin{lstlisting}
+
+0
+0
+\end{lstlisting}
+
+\subsection{tests/test-func6.sos}
+
+\begin{lstlisting}
+
+//more complex function bodies: conditionals
+
+foo: (x: int) -> int = 
+    if x == 0
+    then x
+    else (y: int = x); y-x
+
+a: int = foo(0)
+b: int = foo(5)
+print(a) //0
+print(b) //0
+\end{lstlisting}
+
+\subsection{tests/test-func7.out}
+
+\begin{lstlisting}
+
+5
+\end{lstlisting}
+
+\subsection{tests/test-func7.sos}
+
+\begin{lstlisting}
+
+//using func keyword to turn a function into a variable
+
+bar: () -> int = 5
+baruser: (f: func  -> int) -> int = f()
+
+barvar: func -> int = bar
+print(baruser(barvar))
+\end{lstlisting}
+
+\subsection{tests/test-helloworld.out}
+
+\begin{lstlisting}
+
+5
+startRendering...
+endRendering...
+startRendering...
+endRendering...
+\end{lstlisting}
+
+\subsection{tests/test-helloworld.sos}
+
+\begin{lstlisting}
+
+import renderer.sos
+
+a: int = 5
+print(a)
+
+p1: point = {-0.9, -0.9}
+p2: point = {-0.9, -0.7}
+p3: point = {-0.7, -0.7}
+p4: point = {-0.7, -0.9}
+point_arr : path = [p1, p2, p3, p4]
+
+c1 : color = {255.0, 0.0, 0.0, 0.8}
+c2 : color = {0.0, 255.0, 0.0, 0.8}
+c3 : color = {0.0, 0.0, 255.0, 0.8}
+c4 : color = {100.0, 100.0, 0.0, 0.8}
+color_arr : colors = [c1, c2, c3, c4]
+
+canvas1 : canvas = {400, 400, 0}
+
+startCanvas(canvas1)
+drawShape(point_arr, color_arr, 0, 1)
+endCanvas(canvas1)
+
+canvas2 : canvas = {400, 400, 1}
+
+startCanvas(canvas2)
+drawShape(point_arr, color_arr, 0, 1)
+endCanvas(canvas2)
+\end{lstlisting}
+
+\subsection{tests/test-if.out}
+
+\begin{lstlisting}
+
+1
+0
+\end{lstlisting}
+
+\subsection{tests/test-if.sos}
+
+\begin{lstlisting}
+
+x: int = 1
+
+//catch if-then
+y: int = 
+if (x == 1)
+then 1
+else 0
+
+print(y) //1
+
+//catch else
+z: int = 
+if (y != 1)
+then 1
+else 0
+
+print(z) //0
+
+\end{lstlisting}
+
+\subsection{tests/test-import-protection.out}
+
+\begin{lstlisting}
+
+0
+\end{lstlisting}
+
+\subsection{tests/test-import-protection.sos}
+
+\begin{lstlisting}
+
+import point.sos
+import point.sos 
+p1: point = {0.0, 0.0} 
+printf(p1.x)
+
+/* can duplicate a file import.
+Usage example: dragon.sos imports renderer.sos and transform.sos, and both import shape.sos
+*/
+\end{lstlisting}
+
+\subsection{tests/test-import.out}
+
+\begin{lstlisting}
+
+0
+\end{lstlisting}
+
+\subsection{tests/test-import.sos}
+
+\begin{lstlisting}
+
+import point.sos
+
+p1: point = {0.0, 0.0}
+
+printf(p1.x)
+\end{lstlisting}
+
+\subsection{tests/test-logical-operators.out}
+
+\begin{lstlisting}
+
+1
+1
+0
+0
+1
+1
+0
+0
+1
+\end{lstlisting}
+
+\subsection{tests/test-logical-operators.sos}
+
+\begin{lstlisting}
+
+/* logical operators: AND, OR, NOT  */
+
+t: bool = true
+f: bool = false
+
+
+print(t && t)
+
+
+//and
+and_ans: bool = t && t
+print(and_ans)             //T AND T = T
+and_ans = t && f
+print(and_ans)             //T AND F = F
+and_ans = f && f
+print(and_ans)             //F AND F = F
+
+//or
+or_ans: bool = t || f
+print(or_ans)               //T OR T = T
+or_ans = t || f
+print(or_ans)               //T OR F = T
+or_ans = f || f
+print(or_ans)               //F OR F = F
+
+//not
+not_ans: bool = !t
+print(not_ans)              //NOT TRUE = F
+not_ans = !f
+print(not_ans)              //NOT FALSE = T
+\end{lstlisting}
+
+\subsection{tests/test-memory.out}
+
+\begin{lstlisting}
+
+5
+\end{lstlisting}
+
+\subsection{tests/test-memory.sos}
+
+\begin{lstlisting}
+
+struct point = {x: float, y: float}
+
+add: (x: point, y: point) -> point = 
+    x+y
+dotafteradd: (x: point, y: point) -> float =
+    temp: point = add(x, y);
+    ret: float = temp*temp;
+    free(temp);
+    ret
+
+print(dotafteradd({0.0, 1.0}, {1.0, 1.0})) //{1, 2}*{1, 2} = 1+4 = 5
+\end{lstlisting}
+
+\subsection{tests/test-precedence.out}
+
+\begin{lstlisting}
+
+16
+20
+\end{lstlisting}
+
+\subsection{tests/test-precedence.sos}
+
+\begin{lstlisting}
+
+print(5*3+1) //16
+print(5*(3+1)) //20
+\end{lstlisting}
+
+\subsection{tests/test-primitive-arith-operators.out}
+
+\begin{lstlisting}
+
+3
+-1
+2
+0
+2
+3.2
+1
+2.31
+1.90909
+\end{lstlisting}
+
+\subsection{tests/test-primitive-arith-operators.sos}
+
+\begin{lstlisting}
+
+/* arithmetic operators on primitives int, float */
+
+add: (x: int, y: int) -> int = x + y
+sub: (x: int, y: int) -> int = x - y
+mult: (x: int, y: int) -> int = x * y
+div: (x: int, y: int) -> int = x/y
+mod: (x: int, y: int) -> int = x%y
+
+addf: (x: float, y: float) -> float = x + y 
+subf: (x: float, y: float) -> float = x - y 
+multf:(x: float, y: float) -> float = x * y 
+divf: (x: float, y: float) -> float = x/y 
+
+x: int = add(1,2)
+print(x) //3
+x = sub(1,2)
+print(x) //-1
+x = mult(1,2)
+print(x) //2
+x = div(1,2)
+print(x) //0
+x = mod(10,8)
+print(x) //2
+
+y: float = addf(1.1, 2.1)
+printf(y) //3.2
+y = subf(2.1, 1.1)
+printf(y) //1.0
+y = multf(1.1, 2.1)
+printf(y) //2.31
+y = divf(2.1, 1.1)
+printf(y) //1.9090...
+\end{lstlisting}
+
+\subsection{tests/test-primitive-comparison.out}
+
+\begin{lstlisting}
+
+1
+1
+0
+1
+1
+1
+1
+1
+1
+1
+0
+1
+1
+1
+1
+1
+\end{lstlisting}
+
+\subsection{tests/test-primitive-comparison.sos}
+
+\begin{lstlisting}
+
+/* 
+==, !=, <, <=, >, >=
+primitives are passed by value
+*/
+
+/*int*/
+a: int = 5
+b: int = 5
+c: int = 7
+
+out1: bool  = a == a
+print(out1) //True
+
+out2: bool  = a == b
+print(out2) //True
+
+out3: bool = a == c
+print(out3) //False
+
+
+x: bool = 5 != 6
+print(x)
+
+x = 5 <= 6
+print(x)
+
+x = 6 >= 6
+print(x)
+
+x = 6 > 5
+print(x)
+
+x = 5 < 6
+print(x)
+
+
+
+/*float*/
+d: float = 1.2
+e: float = 1.2
+f: float = 2.3
+
+out4: bool = d == d
+print(out4) //True
+
+out5: bool = d == e
+print(out5) //True
+
+out6: bool = e == f
+print(out6) //False
+
+
+x = 5.0 != 6.0
+print(x)
+
+x = 5.0 <= 6.0
+print(x)
+
+x = 6.0 >= 6.0
+print(x)
+
+x = 6.0 > 5.0 
+print(x)
+
+x = 5.0 < 6.0
+print(x)
+
+\end{lstlisting}
+
+\subsection{tests/test-print.out}
+
+\begin{lstlisting}
+
+1
+1
+1.1
+1
+\end{lstlisting}
+
+\subsection{tests/test-print.sos}
+
+\begin{lstlisting}
+
+/* Int: print */
+x: int = 1
+print(1) //1
+print(x) //1
+
+/* Float: printf */
+y: float = 1.0
+printf(1.1) //1.1
+printf(y) //1
+\end{lstlisting}
+
+\subsection{tests/test-recursion.out}
+
+\begin{lstlisting}
+
+15
+\end{lstlisting}
+
+\subsection{tests/test-recursion.sos}
+
+\begin{lstlisting}
+
+add: (n: int) -> int = 
+if n == 0
+then 0
+else add(n-1) + n
+
+x: int = 5
+x = add(x)
+print(x) //5+4+3+2+1+0=15
+
+\end{lstlisting}
+
+\subsection{tests/test-scoping-if.out}
+
+\begin{lstlisting}
+
+1
+1
+3
+0
+4
+\end{lstlisting}
+
+\subsection{tests/test-scoping-if.sos}
+
+\begin{lstlisting}
+
+y: int = 1
+x: int = 1
+
+print(x)
+print(y)
+
+x = 
+if 1==1
+then x = 3; y = 0; print(x); print(y); 4
+else 0
+
+print(x) //4
+\end{lstlisting}
+
+\subsection{tests/test-scoping.out}
+
+\begin{lstlisting}
+
+6
+12
+6
+\end{lstlisting}
+
+\subsection{tests/test-scoping.sos}
+
+\begin{lstlisting}
+
+//global x vs x in function
+
+double: (x: int) -> int = x+x
+
+x: int = double(3)
+print(x) //6
+
+x = double(x)
+print(x) //12
+
+func2: () -> int = x: int = 3; x+x
+
+x = func2()
+print(x) //6
+\end{lstlisting}
+
+\subsection{tests/test-struct-access.out}
+
+\begin{lstlisting}
+
+2
+3
+\end{lstlisting}
+
+\subsection{tests/test-struct-access.sos}
+
+\begin{lstlisting}
+
+//construction
+struct person = {identifier: int, age: int, isMarried: bool}
+tom: person = {2, 20, false}
+
+//accessing struct field
+tom_id: int = tom.identifier
+print(tom_id) //2
+
+//changing struct field
+tom.identifier=3
+tom_id = tom.identifier
+print(tom_id) //3
+
+\end{lstlisting}
+
+\subsection{tests/test-struct-arith-diff-names.out}
+
+\begin{lstlisting}
+
+4
+6
+\end{lstlisting}
+
+\subsection{tests/test-struct-arith-diff-names.sos}
+
+\begin{lstlisting}
+
+struct s1 = {a: int, b: int}
+
+struct s2 = {c: int, d: int}
+
+first: s1 = {1, 2}
+
+second: s2 = {3, 4}
+
+first = first + second
+
+print(first.a)
+print(first.b)
+\end{lstlisting}
+
+\subsection{tests/test-struct-construction.out}
+
+\begin{lstlisting}
+
+2
+20
+\end{lstlisting}
+
+\subsection{tests/test-struct-construction.sos}
+
+\begin{lstlisting}
+
+//construction
+struct person = {identifier: int, age: int}
+
+p1: person = {2, 20}
+print(p1.identifier) //2
+print(p1.age) //20
+\end{lstlisting}
+
+\subsection{tests/test-struct-dot-assoc.out}
+
+\begin{lstlisting}
+
+2
+\end{lstlisting}
+
+\subsection{tests/test-struct-dot-assoc.sos}
+
+\begin{lstlisting}
+
+struct more = {field1: int}
+
+struct stuff = {field1: int, field2: more}
+
+temp1: more = {2}
+temp2: stuff = {1, temp1}
+
+ans: int = temp2.field2.field1
+print(ans) //2
+\end{lstlisting}
+
+\subsection{tests/test-struct-dot-product.out}
+
+\begin{lstlisting}
+
+11
+\end{lstlisting}
+
+\subsection{tests/test-struct-dot-product.sos}
+
+\begin{lstlisting}
+
+struct s1 = {a: int, b: int}
+
+first: s1 = {1, 2}
+
+second: s1 = {3, 4}
+
+dotted: int = first*second
+print(dotted)
+\end{lstlisting}
+
+\subsection{tests/test-struct-of-array.out}
+
+\begin{lstlisting}
+
+3
+\end{lstlisting}
+
+\subsection{tests/test-struct-of-array.sos}
+
+\begin{lstlisting}
+
+struct first = {arr1: array int}
+
+struct second = {arr2: array first}
+
+struct third = {arr3: array second}
+
+s1: first = {[1,2]}
+s1_2: first = {[3,4]}
+s2: second = {[s1, s1_2]}
+s2_2: second = {[{[-1, 0]}, {[-2, -1]}]}
+s1: third = {[s2, s2_2]}
+
+x: int = s1.arr3[0].arr2[1].arr1[0]
+print(x) //3
+\end{lstlisting}
+
+\subsection{tests/test-struct-of-same-types.out}
+
+\begin{lstlisting}
+
+-2.5
+-4
+1
+2
+\end{lstlisting}
+
+\subsection{tests/test-struct-of-same-types.sos}
+
+\begin{lstlisting}
+
+struct point = {x: float, y: float}
+struct vector = {a: float, b: float}
+
+
+p: point = {-2.5, -4.0}
+v: vector = p
+printf(v.a) //-2.5
+printf(v.b) //-4.0
+
+v2: vector = {1.0, 2.0}
+p2: point = v2
+printf(p2.x) //1.0
+printf(p2.y) //2.0
+\end{lstlisting}
+
+\subsection{tests/test-struct-of-struct.out}
+
+\begin{lstlisting}
+
+2
+\end{lstlisting}
+
+\subsection{tests/test-struct-of-struct.sos}
+
+\begin{lstlisting}
+
+//predefining field struct in outer scope
+struct a = {field: int}
+struct b = { 
+    field: int,
+    field2: a}
+
+test1: b = {1, temp: a = {2}; temp}
+print(test1.field2.field)
+
+/*
+//field struct defined in outer struct
+struct c = {
+    int field,
+    struct d = {int field} field2
+}
+
+c test2 = {1, d temp2 = {2}; temp2}
+int temp2 = test2.field2.field
+*/
+\end{lstlisting}
+
+\subsection{tests/test-struct-scaling.out}
+
+\begin{lstlisting}
+
+6
+-9
+1
+-1
+\end{lstlisting}
+
+\subsection{tests/test-struct-scaling.sos}
+
+\begin{lstlisting}
+
+struct point = {a: int, b: int}
+
+p1: point = {2, -3}
+
+p_mult: point = 3*p1
+
+print(p_mult.a) //6
+print(p_mult.b) //-9
+
+p_div: point = p1/2
+
+print(p_div.a) //1
+print(p_div.b) //-1
+
+\end{lstlisting}
+
+\subsection{tests/test-type-conversions-comp.out}
+
+\begin{lstlisting}
+
+1
+1
+1
+\end{lstlisting}
+
+\subsection{tests/test-type-conversions-comp.sos}
+
+\begin{lstlisting}
+
+/*float over int*/
+b: bool = 3.5 > 3
+print(b) //True
+
+b = 3 < 3.5
+print(b) //True
+
+/*int over bool*/
+b = 2 > true
+print(b) //True
+\end{lstlisting}
+
+\subsection{tests/test-type-conversions-func.out}
+
+\begin{lstlisting}
+
+4
+\end{lstlisting}
+
+\subsection{tests/test-type-conversions-func.sos}
+
+\begin{lstlisting}
+
+add_int: (x: int, y: int) -> int = x + y
+
+x: float = 1.0
+y: float = 3.0
+
+sum: int = add_int(x, y)
+print(sum)
+\end{lstlisting}
+
+\subsection{tests/test-type-conversions.out}
+
+\begin{lstlisting}
+
+10
+1
+1
+0
+0
+0
+0
+2
+-2
+1
+1
+1
+0
+4
+2
+3
+\end{lstlisting}
+
+\subsection{tests/test-type-conversions.sos}
+
+\begin{lstlisting}
+
+/*bool to int*/
+//Type conversion during variable assignment
+x: bool = true
+y: int = x
+y = x + 9
+print(y) //10
+
+//Type conversion during function application
+sum: (x: int, y: int) -> int = x + y
+summed: int = sum(true, false)
+print(summed) //1
+
+
+/*int to bool*/
+//Type conversion during variable assignment
+m: int = 1
+n: int = 0
+o: bool = m 
+p: bool = n
+print(o) //True
+print(p) //False
+
+//Type conversion based on unary operator
+p = !1
+print(p) //False
+
+//Type conversion during function application
+not: (x: bool) -> bool = !x
+notted: bool  = not(1)
+print(notted) //False
+
+
+/*float to int (via truncation) */
+a: float = -0.5
+b: int = a
+print(b) //0
+
+a = 2.9
+b = a
+print(b) //2
+
+a = -2.9
+b = a
+print(b) //-2
+
+
+/*float to bool: anything other than 0.0 is true */
+b: bool = 1.1 //1
+print(b)
+b = -1.1 //1
+print(b)
+b = 0.1
+print(b) //1
+b = 0.0
+print(b) // 0
+
+//Type conversion during function application (use sum() on line 15)
+summed2: int = sum(1.2, 3.5)
+print(summed2) //4
+
+
+/*int to float (via injection) */
+c: int = 2
+d: float = c
+printf(d) //2.0
+
+//Type conversion during function application
+floatsum: (x: float, y: float) -> float = x + y
+e: float = floatsum(1, 2)
+printf(e) //3.0
+\end{lstlisting}
+
+\subsection{tests/test-unop.out}
+
+\begin{lstlisting}
+
+5
+-5
+-3
+5
+-5
+2
+1
+0
+0
+\end{lstlisting}
+
+\subsection{tests/test-unop.sos}
+
+\begin{lstlisting}
+
+/*negation of int and float: neg*/
+//int
+a: int = 5
+b: int = -a
+print(a) //5
+print(b) //-5
+print(-1+-2) //-3
+
+//float
+c: float = 5.0
+d: float = -c
+printf(c) //5.0
+printf(d) //-5.0
+printf(-1.0*-2.0) //2.0
+
+
+/*negation of bool: not*/
+e: bool = true
+f: bool = !e
+print(e) //True
+print(f) //False
+print(!true) //False
+\end{lstlisting}
+
+\subsection{tests/test-value-access-modifier.out}
+
+\begin{lstlisting}
+
+255
+\end{lstlisting}
+
+\subsection{tests/test-value-access-modifier.sos}
+
+\begin{lstlisting}
+
+import color.sos
+printf($(c : color = {0.0, 255.0, 255.0, 0.8}).g)\end{lstlisting}
+
+\subsection{tests/test-var-assign-as-expr.out}
+
+\begin{lstlisting}
+
+6
+6
+\end{lstlisting}
+
+\subsection{tests/test-var-assign-as-expr.sos}
+
+\begin{lstlisting}
+
+a: int = 2
+
+print(a = 3 + 3) //6
+print(a) //6
+\end{lstlisting}
+
+\subsection{tests/test-vardecl-as-expr.out}
+
+\begin{lstlisting}
+
+10
+\end{lstlisting}
+
+\subsection{tests/test-vardecl-as-expr.sos}
+
+\begin{lstlisting}
+
+//variable declaration for x is an expression for assignment of y
+y: int = 5
+y= (x: int = 10)
+
+print(y) //10
+\end{lstlisting}
+
+\subsection{tests/test-vardecl-twice.out}
+
+\begin{lstlisting}
+
+5
+1
+\end{lstlisting}
+
+\subsection{tests/test-vardecl-twice.sos}
+
+\begin{lstlisting}
+
+/* SOS allows variables to be redeclared to different types */
+
+a: int = 5
+print(a) //5
+
+a: bool = true
+print(a) //1
+\end{lstlisting}
+
+\subsection{tests/test-vardecl.out}
+
+\begin{lstlisting}
+
+0
+0
+1
+\end{lstlisting}
+
+\subsection{tests/test-vardecl.sos}
+
+\begin{lstlisting}
+
+/*variable definitions must have a type id and an expression.
+This test case is for primitives only. Reference type definitions
+are tested in "construction" test cases.*/
+
+x: int = 0
+print(x)
+
+y: float = 0.0
+printf(y)
+
+z: bool = true
+print(z)
+\end{lstlisting}
+
+\subsection{tests/test-vardecl2.out}
+
+\begin{lstlisting}
+
+0
+0
+\end{lstlisting}
+
+\subsection{tests/test-vardecl2.sos}
+
+\begin{lstlisting}
+
+/*variables must start with a letters, then can have any
+number of letters, underscores, and numbers*/
+
+a_d1: int = 0
+a000___: float = 0.0
+print(a_d1)
+print(a000___)
+\end{lstlisting}
+
 \end{document}
